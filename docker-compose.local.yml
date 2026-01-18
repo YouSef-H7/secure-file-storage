@@ -1,0 +1,48 @@
+# Docker Compose Configuration for Local Development
+# This is for LOCAL TESTING ONLY - NOT production
+# Services: Backend (Node.js) + Frontend (Nginx)
+
+version: '3.8'
+
+services:
+  backend:
+    # Build backend using Dockerfile from docker/ directory
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    container_name: secure_storage_backend_local
+    # Backend internal port 3000 exposed on localhost:3000
+    ports:
+      - "3000:3000"
+    # Environment variables for local development
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATA_DIR: /data
+      JWT_SECRET: dev_secret_local_testing_only
+      MAX_FILE_MB: 25
+      ALLOWED_MIME: image/png,image/jpeg,application/pdf
+    # Mount local ./data directory for persistent storage
+    # Allows accessing uploaded files and database locally
+    volumes:
+      - ./data:/data
+    # Restart policy for local development
+    restart: unless-stopped
+
+  frontend:
+    # Build frontend using multi-stage Dockerfile from docker/ directory
+    build:
+      context: .
+      dockerfile: docker/frontend.Dockerfile
+    container_name: secure_storage_frontend_local
+    # Frontend Nginx port 80 exposed on localhost:8080
+    ports:
+      - "8080:80"
+    # Restart policy for local development
+    restart: unless-stopped
+
+# Network configuration
+networks:
+  default:
+    name: secure_storage_local_network
+    driver: bridge
