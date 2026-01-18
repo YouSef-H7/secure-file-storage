@@ -1,0 +1,5 @@
+
+{
+  "name": "Secure File Storage",
+  "description": "A production-grade, end-to-end secure file storage application designed for OCI deployment. Features JWT authentication, persistent SQLite storage, and a premium dark-themed React dashboard."
+}
