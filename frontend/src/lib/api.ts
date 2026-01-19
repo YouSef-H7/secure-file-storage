@@ -1,7 +1,12 @@
-const getAuthHeader = () => {
+const getAuthHeader = (): HeadersInit => {
   const token = localStorage.getItem('vlt_token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+  const headers: HeadersInit = {};
+  if (token) {
+    (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
 };
+
 
 const handleResponse = async (res: Response) => {
   if (res.status === 401) {
