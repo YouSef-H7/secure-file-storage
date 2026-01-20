@@ -1,37 +1,16 @@
-import Database from 'better-sqlite3';
-import path from 'path';
-import fs from 'fs-extra';
-import { config } from './config';
+import mysql from "mysql2/promise";
+import dotenv from "dotenv";
 
-const DB_DIR = path.join(config.DATA_DIR, 'db');
-fs.ensureDirSync(DB_DIR);
+dotenv.config();
 
-const dbPath = path.join(DB_DIR, 'app.db');
-const db = new Database(dbPath);
-
-// Performance optimizations
-db.pragma('journal_mode = WAL');
-db.pragma('synchronous = NORMAL');
-
-// Initialize schema
-db.exec(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-  );
-
-  CREATE TABLE IF NOT EXISTS files (
-    id TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    name TEXT NOT NULL,
-    size INTEGER NOT NULL,
-    mime_type TEXT NOT NULL,
-    storage_path TEXT NOT NULL,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
-  );
-`);
+const db = mysql.createPool({
+  host: process.env.DB_HOST,
+  port: Number(process.env.DB_PORT || 3306),
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+  waitForConnections: true,
+  connectionLimit: 10,
+});
 
 export default db;
