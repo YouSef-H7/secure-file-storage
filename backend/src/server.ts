@@ -1,5 +1,6 @@
-import express from 'express';
+import express, { Express } from 'express';
 import cors from 'cors';
+import session from 'express-session';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
@@ -10,11 +11,37 @@ import db from './db';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { config } from './config';
 import { authenticate, AuthRequest } from './middleware/auth';
+import oidcRouter from './routes/oidc';
 
-const app = express();
+const app: Express = express();
+
+// ================= TRUST PROXY =================
+// 🔐 Required for secure cookies behind reverse proxy (even localhost)
+app.set('trust proxy', 1);
+
+// ================= SESSION MIDDLEWARE =================
+// 🔐 Express-session with httpOnly cookies (BFF pattern)
+// CRITICAL: Must be FIRST middleware, before CORS and routes
+app.use(session({
+  secret: config.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true,  // 🔥 CRITICAL: Set to true so uninitialized sessions are stored
+  name: 'connect.sid',      // Explicit cookie name
+  cookie: {
+    secure: config.SESSION_COOKIE_SECURE,      // false in dev (HTTP), true in prod (HTTPS only)
+    httpOnly: true,                             // Prevents JS access (no XSS risk)
+    sameSite: config.SESSION_COOKIE_SAMESITE, // 'lax' - prevents CSRF for same-site redirects
+    maxAge: config.SESSION_MAX_AGE,            // 7 days
+    path: '/',
+    // domain: undefined - let browser handle it for localhost
+  },
+}));
 
 // ================= MIDDLEWARE =================
-app.use(cors());
+app.use(cors({
+  origin: config.FRONTEND_BASE_URL,
+  credentials: true,  // Allow cookies with CORS
+}));
 app.use(express.json());
 
 // ================= DIRECTORIES =================
@@ -24,8 +51,12 @@ fs.ensureDirSync(UPLOADS_DIR);
 // ================= MULTER =================
 const storage = multer.diskStorage({
   destination: (req: any, file, cb) => {
-    const tenantId = req.user.tenantId;
-    const userId = req.user.userId;
+    const tenantId = req.user?.tenantId;
+    const userId = req.user?.userId;
+
+    if (!tenantId || !userId) {
+      return cb(new Error('Missing tenant or user context'), '');
+    }
 
     const tenantDir = path.join(UPLOADS_DIR, tenantId);
     const userDir = path.join(tenantDir, userId);
@@ -33,12 +64,13 @@ const storage = multer.diskStorage({
     fs.ensureDirSync(userDir);
     cb(null, userDir);
   },
-
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
     cb(null, `${uuidv4()}${ext}`);
   }
 });
+
+
 
 
 const upload = multer({
@@ -52,6 +84,11 @@ const upload = multer({
     }
   }
 });
+
+// ================= OIDC ROUTES (BFF Pattern) =================
+// 🔐 All OIDC logic (login, callback, token exchange) happens here
+// Frontend never sees tokens; they're stored server-side only
+app.use('/auth', oidcRouter);
 
 // ================= HEALTH =================
 app.get('/api/health', (req, res) => {
@@ -153,20 +190,27 @@ app.post(
     );
 
     try {
-      await db.execute<ResultSetHeader>(
-        `
-        INSERT INTO files (id, tenant_id, user_id, filename, size, storage_path)
-        VALUES (?, ?, ?, ?, ?, ?)
-        `,
-        [
-          fileId,
-          req.user.tenantId,
-          req.user.userId,
-          req.file.originalname,
-          req.file.size,
-          req.file.path
-        ]
-      );
+     await db.execute<ResultSetHeader>(
+  `
+  INSERT INTO files (
+    id,
+    tenant_id,
+    user_id,
+    filename,
+    size,
+    storage_path
+  )
+  VALUES (?, ?, ?, ?, ?, ?)
+  `,
+  [
+    fileId,
+    req.user!.tenantId,
+    req.user!.userId,
+    req.file.originalname,
+    req.file.size,
+    req.file.path
+  ]
+);
 
       res.status(201).json({
         id: fileId,
@@ -183,15 +227,16 @@ app.post(
 app.get('/api/files', authenticate, async (req: AuthRequest, res) => {
   try {
     const [files] = await db.execute<RowDataPacket[]>(
-      `
-      SELECT id, filename, size, created_at
-      FROM files
-      WHERE user_id = ?
-        AND tenant_id = ?
-      ORDER BY created_at DESC
-      `,
-      [req.user!.userId, req.user!.tenantId]
-    );
+  `
+  SELECT id, filename, size, created_at
+  FROM files
+  WHERE user_id = ?
+    AND tenant_id = ?
+  ORDER BY created_at DESC
+  `,
+  [req.user!.userId, req.user!.tenantId]
+);
+
 
     res.json(files);
   } catch (err) {

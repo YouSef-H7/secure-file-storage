@@ -7,7 +7,7 @@
     "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": ["vite/client"]
   },
   "include": ["src"]
 }

@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Compiled TypeScript (should not be committed)
+*.js
+*.js.map
+!vite.config.ts
+!tsconfig.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -28,3 +34,8 @@ data/
 *.db
 *.db-shm
 *.db-wal
+# Environment
+.env
+backend/.env
+frontend/.env
+
