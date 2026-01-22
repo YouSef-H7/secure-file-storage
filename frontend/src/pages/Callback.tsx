@@ -26,10 +26,10 @@ export default function Callback() {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-black">
-      <div className="text-center">
-        <div className="text-xl font-semibold">Signing you in…</div>
-        <div className="text-sm opacity-70 mt-2">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#050509] via-[#04040b] to-[#060712] px-6">
+      <div className="text-center bg-[#050510] border border-neutral-900 rounded-2xl px-8 py-10 shadow-[0_22px_70px_rgba(15,23,42,0.85)]">
+        <div className="text-xl font-semibold text-slate-50">Signing you in…</div>
+        <div className="text-sm text-neutral-500 mt-2">
           Please wait
         </div>
       </div>
