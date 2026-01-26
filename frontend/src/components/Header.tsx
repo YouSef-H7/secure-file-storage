@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { ChevronRight, LogOut } from 'lucide-react';
+import { ChevronRight, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../auth/AuthContext';
 
 const Header = () => {
@@ -8,6 +8,29 @@ const Header = () => {
   const location = useLocation();
   const pathName = location.pathname.split('/').pop() || 'Dashboard';
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Defensive check - if user is not available, don't render
+  if (!user) {
+    return null;
+  }
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    if (showDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDropdown]);
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
@@ -20,34 +43,48 @@ const Header = () => {
     }
   };
 
+  const displayName = user?.name || user?.email?.split('@')[0] || 'User';
+  const displayEmail = user?.email || 'user@company.com';
+
   return (
-    <header className="h-20 border-b border-neutral-900 bg-gradient-to-r from-[#050509]/95 via-[#050509]/95 to-[#050509]/95 backdrop-blur-xl flex items-center justify-between px-10 fixed top-0 right-0 left-64 z-20 shadow-[0_0_40px_rgba(15,23,42,0.45)]">
-      <div className="flex items-center gap-2 text-[10px] font-black text-neutral-500 uppercase tracking-[0.22em]">
-        <span className="opacity-60">Segment</span>
-        <ChevronRight size={12} className="opacity-40" />
-        <span className="text-blue-400 capitalize">{pathName}</span>
+    <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6 fixed top-0 right-0 left-64 z-20">
+      <div className="flex items-center gap-2 text-sm text-slate-600">
+        <span>Segment</span>
+        <ChevronRight size={16} className="text-slate-400" />
+        <span className="text-slate-900 font-medium capitalize">{pathName}</span>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 relative">
         <div className="text-right">
-          <p className="text-sm font-semibold text-slate-50 leading-none">
-            {user?.email || 'Authenticated User'}
-          </p>
-          <p className="text-[10px] text-emerald-400 font-black uppercase tracking-[0.28em] mt-1 flex items-center gap-1 justify-end">
-            <span className="inline-flex w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.9)] animate-pulse" />
-            Verified Node
-          </p>
+          <p className="text-sm font-medium text-slate-900">{displayName}</p>
+          <p className="text-xs text-slate-500">{displayEmail}</p>
         </div>
-        <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 via-indigo-500 to-sky-500 flex items-center justify-center text-xs font-black text-white shadow-xl shadow-blue-600/30 ring-1 ring-white/5">
-          {(user?.email?.charAt(0) || 'U').toUpperCase()}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            onClick={() => setShowDropdown(!showDropdown)}
+            className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded-lg transition-colors"
+          >
+            <div className="w-8 h-8 bg-slate-200 rounded-full flex items-center justify-center">
+              <span className="text-slate-600 text-xs font-medium">
+                {displayName.charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <ChevronDown size={16} className="text-slate-400" />
+          </button>
+          {showDropdown && (
+            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+              <button
+                onClick={() => {
+                  setShowDropdown(false);
+                  handleLogout();
+                }}
+                className="w-full text-left px-4 py-2 text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+              >
+                <LogOut size={16} />
+                <span>Logout</span>
+              </button>
+            </div>
+          )}
         </div>
-        <button
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          className="ml-4 p-2 rounded-xl text-neutral-400 hover:text-red-400 hover:bg-red-500/5 transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050509]"
-          title="Logout"
-        >
-          <LogOut size={18} />
-        </button>
       </div>
     </header>
   );

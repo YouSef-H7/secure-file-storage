@@ -8,12 +8,26 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: '#0a0a0a',
-        surface: '#121212',
-        border: '#1f1f1f',
-        primary: '#3b82f6',
-        secondary: '#64748b',
+        brand: {
+          DEFAULT: '#0B3B2E',
+          light: '#165a49',
+          dark: '#062b21',
+          accent: '#10b981',
+        },
+        background: '#f8fafc',
+        surface: '#ffffff',
+        border: '#e2e8f0',
+        text: {
+          primary: '#0f172a',
+          secondary: '#64748b',
+        },
+        error: '#ef4444',
+        warning: '#f59e0b',
+        success: '#10b981',
       },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      }
     },
   },
   plugins: [],

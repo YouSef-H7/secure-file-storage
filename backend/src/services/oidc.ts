@@ -113,7 +113,7 @@ export function generateAuthorizationUrl(): {
   const state = crypto.randomBytes(16).toString('hex');
   const nonce = crypto.randomBytes(16).toString('hex');
   const codeVerifier = crypto.randomBytes(32).toString('hex');
-  
+
   // PKCE: challenge = base64url(sha256(verifier))
   const codeChallenge = crypto
     .createHash('sha256')
@@ -234,7 +234,7 @@ export async function validateIdToken(
   try {
     // Decode token WITHOUT signature verification (JWKS inaccessible on OCI)
     const decoded = jwt.decode(idToken, { complete: false }) as any;
-    
+
     if (!decoded) {
       throw new Error('Failed to decode ID token');
     }
@@ -315,20 +315,108 @@ export async function validateIdToken(
   }
 }
 
+/* 
+ * NOTE: fetchUserInfo is not currently used (allowlist-based authorization)
+ * TODO: When OCI Admin enables Custom Claims, uncomment and adapt this function
+ *
 /**
- * Extract user info from ID token
+ * Fetch user information from OIDC UserInfo endpoint
+ * Uses access token to retrieve custom attributes (e.g., app_role from OCI Identity Domain)
  */
-export function extractUserFromIdToken(idToken: string): {
-  sub: string;
-  email?: string;
-  name?: string;
-} {
-  const decoded = jwt.decode(idToken) as any;
-  return {
-    sub: decoded.sub,
-    email: decoded.email,
-    name: decoded.name,
-  };
+/*
+export async function fetchUserInfo(accessToken: string): Promise<Record<string, unknown>> {
+  const oidcConfig = await getOIDCConfig();
+
+  if (!oidcConfig.userInfoEndpoint) {
+    throw new Error('UserInfo endpoint not available in OIDC configuration');
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), config.USERINFO_TIMEOUT_MS);
+
+  try {
+    console.log('[OIDC] Calling UserInfo endpoint:', oidcConfig.userInfoEndpoint);
+
+    const response = await fetch(oidcConfig.userInfoEndpoint, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+        'Accept': 'application/json',
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unable to read response');
+      console.error(`[OIDC] UserInfo endpoint failed: HTTP ${response.status}`, errorText.substring(0, 200));
+      throw new Error(`UserInfo request failed: HTTP ${response.status}`);
+    }
+
+    const userInfo = await response.json() as Record<string, unknown>;
+
+    // Log available attributes (keys only - no PII)
+    console.log('[OIDC] UserInfo attributes (keys only):', Object.keys(userInfo));
+
+    return userInfo;
+  } catch (error) {
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error(`[OIDC] UserInfo request timed out after ${config.USERINFO_TIMEOUT_MS}ms`);
+      throw new Error(`UserInfo request timed out after ${config.USERINFO_TIMEOUT_MS}ms`);
+    }
+
+    console.error('[OIDC] UserInfo fetch failed:', error instanceof Error ? error.message : error);
+    throw error;
+  }
+}
+*/
+
+
+/**
+ * AUTHORIZATION LOGIC (Backend-Controlled)
+ * 
+ * Resolves user role based on email allowlist.
+ * This separates Authentication (OCI) from Authorization (Backend).
+ * 
+ * Rules:
+ * - Admin: Email exists in ADMIN_EMAIL_ALLOWLIST
+ * - Employee: All other authenticated users (secure default)
+ * - Denied: Missing or invalid email
+ * 
+ * TODO: When OCI Custom Claims (app_role) become available,
+ * replace this allowlist logic with token-based resolution.
+ * Structure allows for easy one-function replacement.
+ */
+export function resolveUserRole(email: string | undefined): 'admin' | 'employee' | undefined {
+  // Fail closed: No email = deny access
+  if (!email || typeof email !== 'string' || email.trim() === '') {
+    console.error('[AUTHZ] Missing or invalid email - denying access');
+    return undefined;
+  }
+
+  // Normalize email for comparison
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Parse admin allowlist from config
+  const allowlistStr = config.ADMIN_EMAIL_ALLOWLIST.trim();
+  const adminEmails = new Set<string>(
+    allowlistStr
+      ? allowlistStr.split(',').map(e => e.trim().toLowerCase()).filter(Boolean)
+      : []
+  );
+
+  // Check allowlist
+  if (adminEmails.has(normalizedEmail)) {
+    console.log(`[AUTHZ] Role resolved: admin (source=allowlist, user=${normalizedEmail})`);
+    return 'admin';
+  }
+
+  // Default: employee (secure, least-privilege)
+  console.log(`[AUTHZ] Role resolved: employee (source=default, user=${normalizedEmail})`);
+  return 'employee';
 }
 
 /**

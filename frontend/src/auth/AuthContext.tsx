@@ -4,6 +4,7 @@ interface User {
   sub: string;
   email?: string;
   name?: string;
+  role?: 'admin' | 'employee';
 }
 
 interface AuthContextType {
@@ -31,7 +32,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    */
   const checkAuth = async () => {
     try {
-      const response = await fetch('http://localhost:3000/auth/me', {
+      const response = await fetch('/auth/me', {
         method: 'GET',
         credentials: 'include', // Include httpOnly cookie in request
         headers: {
@@ -49,7 +50,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUser(null);
       }
     } catch (error) {
-      console.error('Auth check error:', error);
+      // Network error - backend not running or connection refused
+      // Handle gracefully without crashing the app
+      console.error('Auth check error (backend may be down):', error);
       setUser(null);
     } finally {
       setIsLoading(false);
@@ -62,7 +65,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
    */
   const logout = async () => {
     try {
-      const response = await fetch('http://localhost:3000/auth/logout', {
+      const response = await fetch('/auth/logout', {
         method: 'POST',
         credentials: 'include',
         headers: {
@@ -76,9 +79,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         window.location.href = '/login';
       } else {
         console.error('Logout failed:', response.status);
+        // Still clear user and redirect even if request fails
+        setUser(null);
+        window.location.href = '/login';
       }
     } catch (error) {
       console.error('Logout error:', error);
+      // Still clear user and redirect even if request fails
+      setUser(null);
+      window.location.href = '/login';
     }
   };
 

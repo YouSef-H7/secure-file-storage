@@ -12,6 +12,18 @@ import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { config } from './config';
 import { authenticate, AuthRequest } from './middleware/auth';
 import oidcRouter from './routes/oidc';
+import statsRouter from './routes/stats';
+import sharingRouter from './routes/sharing';
+import foldersRouter from './routes/folders';
+import { fileRepository } from './repositories';
+import { FileMeta } from './repositories/FileRepository';
+import initSchema from './services/db_init';
+
+// Init DB Schema (required for register/login and folder/share routes)
+// Run asynchronously - don't block server startup if DB is unavailable
+initSchema().catch(err => {
+  console.warn('[SERVER] Database schema initialization failed (this is OK if using filesystem mode):', err.message);
+});
 
 const app: Express = express();
 
@@ -51,18 +63,34 @@ fs.ensureDirSync(UPLOADS_DIR);
 // ================= MULTER =================
 const storage = multer.diskStorage({
   destination: (req: any, file, cb) => {
+    console.log('[UPLOAD] Storage: Processing upload request');
+    try {
+      console.log('[UPLOAD] Req User:', JSON.stringify(req.user));
+    } catch (e) {
+      console.log('[UPLOAD] Req User: [Circular or Error]');
+    }
+
     const tenantId = req.user?.tenantId;
     const userId = req.user?.userId;
 
     if (!tenantId || !userId) {
+      console.error('[UPLOAD] ❌ Missing auth context:', { tenantId, userId });
       return cb(new Error('Missing tenant or user context'), '');
     }
 
     const tenantDir = path.join(UPLOADS_DIR, tenantId);
     const userDir = path.join(tenantDir, userId);
 
-    fs.ensureDirSync(userDir);
-    cb(null, userDir);
+    console.log(`[UPLOAD] Target directory: ${userDir}`);
+
+    try {
+      fs.ensureDirSync(userDir);
+      console.log('[UPLOAD] Directory ensured');
+      cb(null, userDir);
+    } catch (err: any) {
+      console.error('[UPLOAD] ❌ Failed to create directory:', err);
+      cb(err, '');
+    }
   },
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -89,6 +117,9 @@ const upload = multer({
 // 🔐 All OIDC logic (login, callback, token exchange) happens here
 // Frontend never sees tokens; they're stored server-side only
 app.use('/auth', oidcRouter);
+app.use('/api/stats', authenticate, statsRouter);
+app.use('/api', authenticate, sharingRouter);
+app.use('/api/folders', authenticate, foldersRouter);
 
 // ================= HEALTH =================
 app.get('/api/health', (req, res) => {
@@ -189,28 +220,40 @@ app.post(
       path.extname(req.file.filename)
     );
 
+    const folderId = req.body.folderId || null;
+
     try {
-     await db.execute<ResultSetHeader>(
-  `
-  INSERT INTO files (
-    id,
-    tenant_id,
-    user_id,
-    filename,
-    size,
-    storage_path
-  )
-  VALUES (?, ?, ?, ?, ?, ?)
-  `,
-  [
-    fileId,
-    req.user!.tenantId,
-    req.user!.userId,
-    req.file.originalname,
-    req.file.size,
-    req.file.path
-  ]
-);
+      // Infer mime type from file extension
+      const ext = path.extname(req.file.originalname).toLowerCase();
+      let mimeType = req.file.mimetype || 'application/octet-stream';
+      if (!mimeType || mimeType === 'application/octet-stream') {
+        const mimeMap: Record<string, string> = {
+          '.pdf': 'application/pdf',
+          '.jpg': 'image/jpeg',
+          '.jpeg': 'image/jpeg',
+          '.png': 'image/png',
+          '.doc': 'application/msword',
+          '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          '.xls': 'application/vnd.ms-excel',
+          '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        };
+        mimeType = mimeMap[ext] || 'application/octet-stream';
+      }
+
+      if (!req.user?.tenantId || !req.user?.userId) {
+        return res.status(401).json({ error: 'Missing user context' });
+      }
+      await fileRepository.saveFileMeta({
+        id: fileId,
+        tenant_id: req.user.tenantId,
+        user_id: req.user.userId,
+        filename: req.file.originalname,
+        size: req.file.size,
+        storage_path: req.file.path,
+        folder_id: folderId || null,
+        mime_type: mimeType,
+        created_at: new Date().toISOString()
+      });
 
       res.status(201).json({
         id: fileId,
@@ -226,19 +269,23 @@ app.post(
 // ---------- LIST FILES ----------
 app.get('/api/files', authenticate, async (req: AuthRequest, res) => {
   try {
-    const [files] = await db.execute<RowDataPacket[]>(
-  `
-  SELECT id, filename, size, created_at
-  FROM files
-  WHERE user_id = ?
-    AND tenant_id = ?
-  ORDER BY created_at DESC
-  `,
-  [req.user!.userId, req.user!.tenantId]
-);
+    if (!req.user?.tenantId || !req.user?.userId) {
+      return res.status(401).json({ error: 'Missing user context' });
+    }
+    const files = await fileRepository.listUserFiles({
+      tenantId: req.user.tenantId,
+      userId: req.user.userId
+    });
 
+    // Map to expected format
+    const mappedFiles = files.map((f: FileMeta) => ({
+      id: f.id,
+      filename: f.filename,
+      size: f.size,
+      created_at: f.created_at
+    }));
 
-    res.json(files);
+    res.json(mappedFiles);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch files' });
@@ -246,24 +293,29 @@ app.get('/api/files', authenticate, async (req: AuthRequest, res) => {
 });
 
 // ---------- FILE METADATA ----------
-app.get('/api/files/:id', authenticate, async (req: any, res) => {
+app.get('/api/files/:id', authenticate, async (req: AuthRequest, res) => {
   try {
-    const [rows] = await db.execute<RowDataPacket[]>(
-      `
-      SELECT id, filename, size, created_at
-      FROM files
-      WHERE id = ?
-        AND user_id = ?
-        AND tenant_id = ?
-      `,
-      [req.params.id, req.user!.userId, req.user!.tenantId]
-    );
+    if (!req.user?.tenantId || !req.user?.userId) {
+      return res.status(401).json({ error: 'Missing user context' });
+    }
+    const file = await fileRepository.getFileById({
+      fileId: req.params.id,
+      tenantId: req.user.tenantId,
+      userId: req.user.userId
+    });
 
-    if (rows.length === 0) {
+    if (!file) {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    res.json(rows[0]);
+    // Map to expected format
+    res.json({
+      id: file.id,
+      filename: file.filename,
+      size: file.size,
+      created_at: file.created_at,
+      folder_id: file.folder_id || null
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch file' });
@@ -271,27 +323,23 @@ app.get('/api/files/:id', authenticate, async (req: any, res) => {
 });
 
 // ---------- DOWNLOAD ----------
-app.get('/api/files/:id/download', authenticate, async (req: any, res) => {
+app.get('/api/files/:id/download', authenticate, async (req: AuthRequest, res) => {
   try {
-    const [rows] = await db.execute<RowDataPacket[]>(
-      `
-      SELECT filename, storage_path
-      FROM files
-      WHERE id = ?
-        AND user_id = ?
-        AND tenant_id = ?
-      `,
-      [req.params.id, req.user!.userId, req.user!.tenantId]
-    );
+    if (!req.user?.tenantId || !req.user?.userId) {
+      return res.status(401).json({ error: 'Missing user context' });
+    }
+    const file = await fileRepository.getFileForDownload({
+      fileId: req.params.id,
+      tenantId: req.user.tenantId,
+      userId: req.user.userId
+    });
 
-    if (rows.length === 0) {
+    if (!file) {
       return res.status(404).json({ error: 'File not found' });
     }
-
-    const file = rows[0];
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="${file.filename}"`
+      `attachment; filename = "${file.filename}"`
     );
     res.sendFile(file.storage_path);
   } catch (err) {
@@ -301,37 +349,25 @@ app.get('/api/files/:id/download', authenticate, async (req: any, res) => {
 });
 
 // ---------- DELETE ----------
-app.delete('/api/files/:id', authenticate, async (req: any, res) => {
+app.delete('/api/files/:id', authenticate, async (req: AuthRequest, res) => {
   try {
-    const [rows] = await db.execute<RowDataPacket[]>(
-      `
-      SELECT storage_path
-      FROM files
-      WHERE id = ?
-        AND user_id = ?
-        AND tenant_id = ?
-      `,
-      [req.params.id, req.user!.userId, req.user!.tenantId]
-    );
+    if (!req.user?.tenantId || !req.user?.userId) {
+      return res.status(401).json({ error: 'Missing user context' });
+    }
+    const fileMeta = await fileRepository.deleteFileMeta({
+      fileId: req.params.id,
+      tenantId: req.user.tenantId,
+      userId: req.user.userId
+    });
 
-    if (rows.length === 0) {
+    if (!fileMeta) {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    const file = rows[0];
-
-    if (await fs.pathExists(file.storage_path)) {
-      await fs.remove(file.storage_path);
+    // Delete physical file
+    if (await fs.pathExists(fileMeta.storage_path)) {
+      await fs.remove(fileMeta.storage_path);
     }
-
-    await db.execute<ResultSetHeader>(
-      `
-      DELETE FROM files
-      WHERE id = ?
-        AND tenant_id = ?
-      `,
-      [req.params.id, req.user!.tenantId]
-    );
 
     res.json({ message: 'File deleted' });
   } catch (err) {

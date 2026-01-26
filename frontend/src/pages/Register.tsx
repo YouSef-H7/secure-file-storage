@@ -36,74 +36,79 @@ const RegisterPage = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#050509] via-[#04040b] to-[#060712] p-4 font-sans">
-        <div className="w-full max-w-md bg-[#050510] border border-neutral-900 rounded-[3rem] p-12 text-center shadow-[0_32px_90px_rgba(15,23,42,0.9)] relative overflow-hidden animate-in zoom-in-95 duration-500">
-          <div className="absolute top-0 left-0 w-full h-1 bg-green-500 shadow-[0_0_25px_rgba(34,197,94,0.45)]"></div>
-          <div className="w-20 h-20 bg-green-500/10 text-green-400 rounded-full flex items-center justify-center mx-auto mb-8 animate-in zoom-in duration-700 shadow-[0_18px_45px_rgba(34,197,94,0.28)]">
-            <CheckCircle2 size={40} />
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-4">
+        <div className="w-full max-w-md bg-white rounded-2xl p-12 text-center shadow-lg border border-slate-200">
+          <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <CheckCircle2 size={32} />
           </div>
-          <h2 className="text-2xl font-semibold text-slate-50 mb-2 tracking-tight">Node Provisioned</h2>
-          <p className="text-neutral-500 font-medium text-sm">Transferring identity to auth terminal...</p>
+          <h2 className="text-2xl font-semibold text-slate-900 mb-2">Account Created</h2>
+          <p className="text-slate-600 text-sm">Redirecting to login...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#050509] via-[#04040b] to-[#060712] p-6 font-sans">
-      <div className="w-full max-w-md bg-[#050510] border border-neutral-900 rounded-[2.5rem] p-10 shadow-[0_32px_90px_rgba(15,23,42,0.9)] relative overflow-hidden animate-in slide-in-from-bottom-2 duration-500">
-        <div className="absolute top-0 left-0 w-full h-1 bg-blue-500 shadow-[0_0_22px_rgba(37,99,235,0.4)]"></div>
-        <div className="flex flex-col items-center mb-10 text-center">
-          <div className="p-5 bg-blue-500/10 rounded-3xl mb-6 shadow-[0_16px_40px_rgba(37,99,235,0.25)] border border-blue-500/15">
-            <UserPlus className="text-blue-400" size={42} />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 p-6">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-900 rounded-xl mb-4">
+            <span className="text-white text-2xl font-bold">S</span>
           </div>
-          <h1 className="text-3xl font-semibold text-slate-50 tracking-tight">Identity Registry</h1>
-          <p className="text-neutral-500 mt-2 font-medium text-sm">Provision a secure node for your digital footprint.</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">SecureStore</h1>
+          <p className="text-slate-600 text-sm">Enterprise File Storage Platform</p>
         </div>
 
-        <form onSubmit={handleRegister} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.3em] px-1">Institutional Email</label>
-            <input 
-              type="email" 
-              required
-              disabled={loading}
-              className="w-full bg-[#06060f] border border-neutral-900 rounded-2xl p-4 text-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-500/60 focus:border-blue-500/60 transition-all font-medium disabled:opacity-50 shadow-[0_0_0_1px_rgba(15,23,42,0.7)]"
-              placeholder="yousef@gmail.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-            />
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-slate-200">
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-slate-900 mb-1">Create your account</h2>
+            <p className="text-sm text-slate-600">Sign up to get started</p>
           </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-neutral-500 uppercase tracking-[0.3em] px-1">Security Passcode</label>
-            <input 
-              type="password" 
-              required
-              disabled={loading}
-              className="w-full bg-[#06060f] border border-neutral-900 rounded-2xl p-4 text-slate-50 focus:outline-none focus:ring-1 focus:ring-blue-500/60 focus:border-blue-500/60 transition-all font-medium disabled:opacity-50 shadow-[0_0_0_1px_rgba(15,23,42,0.7)]"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-            />
-          </div>
-          {error && (
-            <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/5 p-4 rounded-2xl border border-red-500/15 font-semibold shadow-[0_12px_30px_rgba(248,113,113,0.15)]">
-              <ShieldAlert size={14} className="flex-shrink-0" />
-              <span>{error}</span>
+
+          <form onSubmit={handleRegister} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+              <input 
+                type="email" 
+                required
+                disabled={loading}
+                className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="you@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
-          )}
-          <button 
-            type="submit"
-            disabled={loading}
-            className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-neutral-800 disabled:text-neutral-500 text-white font-semibold py-4 rounded-2xl transition-all shadow-[0_18px_45px_rgba(37,99,235,0.4)] active:scale-[0.985] mt-4 flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#050510]"
-          >
-            {loading ? <Loader2 size={18} className="animate-spin" /> : null}
-            {loading ? 'Initializing Node...' : 'Create Account'}
-          </button>
-        </form>
-        <p className="mt-10 text-center text-sm font-medium text-neutral-500">
-          Already established? <Link to="/login" className="text-blue-400 hover:text-blue-300 font-semibold transition-colors">Sign In</Link>
-        </p>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+              <input 
+                type="password" 
+                required
+                disabled={loading}
+                className="w-full bg-white border border-slate-200 rounded-lg px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            {error && (
+              <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg border border-red-200">
+                <ShieldAlert size={16} className="flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full bg-slate-900 hover:bg-slate-800 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition-colors flex items-center justify-center gap-2"
+            >
+              {loading && <Loader2 size={18} className="animate-spin" />}
+              {loading ? 'Creating account...' : 'Create Account'}
+            </button>
+          </form>
+          <p className="mt-6 text-center text-sm text-slate-600">
+            Already have an account? <Link to="/login" className="text-slate-900 font-medium hover:underline">Sign In</Link>
+          </p>
+        </div>
       </div>
     </div>
   );

@@ -2,13 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-/* App-wide defaults (visual only) */
 html, body {
   height: 100%;
 }
 
 body {
-  background: #050509;
-  color: #e2e8f0;
+  background: #f8fafc;
+  color: #0f172a;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 

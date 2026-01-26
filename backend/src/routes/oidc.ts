@@ -1,11 +1,12 @@
 import { Router, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../config';
 import {
   getOIDCConfig,
   generateAuthorizationUrl,
   exchangeCodeForTokens,
-  extractUserFromIdToken,
+  resolveUserRole,
 } from '../services/oidc';
 import { AuthRequest } from '../middleware/auth';
 import type { Session } from 'express-session';
@@ -24,6 +25,7 @@ declare module 'express-session' {
       sub: string;
       email?: string;
       name?: string;
+      role?: 'admin' | 'employee';
     };
     tokens?: {
       accessToken: string;
@@ -59,18 +61,18 @@ oidcRouter.get('/_debug/session', (req: Request, res: Response) => {
 oidcRouter.get('/_debug/cookies', (req: Request, res: Response) => {
   const cookies = (req.headers.cookie || '').split(';').map(c => c.trim()).filter(Boolean);
   const sessionCookie = cookies.find(c => c.startsWith('connect.sid='));
-  
+
   res.json({
     timestamp: new Date().toISOString(),
     currentSessionID: req.sessionID,
     sessionStoreHasData: !!req.session?.oidcState || !!req.session?.user,
-    
+
     // Cookie evidence
     cookieHeaderLength: req.headers.cookie?.length || 0,
     cookieCount: cookies.length,
     cookieNames: cookies.map(c => c.split('=')[0]),
     connectSidPresent: !!sessionCookie,
-    
+
     // Session evidence
     sessionIDExists: !!req.sessionID,
     sessionData: {
@@ -92,7 +94,7 @@ oidcRouter.get('/_debug/cookies', (req: Request, res: Response) => {
 oidcRouter.get('/login', async (req: Request, res: Response) => {
   try {
     const timestamp = new Date().toISOString();
-    
+
     // Initialize OIDC config (fetches discovery document)
     await getOIDCConfig();
 
@@ -120,7 +122,7 @@ oidcRouter.get('/login', async (req: Request, res: Response) => {
       }
 
       console.log('[OIDC/LOGIN] ✅ Session persisted successfully');
-      
+
       // 📍 INSTRUMENTATION: Log response headers AFTER save (before redirect)
       const setCookieHeaders = res.getHeaders()['set-cookie'] || [];
       console.log('[OIDC/LOGIN] 📍 Set-Cookie count:', Array.isArray(setCookieHeaders) ? setCookieHeaders.length : (setCookieHeaders ? 1 : 0));
@@ -134,12 +136,17 @@ oidcRouter.get('/login', async (req: Request, res: Response) => {
           console.log(`  [Cookie ${idx}] ${name}, Secure=${hasSecure}, SameSite=${hasSameSite}`);
         });
       }
-      
+
       console.log('[OIDC/LOGIN] 📍 Redirecting to OCI...');
       res.redirect(url);
     });
   } catch (error) {
-    console.error('[OIDC/LOGIN] ❌ Auth login error:', error);
+    console.error('[OIDC/LOGIN] ❌ Auth login error (DETAILED):', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+      errorType: typeof error,
+      error: error
+    });
     res.status(500).json({ error: 'Failed to initiate login' });
   }
 });
@@ -197,14 +204,53 @@ oidcRouter.get('/callback', async (req: Request, res: Response) => {
     // Exchange code for tokens
     const tokens = await exchangeCodeForTokens(code, codeVerifier, nonce);
 
-    // Extract user info from ID token (never send tokens to client)
-    const user = extractUserFromIdToken(tokens.idToken);
+    // Extract basic user info from ID token
+    const decoded = jwt.decode(tokens.idToken) as any;
+    if (!decoded) {
+      console.error('[OIDC/CALLBACK] ❌ Failed to decode ID token');
+      return res.status(400).json({ error: 'Invalid ID token' });
+    }
 
-    console.log('[OIDC/CALLBACK] Extracted user:', user.sub);
+    const sub = decoded.sub;
+    const name = decoded.name;
+
+    // Identity Resolution: email -> preferred_username -> upn -> sub
+    let rawIdentifier = decoded.email;
+    let idSource = 'email';
+
+    if (!rawIdentifier) {
+      if (decoded.preferred_username) { rawIdentifier = decoded.preferred_username; idSource = 'preferred_username'; }
+      else if (decoded.upn) { rawIdentifier = decoded.upn; idSource = 'upn'; }
+      else { rawIdentifier = decoded.sub; idSource = 'sub'; }
+    }
+
+    // Normalize identifier
+    const email = typeof rawIdentifier === 'string' ? rawIdentifier.trim().toLowerCase() : undefined;
+    console.log(`[OIDC/CALLBACK] Identity resolved using source: ${idSource}`);
+
+    // AUTHORIZATION: Resolve role from email allowlist (Backend-Controlled)
+    const role = resolveUserRole(email);
+
+    console.log('[OIDC/CALLBACK] User authenticated:', sub, 'Role:', role || 'DENIED');
+
+    // STRICT ROLE CHECK
+    if (!role) {
+      console.error('[OIDC/CALLBACK] ❌ Access Denied: No valid role for user');
+      // Clear session
+      req.session.destroy((err) => {
+        if (err) console.error('Error destroying session on denied access:', err);
+      });
+      return res.redirect(`${config.FRONTEND_BASE_URL}/login?error=access_denied`);
+    }
 
     // Store user info in session (encrypted by express-session)
     // Tokens are NOT stored client-side; they stay on server
-    req.session.user = user;
+    req.session.user = {
+      sub,
+      email,
+      name,
+      role
+    };
 
     // Clear OIDC state from session
     delete req.session.oidcState;
@@ -227,7 +273,7 @@ oidcRouter.get('/callback', async (req: Request, res: Response) => {
 
       console.log('[OIDC/CALLBACK] ✅ Session saved with authenticated user');
       console.log('[OIDC/CALLBACK] Redirecting to:', `${config.FRONTEND_SUCCESS_URL}?auth=success`);
-      
+
       // Redirect to app (frontend will see session is authenticated)
       res.redirect(`${config.FRONTEND_SUCCESS_URL}?auth=success`);
     });
