@@ -37,6 +37,12 @@ interface OIDCSession {
 // Cache OIDC configuration
 let cachedConfig: OIDCConfig | null = null;
 
+// Redirect URI used for both authorization request and token exchange.
+// Environment-driven with a safe production default.
+const redirectUri =
+  process.env.OIDC_REDIRECT_URI ||
+  'http://145.241.155.110/api/auth/callback';
+
 /**
  * Normalize issuer URL by removing trailing slash
  */
@@ -128,7 +134,7 @@ export function generateAuthorizationUrl(): {
     client_id: config.OIDC_CLIENT_ID,
     response_type: 'code',
     scope: config.OIDC_SCOPES.join(' '),
-    redirect_uri: config.OIDC_REDIRECT_URI,
+    redirect_uri: redirectUri,
     state,
     nonce,
     code_challenge: codeChallenge,
@@ -162,7 +168,7 @@ export async function exchangeCodeForTokens(
     client_id: config.OIDC_CLIENT_ID,
     client_secret: config.OIDC_CLIENT_SECRET,
     code,
-    redirect_uri: config.OIDC_REDIRECT_URI,
+    redirect_uri: redirectUri,
     code_verifier: codeVerifier,
   });
 
