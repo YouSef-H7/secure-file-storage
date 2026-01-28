@@ -29,6 +29,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   /**
    * Call backend /auth/me to check authentication status
    * Uses credentials: 'include' to send httpOnly session cookie
+   * Safely handles non-JSON (e.g. HTML) responses to avoid runtime crashes.
    */
   const checkAuth = async () => {
     try {
@@ -40,13 +41,16 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         },
       });
 
-      if (response.ok) {
+      const contentType = response.headers.get('content-type') || '';
+
+      if (response.ok && contentType.includes('application/json')) {
         const data = await response.json();
         setUser(data.user || null);
       } else if (response.status === 401) {
+        // Explicit unauthenticated state
         setUser(null);
       } else {
-        console.error('Auth check failed:', response.status);
+        // Non-JSON or unexpected response: treat as unauthenticated without throwing
         setUser(null);
       }
     } catch (error) {
