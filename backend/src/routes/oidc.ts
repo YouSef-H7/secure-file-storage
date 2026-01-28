@@ -264,19 +264,16 @@ oidcRouter.get('/callback', async (req: Request, res: Response) => {
     console.log('[OIDC/CALLBACK] Before session.save()');
 
     // 🔐 CRITICAL: Save session before redirecting
-    // This ensures user, tokens are persisted to the session store
-    req.session.save((err) => {
-      if (err) {
-        console.error('[OIDC/CALLBACK] ❌ Session save error:', err);
-        return res.status(500).json({ error: 'Failed to save session after auth' });
-      }
-
-      console.log('[OIDC/CALLBACK] ✅ Session saved with authenticated user');
-      console.log('[OIDC/CALLBACK] Redirecting to:', `${config.FRONTEND_SUCCESS_URL}?auth=success`);
-
-      // Redirect to app (frontend will see session is authenticated)
-      res.redirect(`${config.FRONTEND_SUCCESS_URL}?auth=success`);
+    // This ensures user and tokens are persisted to the session store
+    await new Promise<void>((resolve, reject) => {
+      req.session.save((err) => (err ? reject(err) : resolve()));
     });
+
+    console.log('[OIDC/CALLBACK] ✅ Session saved with authenticated user');
+    console.log('[OIDC/CALLBACK] Redirecting to: /');
+
+    // Redirect to app root; frontend will detect authenticated session via /auth/me
+    return res.redirect('/');
   } catch (error) {
     console.error('Auth callback error:', error);
     res.status(500).json({ error: 'Authentication failed' });
