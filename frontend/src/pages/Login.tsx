@@ -9,7 +9,7 @@ const LoginPage = () => {
     e.preventDefault();
     if (loading) return;
     setLoading(true);
-    window.location.href = '/auth/login';
+    window.location.href = '/api/auth/login';
   };
 
   return (
