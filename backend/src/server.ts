@@ -116,7 +116,9 @@ const upload = multer({
 // ================= OIDC ROUTES (BFF Pattern) =================
 // 🔐 All OIDC logic (login, callback, token exchange) happens here
 // Frontend never sees tokens; they're stored server-side only
+// Public mounts: both legacy '/auth/*' and '/api/auth/*' entrypoints
 app.use('/auth', oidcRouter);
+app.use('/api/auth', oidcRouter);
 app.use('/api/stats', authenticate, statsRouter);
 app.use('/api', authenticate, sharingRouter);
 app.use('/api/folders', authenticate, foldersRouter);
