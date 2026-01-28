@@ -48,23 +48,23 @@ const EmployeeRecent = () => {
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in">
             <div>
                 <h1 className="text-3xl font-bold text-text-primary mb-1 tracking-tight">Recent Files</h1>
                 <p className="text-text-secondary text-sm">Your most recently active documents</p>
             </div>
 
             <div className="flex items-center justify-end gap-2">
-                <div className="flex items-center gap-2 bg-surface border border-border rounded-lg p-1 shadow-sm">
+                <div className="flex items-center gap-2 bg-surface border border-border rounded-xl p-1 shadow-sm">
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded transition-all ${viewMode === 'grid' ? 'bg-brand text-white shadow-sm' : 'text-text-secondary hover:bg-slate-50'}`}
+                        className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'grid' ? 'bg-brand text-white shadow-md' : 'text-text-secondary hover:bg-slate-50'}`}
                     >
                         <Grid3x3 size={18} />
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`p-2 rounded transition-all ${viewMode === 'list' ? 'bg-brand text-white shadow-sm' : 'text-text-secondary hover:bg-slate-50'}`}
+                        className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'list' ? 'bg-brand text-white shadow-md' : 'text-text-secondary hover:bg-slate-50'}`}
                     >
                         <List size={18} />
                     </button>
@@ -76,20 +76,23 @@ const EmployeeRecent = () => {
             ) : error ? (
                 <div className="text-center py-20 text-error">{error}</div>
             ) : files.length === 0 ? (
-                <div className="text-center py-20 text-text-secondary">No recent files found.</div>
+                <div className="flex flex-col items-center justify-center py-20">
+                    <FileText size={48} className="text-slate-300 mb-4 opacity-50" />
+                    <p className="text-text-secondary">No recent files found.</p>
+                </div>
             ) : viewMode === 'list' ? (
-                <div className="bg-surface rounded-xl shadow-sm border border-border overflow-hidden">
+                <div className="bg-surface rounded-2xl shadow-md shadow-slate-200/50 border border-border overflow-hidden">
                     <table className="w-full">
-                        <thead className="bg-slate-50/80 border-b border-border">
+                        <thead className="bg-slate-50/80 border-b border-slate-200">
                             <tr>
                                 <th className="text-left py-4 px-6 text-xs font-semibold text-text-secondary uppercase">File Name</th>
                                 <th className="text-left py-4 px-6 text-xs font-semibold text-text-secondary uppercase">Modified</th>
                                 <th className="text-right py-4 px-6 text-xs font-semibold text-text-secondary uppercase">Size</th>
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-border">
+                        <tbody className="divide-y divide-slate-100">
                             {files.map(file => (
-                                <tr key={file.id} className="hover:bg-slate-50 transition-colors">
+                                <tr key={file.id} className="hover:bg-slate-50/80 transition-colors duration-150">
                                     <td className="py-4 px-6">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${getFileTypeColor(file.mimeType)}`}>
@@ -112,7 +115,7 @@ const EmployeeRecent = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {files.map(file => (
-                        <div key={file.id} className="bg-surface p-4 rounded-xl border border-border shadow-sm hover:shadow-md transition-shadow">
+                        <div key={file.id} className="bg-surface p-4 rounded-2xl border border-border shadow-md shadow-slate-200/50 hover:shadow-lg hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-0.5">
                             <div className="flex items-start justify-between mb-3">
                                 <div className={`p-2 rounded ${getFileTypeColor(file.mimeType)}`}>
                                     <FileText size={20} />

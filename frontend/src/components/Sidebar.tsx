@@ -59,21 +59,21 @@ const Sidebar = () => {
       <Link
         key={item.name}
         to={item.path}
-        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive
-          ? 'bg-brand-light text-white shadow-md shadow-black/20'
-          : 'text-slate-300 hover:bg-white/5 hover:text-white'
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-300 group ${isActive
+          ? 'bg-brand-light text-white shadow-lg shadow-black/20'
+          : 'text-slate-300 hover:bg-white/10 hover:text-white hover:translate-x-1'
           }`}
       >
-        <item.icon size={18} className={isActive ? 'text-brand-accent' : 'text-slate-400 group-hover:text-slate-200'} />
+        <item.icon size={18} className={`transition-all duration-300 ${isActive ? 'text-brand-accent' : 'text-slate-400 group-hover:text-slate-200'}`} />
         <span className="text-sm font-medium">{item.name}</span>
       </Link>
     );
   };
 
   return (
-    <aside className="w-64 bg-brand border-r border-brand-dark flex flex-col h-screen fixed z-30 shadow-xl">
+    <aside className="w-64 bg-brand border-r border-brand-dark flex flex-col h-screen fixed z-30 shadow-2xl shadow-black/10">
       <div className="p-6 flex items-center gap-3 border-b border-brand-light/30">
-        <div className="w-8 h-8 bg-white/10 rounded-lg flex items-center justify-center">
+        <div className="w-8 h-8 bg-white/10 rounded-xl flex items-center justify-center shadow-sm">
           <span className="text-white text-lg font-bold">S</span>
         </div>
         <span className="font-semibold text-lg text-white tracking-tight">SecureStore</span>
@@ -110,9 +110,9 @@ const Sidebar = () => {
       <div className="p-4 border-t border-brand-light/30">
         <button
           onClick={() => { api.clear(); navigate('/login'); }}
-          className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-white/5 hover:text-white rounded-lg transition-colors text-sm"
+          className="flex items-center gap-3 w-full px-3 py-2.5 text-slate-300 hover:bg-white/10 hover:text-white rounded-xl transition-all duration-300 hover:translate-x-1 text-sm"
         >
-          <LogOut size={18} />
+          <LogOut size={18} className="transition-transform duration-300 group-hover:translate-x-0.5" />
           <span>Sign Out</span>
         </button>
       </div>

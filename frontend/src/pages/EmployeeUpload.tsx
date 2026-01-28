@@ -40,14 +40,14 @@ const EmployeeUpload = () => {
     };
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-6 animate-in">
             <div>
                 <h1 className="text-3xl font-bold text-text-primary mb-1 tracking-tight">Upload File</h1>
                 <p className="text-text-secondary text-sm">Add new documents to your workspace</p>
             </div>
 
             <div
-                className="border-2 border-dashed border-border rounded-xl p-20 flex flex-col items-center justify-center text-center hover:border-brand/50 hover:bg-brand/5 transition-all cursor-pointer group"
+                className="border-2 border-dashed border-slate-300 rounded-2xl p-20 flex flex-col items-center justify-center text-center hover:border-brand/60 hover:bg-brand/5 transition-all duration-300 cursor-pointer group bg-slate-50/50"
                 onClick={() => !uploading && fileInputRef.current?.click()}
             >
                 <input
@@ -57,7 +57,7 @@ const EmployeeUpload = () => {
                     onChange={onFileSelect}
                 />
 
-                <div className="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                <div className="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-brand/10">
                     {uploading ? <Loader2 size={40} className="text-brand animate-spin" /> : <UploadCloud size={40} className="text-brand" />}
                 </div>
 
@@ -69,12 +69,12 @@ const EmployeeUpload = () => {
                 </p>
 
                 {status === 'success' && (
-                    <div className="mt-6 bg-green-50 text-green-700 px-4 py-2 rounded-lg text-sm font-medium animate-in fade-in slide-in-from-bottom-2">
+                    <div className="mt-6 bg-green-50 text-green-700 px-4 py-2 rounded-xl text-sm font-medium shadow-sm animate-in">
                         File uploaded successfully!
                     </div>
                 )}
                 {status === 'error' && (
-                    <div className="mt-6 bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm font-medium animate-in fade-in slide-in-from-bottom-2">
+                    <div className="mt-6 bg-red-50 text-red-700 px-4 py-2 rounded-xl text-sm font-medium shadow-sm animate-in">
                         Upload failed. Please try again.
                     </div>
                 )}

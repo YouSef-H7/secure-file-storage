@@ -73,7 +73,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Admin Dashboard</h1>
@@ -115,7 +115,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Activity Chart (Custom CSS Bar Chart) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-md border border-slate-200 p-6 hover:shadow-lg transition-shadow duration-300">
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-slate-900">Upload Activity</h3>
             <p className="text-sm text-slate-500">Files uploaded over the last 7 days</p>
@@ -151,7 +151,7 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Events (Logs) - REPLACED Matrix/Breakdown per task */}
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex flex-col">
+        <div className="bg-white rounded-2xl shadow-md border border-slate-200 p-6 flex flex-col hover:shadow-lg transition-shadow duration-300">
           <div className="mb-4">
             <h3 className="text-lg font-semibold text-slate-900">Recent Events</h3>
             <p className="text-sm text-slate-500">Latest system activities</p>
@@ -159,7 +159,7 @@ const Dashboard = () => {
 
           <div className="flex-1 overflow-y-auto space-y-4 pr-1">
             {recentLogs.length > 0 ? recentLogs.map((log) => (
-              <div key={log.id} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50 border border-slate-100">
+              <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 hover:shadow-sm transition-all duration-200">
                 <div className="mt-1">
                   {log.type === 'upload' && <FileText size={16} className="text-emerald-600" />}
                   {log.type === 'delete' && <Server size={16} className="text-red-600" />}
@@ -202,7 +202,7 @@ const StatsCard = ({ title, value, icon, subValue, trend, color }: any) => {
   const trendColor = trend?.includes('+') ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50';
 
   return (
-    <div className="bg-surface rounded-xl shadow-sm border border-border p-6 hover:shadow-md transition-shadow duration-200">
+    <div className="bg-surface rounded-2xl shadow-md border border-border p-6 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
         <div className={`p-3 rounded-lg ${bgColors[color] || 'bg-slate-100 text-slate-600'}`}>
           {icon}
