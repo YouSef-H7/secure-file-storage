@@ -40,12 +40,12 @@ app.use(session({
   saveUninitialized: true,  // 🔥 CRITICAL: Set to true so uninitialized sessions are stored
   name: 'connect.sid',      // Explicit cookie name
   cookie: {
-    secure: config.SESSION_COOKIE_SECURE,      // false in dev (HTTP), true in prod (HTTPS only)
-    httpOnly: true,                             // Prevents JS access (no XSS risk)
-    sameSite: config.SESSION_COOKIE_SAMESITE, // 'lax' - prevents CSRF for same-site redirects
-    maxAge: config.SESSION_MAX_AGE,            // 7 days
+    httpOnly: true,          // Prevents JS access (no XSS risk)
+    secure: false,           // Allow cookie over HTTP so OIDC state survives login → callback
+    sameSite: 'lax',         // Allows IdP redirect while keeping CSRF protection
+    maxAge: config.SESSION_MAX_AGE, // 7 days
     path: '/',
-    // domain: undefined - let browser handle it for localhost
+    // domain: undefined - let browser handle it for current host
   },
 }));
 
