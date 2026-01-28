@@ -13,6 +13,10 @@ import type { Session } from 'express-session';
 
 const oidcRouter = Router();
 
+// Frontend base URL for post-authentication redirect.
+// Environment-driven, defaulting to the production VM URL.
+const FRONTEND_BASE_URL = process.env.FRONTEND_BASE_URL || 'http://145.241.155.110';
+
 /**
  * Session type extension for OIDC data
  */
@@ -270,10 +274,10 @@ oidcRouter.get('/callback', async (req: Request, res: Response) => {
     });
 
     console.log('[OIDC/CALLBACK] ✅ Session saved with authenticated user');
-    console.log('[OIDC/CALLBACK] Redirecting to: /');
+    console.log('[OIDC/CALLBACK] Redirecting to:', FRONTEND_BASE_URL);
 
-    // Redirect to app root; frontend will detect authenticated session via /auth/me
-    return res.redirect('/');
+    // Redirect to frontend; it will detect authenticated session via /auth/me
+    return res.redirect(FRONTEND_BASE_URL);
   } catch (error) {
     console.error('Auth callback error:', error);
     res.status(500).json({ error: 'Authentication failed' });
