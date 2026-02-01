@@ -27,13 +27,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   /**
-   * Call backend /auth/me to check authentication status
+   * Call backend /api/auth/me to check authentication status
    * Uses credentials: 'include' to send httpOnly session cookie
    * Safely handles non-JSON (e.g. HTML) responses to avoid runtime crashes.
    */
   const checkAuth = async () => {
     try {
-      const response = await fetch('/auth/me', {
+      const response = await fetch('/api/auth/me', {
         method: 'GET',
         credentials: 'include', // Include httpOnly cookie in request
         headers: {
@@ -64,12 +64,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   /**
-   * Logout: Call backend /auth/logout to destroy session
+   * Logout: Call backend /api/auth/logout to destroy session
    * Browser automatically clears httpOnly cookie
    */
   const logout = async () => {
     try {
-      const response = await fetch('/auth/logout', {
+      const response = await fetch('/api/auth/logout', {
         method: 'POST',
         credentials: 'include',
         headers: {

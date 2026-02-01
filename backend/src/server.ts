@@ -38,14 +38,15 @@ app.use(session({
   secret: config.SESSION_SECRET,
   resave: false,
   saveUninitialized: true,  // Required so OIDC state/nonce persist before callback redirect
+  rolling: true,            // Refresh cookie on every response (required for HTTP + IP)
   name: 'connect.sid',
   cookie: {
     httpOnly: true,
-    secure: false,          // HTTP only - required so cookie is sent over HTTP
-    sameSite: false,        // CRITICAL: false (not 'lax') for IP + HTTP to prevent browser rejection
+    secure: false,          // MUST be false for HTTP
+    sameSite: 'lax',        // REQUIRED for OIDC redirect on modern browsers
     maxAge: config.SESSION_MAX_AGE,
     path: '/',
-    // domain: undefined - NEVER set domain on IP-based origins; let browser scope it automatically
+    // domain: NEVER set on IP-based origins; let browser scope it automatically
   },
 }));
 
