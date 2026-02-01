@@ -1,9 +1,23 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Shield, Loader2 } from 'lucide-react';
+import { useAuth } from '../auth/AuthContext';
 
 const LoginPage = () => {
   const [loading, setLoading] = React.useState(false);
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  // Auto-redirect if already authenticated
+  React.useEffect(() => {
+    if (!isLoading && user) {
+      if (user.role === 'admin') {
+        navigate('/app', { replace: true });
+      } else if (user.role === 'employee') {
+        navigate('/app/employee', { replace: true });
+      }
+    }
+  }, [user, isLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

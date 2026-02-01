@@ -143,7 +143,10 @@ export const api = {
   },
 
   get: async (path: string) => {
-    const res = await fetch(path, { headers: { ...getAuthHeader() } });
+    const res = await fetch(path, { 
+      headers: { ...getAuthHeader() },
+      credentials: 'include' // Send session cookie
+    });
     return handleResponse(res);
   },
   post: async (path: string, body: any) => {
@@ -151,6 +154,7 @@ export const api = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
       body: JSON.stringify(body),
+      credentials: 'include' // Send session cookie
     });
     return handleResponse(res);
   },
@@ -159,6 +163,7 @@ export const api = {
       method: 'POST',
       headers: { ...getAuthHeader() },
       body: formData,
+      credentials: 'include' // Send session cookie
     });
     return handleResponse(res);
   },
@@ -166,6 +171,7 @@ export const api = {
     const res = await fetch(path, {
       method: 'DELETE',
       headers: { ...getAuthHeader() },
+      credentials: 'include' // Send session cookie
     });
     return handleResponse(res);
   },
