@@ -104,44 +104,34 @@ oidcRouter.get('/login', async (req: Request, res: Response) => {
     // Generate auth URL with PKCE
     const { url, state, nonce, codeVerifier } = generateAuthorizationUrl();
 
+    // 📍 INSTRUMENTATION: Log login details
+    console.log('[OIDC/LOGIN]', timestamp);
+    console.log('[OIDC/LOGIN] 📍 Session ID (before save):', req.sessionID);
+    console.log('[OIDC/LOGIN] 📍 State generated:', state.substring(0, 8) + '... (len:' + state.length + ')');
+    console.log('[OIDC/LOGIN] 📍 Incoming cookie header:', req.headers.cookie ? `${req.headers.cookie.length} bytes` : 'ABSENT');
+
     // Store state, nonce, code_verifier in session (not sent to client)
     req.session.oidcState = state;
     req.session.oidcNonce = nonce;
     req.session.oidcCodeVerifier = codeVerifier;
 
-    // 📍 INSTRUMENTATION: Log login details BEFORE save
-    console.log('[OIDC/LOGIN]', timestamp);
-    console.log('[OIDC/LOGIN] 📍 Session ID:', req.sessionID);
-    console.log('[OIDC/LOGIN] 📍 State:', state.substring(0, 8) + '... (len:' + state.length + ')');
-    console.log('[OIDC/LOGIN] 📍 Incoming cookie header:', req.headers.cookie ? `${req.headers.cookie.length} bytes` : 'ABSENT');
-    console.log('[OIDC/LOGIN] 📍 saveUninitialized enabled:', true);
-
-    // 🔐 CRITICAL: Save session before redirecting
-    // This ensures state/nonce/codeVerifier persist to the session store
+    // 🔐 CRITICAL: FORCE session save before redirect
+    // This ensures:
+    // 1. Session data is written to MemoryStore
+    // 2. express-session marks the session as needing a Set-Cookie header
+    // 3. Browser receives connect.sid BEFORE leaving for Oracle IDCS
     req.session.save((saveErr) => {
       if (saveErr) {
-        console.error('[OIDC/LOGIN] ❌ Session save ERROR:', saveErr);
-        return res.status(500).json({ error: 'Failed to save session' });
+        console.error('[OIDC/LOGIN] ❌ Session save failed:', saveErr);
+        return res.status(500).send('Internal Server Error');
       }
 
-      console.log('[OIDC/LOGIN] ✅ Session persisted successfully');
-
-      // 📍 INSTRUMENTATION: Log response headers AFTER save (before redirect)
-      const setCookieHeaders = res.getHeaders()['set-cookie'] || [];
-      console.log('[OIDC/LOGIN] 📍 Set-Cookie count:', Array.isArray(setCookieHeaders) ? setCookieHeaders.length : (setCookieHeaders ? 1 : 0));
-      if (setCookieHeaders) {
-        const cookies = Array.isArray(setCookieHeaders) ? setCookieHeaders : [setCookieHeaders];
-        cookies.forEach((cookie, idx) => {
-          const match = cookie.match(/^([^=]+)=/);
-          const name = match ? match[1] : 'unknown';
-          const hasSecure = cookie.includes('Secure');
-          const hasSameSite = cookie.match(/SameSite=(\w+)/)?.[1] || 'none';
-          console.log(`  [Cookie ${idx}] ${name}, Secure=${hasSecure}, SameSite=${hasSameSite}`);
-        });
-      }
-
-      console.log('[OIDC/LOGIN] 📍 Redirecting to OCI...');
-      res.redirect(url);
+      console.log('[OIDC/LOGIN] ✅ Session saved successfully');
+      console.log('[OIDC/LOGIN] 📍 Session ID (after save):', req.sessionID);
+      console.log('[OIDC/LOGIN] 📍 Redirecting to Oracle IDCS...');
+      
+      // Session cookie will be set by express-session middleware on this response
+      return res.redirect(url);
     });
   } catch (error) {
     console.error('[OIDC/LOGIN] ❌ Auth login error (DETAILED):', {
