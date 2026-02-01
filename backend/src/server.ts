@@ -387,6 +387,18 @@ app.delete('/api/files/:id', authenticate, async (req: AuthRequest, res) => {
   }
 });
 
+// ================= PRODUCTION FRONTEND (static + SPA fallback) =================
+// Serve built React app from backend/public (create with: mkdir -p backend/public && cp -r frontend/dist/* backend/public/)
+const publicDir = path.join(__dirname, '../public');
+app.use(express.static(publicDir));
+// SPA fallback: non-API GET requests (e.g. /, /app, /login) serve index.html
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return next();
+  res.sendFile(path.join(publicDir, 'index.html'), (err) => {
+    if (err) next(err);
+  });
+});
+
 // ================= START SERVER =================
 app.listen(config.PORT, () => {
   console.log(`[BACKEND] Running on port ${config.PORT}`);

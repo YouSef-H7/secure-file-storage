@@ -1,0 +1,2 @@
+# Production frontend build is copied here at deploy time:
+# mkdir -p backend/public && cp -r frontend/dist/* backend/public/
