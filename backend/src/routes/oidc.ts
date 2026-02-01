@@ -329,11 +329,11 @@ oidcRouter.post('/logout', (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Logout failed' });
     }
 
-    // Clear session cookie (must match session cookie: secure=false, sameSite=false, no domain)
+    // Clear session cookie (must match session cookie: secure=false, sameSite='lax', no domain)
     res.clearCookie('connect.sid', {
       path: '/',
       secure: false,
-      sameSite: false,
+      sameSite: 'lax',
     });
 
     res.json({ message: 'Logged out successfully' });

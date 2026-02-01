@@ -44,7 +44,7 @@ app.use(session({
   cookie: {
     httpOnly: true,
     secure: false,          // MUST be false for HTTP
-    sameSite: false,        // REQUIRED for HTTP + IP redirect survival (not 'lax', not 'none')
+    sameSite: 'lax',        // OIDC-compatible: allows cookie on top-level navigation from IdP
     maxAge: config.SESSION_MAX_AGE,
     path: '/',
     // domain: NEVER set on IP-based origins; let browser scope automatically
