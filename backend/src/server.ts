@@ -42,18 +42,17 @@ console.warn = function (msg: unknown, ...args: unknown[]) {
 };
 app.use(session({
   name: 'connect.sid',
-  secret: config.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || config.SESSION_SECRET,
   resave: false,
-  saveUninitialized: true,  // REQUIRED so cookie is set BEFORE redirect to IdP
-  rolling: true,            // Refresh cookie on every response
-  proxy: true,              // REQUIRED when using IP + proxy (trust X-Forwarded headers)
+  saveUninitialized: true,
+  rolling: true,
+  proxy: true, // required behind nginx / reverse proxy
   cookie: {
+    secure: false,   // MUST be false for HTTP (SameSite=None requires Secure=true)
     httpOnly: true,
-    secure: false,          // MUST be false for HTTP
-    sameSite: 'lax',        // OIDC-compatible: allows cookie on top-level navigation from IdP
-    maxAge: config.SESSION_MAX_AGE,
-    path: '/',
-    // domain: NEVER set on IP-based origins; let browser scope automatically
+    sameSite: 'lax', // REQUIRED for OIDC redirects over HTTP; do NOT use 'none' on HTTP
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    // domain: do NOT set on IP-based origins; browser scopes cookie automatically
   },
 }));
 console.warn = _warn;

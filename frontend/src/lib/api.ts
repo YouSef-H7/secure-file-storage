@@ -50,7 +50,7 @@ export const api = {
       setTimeout(() => reject(new Error('TIMEOUT')), 1500)
     );
 
-    const fetchPromise = fetch(path, { ...options, headers })
+    const fetchPromise = fetch(path, { ...options, headers, credentials: 'include' })
       .then(async (res) => {
         const contentType = res.headers.get('content-type');
         if (!res.ok || !contentType || !contentType.includes('application/json')) {
