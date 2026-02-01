@@ -37,22 +37,22 @@ app.set('trust proxy', 1);
 app.use(session({
   secret: config.SESSION_SECRET,
   resave: false,
-  saveUninitialized: true,  // 🔥 CRITICAL: Set to true so uninitialized sessions are stored
-  name: 'connect.sid',      // Explicit cookie name
+  saveUninitialized: true,  // Required so OIDC state/nonce persist before callback redirect
+  name: 'connect.sid',
   cookie: {
-    httpOnly: true,          // Prevents JS access (no XSS risk)
-    secure: false,           // Allow cookie over HTTP so OIDC state survives login → callback
-    sameSite: 'lax',         // Allows IdP redirect while keeping CSRF protection
-    maxAge: config.SESSION_MAX_AGE, // 7 days
+    httpOnly: true,
+    secure: false,          // HTTP only - required so cookie is sent over HTTP
+    sameSite: 'lax',        // Required for OIDC redirect (IdP → callback)
+    maxAge: config.SESSION_MAX_AGE,
     path: '/',
-    // domain: undefined - let browser handle it for current host
+    domain: process.env.COOKIE_DOMAIN || undefined, // e.g. 145.241.155.110 for cross-path cookie
   },
 }));
 
 // ================= MIDDLEWARE =================
 app.use(cors({
-  origin: config.FRONTEND_BASE_URL,
-  credentials: true,  // Allow cookies with CORS
+  origin: process.env.FRONTEND_BASE_URL || config.FRONTEND_BASE_URL, // Match frontend exactly; no *
+  credentials: true,
 }));
 app.use(express.json());
 

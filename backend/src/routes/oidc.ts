@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { config } from '../config';
+import db from '../db';
+import { RowDataPacket } from 'mysql2';
 import {
   getOIDCConfig,
   generateAuthorizationUrl,
@@ -22,6 +24,7 @@ declare module 'express-session' {
     oidcNonce?: string;
     oidcCodeVerifier?: string;
     user?: {
+      id?: string;
       sub: string;
       email?: string;
       name?: string;
@@ -228,8 +231,25 @@ oidcRouter.get('/callback', async (req: Request, res: Response) => {
     const email = typeof rawIdentifier === 'string' ? rawIdentifier.trim().toLowerCase() : undefined;
     console.log(`[OIDC/CALLBACK] Identity resolved using source: ${idSource}`);
 
-    // AUTHORIZATION: Resolve role from email allowlist (Backend-Controlled)
-    const role = resolveUserRole(email);
+    // AUTHORIZATION: Resolve role from DB (users table) when user exists; else allowlist fallback
+    let role: 'admin' | 'employee' | undefined;
+    let dbUserId: string | undefined;
+
+    if (email) {
+      const [rows] = await db.execute<RowDataPacket[]>(
+        'SELECT id, email, role FROM users WHERE LOWER(email) = ?',
+        [email]
+      );
+      const dbUser = rows[0];
+      if (dbUser && (dbUser.role === 'admin' || dbUser.role === 'employee')) {
+        role = dbUser.role;
+        dbUserId = dbUser.id;
+        console.log('[OIDC/CALLBACK] Role from DB:', role, 'user id:', dbUserId);
+      }
+    }
+    if (!role) {
+      role = resolveUserRole(email);
+    }
 
     console.log('[OIDC/CALLBACK] User authenticated:', sub, 'Role:', role || 'DENIED');
 
@@ -243,13 +263,13 @@ oidcRouter.get('/callback', async (req: Request, res: Response) => {
       return res.redirect(`${config.FRONTEND_BASE_URL}/login?error=access_denied`);
     }
 
-    // Store user info in session (encrypted by express-session)
-    // Tokens are NOT stored client-side; they stay on server
+    // Store user info in session (id and role from DB when present)
     req.session.user = {
+      id: dbUserId,
       sub,
       email,
       name,
-      role
+      role,
     };
 
     // Clear OIDC state from session
@@ -309,11 +329,12 @@ oidcRouter.post('/logout', (req: Request, res: Response) => {
       return res.status(500).json({ error: 'Logout failed' });
     }
 
-    // Clear session cookie (must match session cookie options: secure=false over HTTP, sameSite=lax)
+    // Clear session cookie (must match session cookie: domain, secure, sameSite)
     res.clearCookie('connect.sid', {
       path: '/',
       secure: false,
       sameSite: 'lax',
+      domain: process.env.COOKIE_DOMAIN || undefined,
     });
 
     res.json({ message: 'Logged out successfully' });
