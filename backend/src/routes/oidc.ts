@@ -280,10 +280,11 @@ oidcRouter.get('/callback', async (req: Request, res: Response) => {
     });
 
     console.log('[OIDC/CALLBACK] ✅ Session saved with authenticated user');
-    console.log('[OIDC/CALLBACK] Redirecting to:', config.FRONTEND_BASE_URL);
+    // Land on /app so the SPA shows "Loading..." then dashboard (guard runs checkAuth with cookie)
+    const redirectUrl = `${config.FRONTEND_BASE_URL}/app`;
+    console.log('[OIDC/CALLBACK] Redirecting to:', redirectUrl);
 
-    // Redirect to frontend; it will detect authenticated session via /auth/me
-    return res.redirect(config.FRONTEND_BASE_URL);
+    return res.redirect(redirectUrl);
   } catch (error) {
     console.error('Auth callback error:', error);
     res.status(500).json({ error: 'Authentication failed' });

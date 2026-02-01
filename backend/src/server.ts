@@ -34,6 +34,12 @@ app.set('trust proxy', 1);
 // ================= SESSION MIDDLEWARE =================
 // 🔐 Express-session with httpOnly cookies (BFF pattern)
 // CRITICAL: Must be FIRST middleware, before CORS and routes
+// Suppress MemoryStore production warning (stderr can trigger pm2 restarts; use Redis in production)
+const _warn = console.warn;
+console.warn = function (msg: unknown, ...args: unknown[]) {
+  if (typeof msg === 'string' && msg.includes('MemoryStore')) return;
+  return _warn.apply(console, [msg, ...args]);
+};
 app.use(session({
   name: 'connect.sid',
   secret: config.SESSION_SECRET,
@@ -50,6 +56,7 @@ app.use(session({
     // domain: NEVER set on IP-based origins; let browser scope automatically
   },
 }));
+console.warn = _warn;
 
 // ================= MIDDLEWARE =================
 app.use(cors({

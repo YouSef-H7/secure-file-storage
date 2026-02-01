@@ -96,12 +96,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   /**
-   * Check auth status on app load AND when returning from OIDC callback
-   * This runs once when the component mounts and whenever the URL changes
+   * Check auth on app load (including after OIDC redirect to /app).
+   * Run once on mount so /api/auth/me is called with credentials and session cookie.
    */
   useEffect(() => {
     checkAuth();
-  }, [window.location.pathname]); // Re-check when route changes (e.g. after OIDC redirect)
+  }, []);
 
   const value: AuthContextType = {
     user,
