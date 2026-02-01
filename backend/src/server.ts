@@ -42,16 +42,16 @@ app.use(session({
   cookie: {
     httpOnly: true,
     secure: false,          // HTTP only - required so cookie is sent over HTTP
-    sameSite: 'lax',        // Required for OIDC redirect (IdP → callback)
+    sameSite: false,        // CRITICAL: false (not 'lax') for IP + HTTP to prevent browser rejection
     maxAge: config.SESSION_MAX_AGE,
     path: '/',
-    domain: process.env.COOKIE_DOMAIN || undefined, // e.g. 145.241.155.110 for cross-path cookie
+    // domain: undefined - NEVER set domain on IP-based origins; let browser scope it automatically
   },
 }));
 
 // ================= MIDDLEWARE =================
 app.use(cors({
-  origin: process.env.FRONTEND_BASE_URL || config.FRONTEND_BASE_URL, // Match frontend exactly; no *
+  origin: 'http://145.241.155.110', // Exact origin match for production IP
   credentials: true,
 }));
 app.use(express.json());
