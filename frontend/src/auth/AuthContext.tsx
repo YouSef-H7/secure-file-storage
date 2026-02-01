@@ -11,7 +11,7 @@ interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  checkAuth: () => Promise<void>;
+  checkAuth: () => Promise<boolean>;
   logout: () => Promise<void>;
 }
 
@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
  * Authentication Context Provider
- * Manages session-based auth via backend /auth/me endpoint
+ * Manages session-based auth via backend /api/auth/me
  * Tokens are stored server-side (httpOnly cookies), never exposed to frontend
  */
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -27,37 +27,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(true);
 
   /**
-   * Call backend /api/auth/me to check authentication status
-   * Uses credentials: 'include' to send httpOnly session cookie
-   * Safely handles non-JSON (e.g. HTML) responses to avoid runtime crashes.
+   * Call backend /api/auth/me to check authentication status.
+   * Uses credentials: 'include' so the session cookie (connect.sid) is sent.
+   * Returns true if authenticated, false otherwise. Always sets loading = false.
    */
-  const checkAuth = async () => {
+  const checkAuth = async (): Promise<boolean> => {
     try {
-      const response = await fetch('/api/auth/me', {
-        method: 'GET',
-        credentials: 'include', // Include httpOnly cookie in request
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const contentType = response.headers.get('content-type') || '';
-
-      if (response.ok && contentType.includes('application/json')) {
-        const data = await response.json();
-        setUser(data.user || null);
-      } else if (response.status === 401) {
-        // Explicit unauthenticated state
-        setUser(null);
-      } else {
-        // Non-JSON or unexpected response: treat as unauthenticated without throwing
-        setUser(null);
-      }
-    } catch (error) {
-      // Network error - backend not running or connection refused
-      // Handle gracefully without crashing the app
-      console.error('Auth check error (backend may be down):', error);
+      const res = await fetch('/api/auth/me', { credentials: 'include' });
+      if (!res.ok) throw new Error('Not authenticated');
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) throw new Error('Not JSON');
+      const data = await res.json();
+      setUser(data.user ?? null);
+      return true;
+    } catch {
       setUser(null);
+      return false;
     } finally {
       setIsLoading(false);
     }

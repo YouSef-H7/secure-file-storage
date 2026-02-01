@@ -1,23 +1,17 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "../auth/AuthContext";
 
 export default function Callback() {
   const navigate = useNavigate();
+  const { checkAuth } = useAuth();
 
   useEffect(() => {
-    let isMounted = true;
-
-    const timer = setTimeout(() => {
-      if (isMounted) {
-        navigate("/app", { replace: true });
-      }
-    }, 500);
-
-    return () => {
-      isMounted = false;
-      clearTimeout(timer);
-    };
+    (async () => {
+      const ok = await checkAuth();
+      navigate(ok ? "/app" : "/login", { replace: true });
+    })();
   }, [navigate]);
 
   return (
