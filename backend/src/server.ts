@@ -35,18 +35,19 @@ app.set('trust proxy', 1);
 // 🔐 Express-session with httpOnly cookies (BFF pattern)
 // CRITICAL: Must be FIRST middleware, before CORS and routes
 app.use(session({
+  name: 'connect.sid',
   secret: config.SESSION_SECRET,
   resave: false,
-  saveUninitialized: true,  // Required so OIDC state/nonce persist before callback redirect
-  rolling: true,            // Refresh cookie on every response (required for HTTP + IP)
-  name: 'connect.sid',
+  saveUninitialized: true,  // REQUIRED so cookie is set BEFORE redirect to IdP
+  rolling: true,            // Refresh cookie on every response
+  proxy: true,              // REQUIRED when using IP + proxy (trust X-Forwarded headers)
   cookie: {
     httpOnly: true,
     secure: false,          // MUST be false for HTTP
-    sameSite: 'lax',        // REQUIRED for OIDC redirect on modern browsers
+    sameSite: false,        // REQUIRED for HTTP + IP redirect survival (not 'lax', not 'none')
     maxAge: config.SESSION_MAX_AGE,
     path: '/',
-    // domain: NEVER set on IP-based origins; let browser scope it automatically
+    // domain: NEVER set on IP-based origins; let browser scope automatically
   },
 }));
 
