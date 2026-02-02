@@ -108,12 +108,16 @@ const EmployeeFiles = () => {
       return;
     }
 
+    const effectiveFolderId = searchParams.get('folderId') || currentFolderId || null;
+    console.log('[UPLOAD] currentFolderId:', currentFolderId);
+    console.log('[UPLOAD] effectiveFolderId:', effectiveFolderId);
+
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append('file', file);
-      if (currentFolderId) {
-        formData.append('folderId', currentFolderId);
+      if (effectiveFolderId) {
+        formData.append('folderId', effectiveFolderId);
       }
 
       await api.request('/api/files/upload', {

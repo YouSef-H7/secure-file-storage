@@ -133,7 +133,8 @@ class FileRepositoryFS implements FileRepository {
     const record: FileRecord = {
       ...meta,
       created_at: typeof meta.created_at === 'string' ? meta.created_at : meta.created_at.toISOString(),
-      mime_type: meta.mime_type || null
+      mime_type: meta.mime_type || null,
+      folder_id: meta.folder_id ?? null
     };
     files.push(record);
     await this.writeFiles(files);

@@ -1,6 +1,8 @@
 import { Router, Response } from 'express';
 import { v4 as uuidv4 } from 'uuid';
 import db from '../db';
+import { config } from '../config';
+import { fileRepository } from '../repositories';
 import { AuthRequest } from '../middleware/auth';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
@@ -79,8 +81,11 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 // ================= LIST FOLDER CONTENTS =================
 router.get('/:id/items', async (req: AuthRequest, res: Response) => {
     const folderId = req.params.id;
-    const userId = req.user!.userId;
-    const tenantId = req.user!.tenantId;
+    if (!req.user?.tenantId || !req.user?.userId) {
+        return res.status(401).json({ error: 'Missing user context' });
+    }
+    const userId = req.user.userId;
+    const tenantId = req.user.tenantId;
 
     try {
         // 1. Access Check (Owner OR Shared)
@@ -142,45 +147,55 @@ router.get('/:id/items', async (req: AuthRequest, res: Response) => {
         // For MVP: Return all non-deleted children of the folder.
 
         const [subfolders] = await db.execute<RowDataPacket[]>(folderQuery, queryParams);
-
-        // Files - Check access: owner OR file shared directly OR folder is shared
-        const isFolderShared = access.length > 0 && access[0].owner_user_id !== userId;
-        let fileQuery = `
-            SELECT DISTINCT f.id, f.filename as name, f.size, f.created_at, f.mime_type
-            FROM files f
-            LEFT JOIN shared_files sf ON f.id = sf.file_id AND sf.shared_with_user_id = ?
-            LEFT JOIN folder_shares fs ON f.folder_id = fs.folder_id AND fs.shared_with_user_id = ?
-            WHERE f.tenant_id = ?
-        `;
-        const fileParams: any[] = [userId, userId, tenantId];
-        
-        if (targetParentId) {
-            fileQuery += ` AND f.folder_id = ?`;
-            fileParams.push(targetParentId);
-        } else {
-            fileQuery += ` AND f.folder_id IS NULL`;
-        }
-        
-        if (isFolderShared) {
-            fileQuery += ` AND (f.user_id = (SELECT owner_user_id FROM folders WHERE id = ?) OR sf.id IS NOT NULL OR fs.id IS NOT NULL)`;
-            fileParams.push(folderId);
-        } else {
-            fileQuery += ` AND (f.user_id = ? OR sf.id IS NOT NULL OR fs.id IS NOT NULL)`;
-            fileParams.push(userId);
-        }
-
-        const [files] = await db.execute<RowDataPacket[]>(fileQuery, fileParams);
-
-        // Clean up response - map mime_type to mimeType for frontend
-        const safeFiles = (files ?? []).map(f => ({ 
-            id: f.id,
-            name: f.name,
-            size: f.size,
-            createdAt: f.created_at,
-            mimeType: f.mime_type || 'application/octet-stream',
-            type: 'file'
-        }));
         const safeFolders = (subfolders ?? []).map(f => ({ ...f, type: 'folder' }));
+
+        let safeFiles: Array<{ id: string; name: string; size: number; createdAt: string | Date; mimeType: string; type: 'file' }>;
+
+        if (config.STORAGE_BACKEND === 'fs' && folderId !== 'root') {
+            const allUserFiles = await fileRepository.listUserFiles({ tenantId, userId });
+            const folderFiles = (allUserFiles ?? []).filter(f => f.folder_id === folderId);
+            safeFiles = folderFiles.map(f => ({
+                id: f.id,
+                name: f.filename,
+                size: f.size,
+                createdAt: f.created_at,
+                mimeType: f.mime_type ?? 'application/octet-stream',
+                type: 'file' as const
+            }));
+        } else {
+            // Files from DB
+            const isFolderShared = access.length > 0 && access[0].owner_user_id !== userId;
+            let fileQuery = `
+                SELECT DISTINCT f.id, f.filename as name, f.size, f.created_at, f.mime_type
+                FROM files f
+                LEFT JOIN shared_files sf ON f.id = sf.file_id AND sf.shared_with_user_id = ?
+                LEFT JOIN folder_shares fs ON f.folder_id = fs.folder_id AND fs.shared_with_user_id = ?
+                WHERE f.tenant_id = ?
+            `;
+            const fileParams: any[] = [userId, userId, tenantId];
+            if (targetParentId) {
+                fileQuery += ` AND f.folder_id = ?`;
+                fileParams.push(targetParentId);
+            } else {
+                fileQuery += ` AND f.folder_id IS NULL`;
+            }
+            if (isFolderShared) {
+                fileQuery += ` AND (f.user_id = (SELECT owner_user_id FROM folders WHERE id = ?) OR sf.id IS NOT NULL OR fs.id IS NOT NULL)`;
+                fileParams.push(folderId);
+            } else {
+                fileQuery += ` AND (f.user_id = ? OR sf.id IS NOT NULL OR fs.id IS NOT NULL)`;
+                fileParams.push(userId);
+            }
+            const [files] = await db.execute<RowDataPacket[]>(fileQuery, fileParams);
+            safeFiles = (files ?? []).map(f => ({
+                id: f.id,
+                name: f.name,
+                size: f.size,
+                createdAt: f.created_at,
+                mimeType: f.mime_type || 'application/octet-stream',
+                type: 'file' as const
+            }));
+        }
 
         res.json({
             folders: safeFolders,

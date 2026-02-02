@@ -130,13 +130,14 @@ app.post(
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });
     }
+    console.log('[UPLOAD] req.body:', req.body);
 
     const fileId = path.basename(
       req.file.filename,
       path.extname(req.file.filename)
     );
 
-    const folderId = req.body.folderId || null;
+    const folderId = (req.body.folderId === 'null' || !req.body.folderId) ? null : req.body.folderId;
 
     try {
       // Infer mime type from file extension
