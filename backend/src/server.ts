@@ -62,11 +62,6 @@ app.use(cors({
   credentials: true,
 }));
 
-// ================= BODY PARSERS (before any routes) =================
-// For multipart/form-data, these skip parsing and leave body for Multer on upload route
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true }));
-
 // ================= DIRECTORIES =================
 const UPLOADS_DIR = path.join(config.DATA_DIR, 'uploads');
 fs.ensureDirSync(UPLOADS_DIR);
@@ -188,6 +183,11 @@ app.post(
     }
   }
 );
+
+// ================= BODY PARSERS (after upload route) =================
+// Upload route is registered above so Multer consumes multipart body first; other routes need JSON/urlencoded
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 // ================= OIDC ROUTES (BFF Pattern) =================
 // 🔐 All OIDC logic (login, callback, token exchange) happens here

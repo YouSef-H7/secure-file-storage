@@ -60,6 +60,7 @@ const EmployeeDashboard = () => {
       for (const [key, value] of formData.entries()) {
         console.log('[FORMDATA]', key, value);
       }
+      console.log('[DEBUG] FormData Entries:', Array.from(formData.entries()));
       await api.request('/api/files/upload', {
         method: 'POST',
         body: formData,
