@@ -88,9 +88,9 @@ const EmployeeFiles = () => {
   const handleUpload = async (file: File) => {
     if (!file || uploading) return;
 
-    const MAX_SIZE = 25 * 1024 * 1024;
+    const MAX_SIZE = 100 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      alert("File size exceeds 25MB limit.");
+      alert("File too large (Max 100MB).");
       return;
     }
 

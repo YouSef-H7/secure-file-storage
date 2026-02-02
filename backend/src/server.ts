@@ -110,7 +110,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage,
-  limits: { fileSize: config.MAX_FILE_MB * 1024 * 1024 },
+  limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
   fileFilter: (req, file, cb) => {
     if (config.ALLOWED_MIME.includes(file.mimetype)) {
       cb(null, true);
@@ -184,8 +184,8 @@ app.post(
 
 // ================= BODY PARSERS (after upload route) =================
 // JSON/urlencoded must NOT run on /api/files/upload (multipart); they run for all other routes
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 // ================= OIDC ROUTES (BFF Pattern) =================
 // 🔐 All OIDC logic (login, callback, token exchange) happens here

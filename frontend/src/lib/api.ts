@@ -40,11 +40,13 @@ export const api = {
 
   async request(path: string, options: any = {}) {
     const token = this.getToken();
-    const headers = {
-      'Content-Type': 'application/json',
+    const isFormData = options.body instanceof FormData;
+    const headers: Record<string, string> = {
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...options.headers,
       'Authorization': token ? `Bearer ${token}` : '',
     };
+    if (isFormData && headers['Content-Type']) delete headers['Content-Type'];
 
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('TIMEOUT')), 1500)
