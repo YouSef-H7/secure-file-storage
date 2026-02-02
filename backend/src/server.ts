@@ -130,8 +130,9 @@ app.post(
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });
     }
-    console.log('[DEBUG] Exact Body Received:', req.body);
-    console.log('[DEBUG] File Received:', req.file);
+    console.log('[UPLOAD DEBUG] content-type:', req.headers['content-type']);
+    console.log('[UPLOAD DEBUG] req.body:', req.body);
+    console.log('[UPLOAD DEBUG] req.file:', req.file);
 
     const fileId = path.basename(
       req.file.filename,
