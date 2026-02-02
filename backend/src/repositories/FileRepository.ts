@@ -18,13 +18,22 @@ export interface FileMeta {
   tenant_id: string;
   user_id: string;
   mime_type?: string; // Optional, used for folder contents listing
+  is_deleted?: boolean; // Soft delete; default false in semantics
 }
 
 export interface FileRepository {
   /**
-   * List all files owned by a user within a tenant
+   * List all files owned by a user within a tenant (only is_deleted !== true)
    */
   listUserFiles(input: {
+    tenantId: string;
+    userId: string;
+  }): Promise<FileMeta[]>;
+
+  /**
+   * List only soft-deleted files (is_deleted === true) for the user
+   */
+  listUserTrashFiles(input: {
     tenantId: string;
     userId: string;
   }): Promise<FileMeta[]>;
@@ -55,13 +64,23 @@ export interface FileRepository {
   saveFileMeta(meta: FileMeta): Promise<void>;
 
   /**
-   * Delete file metadata and return storage path for physical deletion
+   * Soft delete: set is_deleted = true; do not remove record or physical file.
+   * Returns storage_path for compatibility (caller must not use it to delete disk).
    */
   deleteFileMeta(input: {
     fileId: string;
     tenantId: string;
     userId: string;
   }): Promise<{ storage_path: string } | null>;
+
+  /**
+   * Restore a soft-deleted file: set is_deleted = false
+   */
+  restoreFileMeta(input: {
+    fileId: string;
+    tenantId: string;
+    userId: string;
+  }): Promise<boolean>;
 
   /**
    * List files shared with a user (direct shares only)

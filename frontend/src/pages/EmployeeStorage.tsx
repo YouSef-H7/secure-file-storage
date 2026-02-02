@@ -1,22 +1,34 @@
 import React, { useState, useEffect } from 'react';
 import { HardDrive, FileText, Loader2 } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, notifyFilesChanged } from '../lib/api';
+
+const STORAGE_QUOTA_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
 
 const EmployeeStorage = () => {
     const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({ used: 0, total: 5 * 1024 * 1024 * 1024, count: 0 }); // 5GB default
+    const [stats, setStats] = useState({ used: 0, total: STORAGE_QUOTA_BYTES, count: 0 });
 
-    useEffect(() => {
-        api.request('/api/files').then(files => {
-            if (Array.isArray(files)) {
+    const fetchStats = () => {
+        api.request('/api/stats/me').then((data: { totalFiles?: number; totalStorage?: number }) => {
+            if (data && typeof data.totalStorage === 'number') {
                 setStats({
-                    used: files.reduce((acc, f) => acc + f.size, 0),
-                    total: 5 * 1024 * 1024 * 1024,
-                    count: files.length
+                    used: data.totalStorage ?? 0,
+                    total: STORAGE_QUOTA_BYTES,
+                    count: data.totalFiles ?? 0
                 });
             }
             setLoading(false);
-        });
+        }).catch(() => setLoading(false));
+    };
+
+    useEffect(() => {
+        fetchStats();
+    }, []);
+
+    useEffect(() => {
+        const onFilesChanged = () => fetchStats();
+        window.addEventListener('securestore:files-changed', onFilesChanged);
+        return () => window.removeEventListener('securestore:files-changed', onFilesChanged);
     }, []);
 
     const formatSize = (bytes: number) => {

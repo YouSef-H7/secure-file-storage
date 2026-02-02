@@ -17,6 +17,10 @@ export class FileRepositoryDB implements FileRepository {
     throw new Error('Database repository not enabled yet. Set STORAGE_BACKEND=fs for filesystem mode.');
   }
 
+  async listUserTrashFiles(input: { tenantId: string; userId: string }): Promise<FileMeta[]> {
+    throw new Error('Database repository not enabled yet. Set STORAGE_BACKEND=fs for filesystem mode.');
+  }
+
   async getFileById(input: { fileId: string; tenantId: string; userId: string }): Promise<FileMeta | null> {
     throw new Error('Database repository not enabled yet. Set STORAGE_BACKEND=fs for filesystem mode.');
   }
@@ -30,6 +34,10 @@ export class FileRepositoryDB implements FileRepository {
   }
 
   async deleteFileMeta(input: { fileId: string; tenantId: string; userId: string }): Promise<{ storage_path: string } | null> {
+    throw new Error('Database repository not enabled yet. Set STORAGE_BACKEND=fs for filesystem mode.');
+  }
+
+  async restoreFileMeta(input: { fileId: string; tenantId: string; userId: string }): Promise<boolean> {
     throw new Error('Database repository not enabled yet. Set STORAGE_BACKEND=fs for filesystem mode.');
   }
 

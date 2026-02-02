@@ -22,9 +22,9 @@ router.post('/files/:fileId/share', async (req: AuthRequest, res: Response) => {
     }
 
     try {
-        // 1. Verify file ownership and existence
+        // 1. Verify file ownership and existence (exclude soft-deleted)
         const [files] = await db.execute<RowDataPacket[]>(
-            'SELECT id, filename FROM files WHERE id = ? AND user_id = ? AND tenant_id = ?',
+            'SELECT id, filename FROM files WHERE id = ? AND user_id = ? AND tenant_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)',
             [fileId, ownerId, tenantId]
         );
 
@@ -109,11 +109,11 @@ router.get('/files/shared-with-me', async (req: AuthRequest, res: Response) => {
         u.email as owner_email,
         u.id as owner_id
        FROM shared_files s
-       JOIN files f ON s.file_id = f.id
+       JOIN files f ON s.file_id = f.id AND (f.is_deleted = FALSE OR f.is_deleted IS NULL)
        JOIN users u ON s.owner_user_id = u.id
        WHERE s.shared_with_user_id = ? 
          AND s.tenant_id = ?
-         AND f.tenant_id = ? -- Extra safety check
+         AND f.tenant_id = ?
        ORDER BY s.created_at DESC`,
             [userId, tenantId, tenantId]
         );

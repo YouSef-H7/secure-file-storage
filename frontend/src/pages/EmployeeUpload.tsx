@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import { UploadCloud, Loader2, FileText } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, notifyFilesChanged } from '../lib/api';
 
 const EmployeeUpload = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -27,6 +27,7 @@ const EmployeeUpload = () => {
                 headers: {}
             });
             setStatus('success');
+            notifyFilesChanged();
         } catch {
             setStatus('error');
         } finally {

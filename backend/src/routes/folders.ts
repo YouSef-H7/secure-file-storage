@@ -170,7 +170,7 @@ router.get('/:id/items', async (req: AuthRequest, res: Response) => {
                 FROM files f
                 LEFT JOIN shared_files sf ON f.id = sf.file_id AND sf.shared_with_user_id = ?
                 LEFT JOIN folder_shares fs ON f.folder_id = fs.folder_id AND fs.shared_with_user_id = ?
-                WHERE f.tenant_id = ?
+                WHERE f.tenant_id = ? AND (f.is_deleted = FALSE OR f.is_deleted IS NULL)
             `;
             const fileParams: any[] = [userId, userId, tenantId];
             if (targetParentId) {

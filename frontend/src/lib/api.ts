@@ -179,3 +179,10 @@ export const api = {
   },
   downloadUrl: (id: string) => `/api/files/${id}/download?token=${localStorage.getItem('vault_token')}`
 };
+
+/** Dispatch so Dashboard/Storage can refetch stats after upload/delete/restore */
+export const notifyFilesChanged = () => {
+  try {
+    window.dispatchEvent(new CustomEvent('securestore:files-changed'));
+  } catch (_) {}
+};

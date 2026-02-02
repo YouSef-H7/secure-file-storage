@@ -59,6 +59,15 @@ const initSchema = async () => {
       }
     }
 
+    // Add is_deleted (soft delete) to files
+    try {
+      await db.execute(`ALTER TABLE files ADD COLUMN is_deleted BOOLEAN DEFAULT FALSE`);
+    } catch (e: any) {
+      if (e.code !== 'ER_DUP_FIELDNAME') {
+        console.warn('[SCHEMA] Note on adding is_deleted:', e.message);
+      }
+    }
+
     console.log('[SCHEMA] shared_files, folders, folder_shares tables ready');
   } catch (err) {
     console.error('[SCHEMA] Failed to init shared_files:', err);

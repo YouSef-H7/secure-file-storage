@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { ShareModal } from '../components/ShareModal';
 import { FileMetadata } from '../types/file';
-import { api } from '../lib/api';
+import { api, notifyFilesChanged } from '../lib/api';
 
 const EmployeeFiles = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -145,10 +145,11 @@ const EmployeeFiles = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this file permanently?')) return;
+    if (!confirm('Move this file to trash?')) return;
     try {
       await api.request(`/api/files/${id}`, { method: 'DELETE' });
       setFiles(prev => prev.filter(f => f.id !== id));
+      notifyFilesChanged();
     } catch (err) {
       alert("Delete failed.");
     }

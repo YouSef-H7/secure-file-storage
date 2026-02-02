@@ -1,25 +1,44 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Upload, FileText, TrendingUp, HardDrive, Loader2 } from 'lucide-react';
-import { api } from '../lib/api';
+import { api, notifyFilesChanged } from '../lib/api';
+
+const STORAGE_QUOTA_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
+
+interface StatsMe {
+  totalFiles: number;
+  totalStorage: number;
+  filesThisWeek: number;
+  recentActivity: Array<{ id: string; name: string; created_at: string; action: string }>;
+}
 
 const EmployeeDashboard = () => {
-  const [stats, setStats] = useState({ count: 0, size: 0 });
+  const [stats, setStats] = useState<StatsMe | null>(null);
+  const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchStats = () => {
-    api.request('/api/files').then(files => {
-      if (Array.isArray(files)) {
+    api.request('/api/stats/me').then((data: StatsMe) => {
+      if (data && typeof data.totalFiles === 'number') {
         setStats({
-          count: files.length,
-          size: files.reduce((acc, f) => acc + f.size, 0)
+          totalFiles: data.totalFiles ?? 0,
+          totalStorage: data.totalStorage ?? 0,
+          filesThisWeek: data.filesThisWeek ?? 0,
+          recentActivity: Array.isArray(data.recentActivity) ? data.recentActivity : []
         });
       }
-    });
+      setLoading(false);
+    }).catch(() => setLoading(false));
   };
 
   useEffect(() => {
     fetchStats();
+  }, []);
+
+  useEffect(() => {
+    const onFilesChanged = () => fetchStats();
+    window.addEventListener('securestore:files-changed', onFilesChanged);
+    return () => window.removeEventListener('securestore:files-changed', onFilesChanged);
   }, []);
 
   const handleUpload = async (file: File) => {
@@ -33,8 +52,6 @@ const EmployeeDashboard = () => {
 
     setUploading(true);
     try {
-      await new Promise(r => setTimeout(r, 1000));
-
       const formData = new FormData();
       formData.append('file', file);
 
@@ -45,6 +62,7 @@ const EmployeeDashboard = () => {
       });
 
       fetchStats();
+      notifyFilesChanged();
       alert("File uploaded successfully!");
     } catch (err) {
       alert("Upload failed.");
@@ -74,9 +92,20 @@ const EmployeeDashboard = () => {
     return `${val.toFixed(1)} ${units[unitIdx]}`;
   };
 
-  const storageUsed = 2.1;
-  const storageTotal = 5;
-  const storagePercent = (storageUsed / storageTotal) * 100;
+  const storageUsed = stats?.totalStorage ?? 0;
+  const storageTotal = STORAGE_QUOTA_BYTES;
+  const storagePercent = storageTotal > 0 ? Math.min((storageUsed / storageTotal) * 100, 100) : 0;
+  const storageUsedGB = (storageUsed / (1024 * 1024 * 1024)).toFixed(1);
+  const storageTotalGB = (storageTotal / (1024 * 1024 * 1024)).toFixed(1);
+
+  if (loading && !stats) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <Loader2 size={32} className="text-slate-400 animate-spin mb-4" />
+        <p className="text-sm text-slate-600">Loading dashboard...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -85,7 +114,6 @@ const EmployeeDashboard = () => {
         <p className="text-slate-600 text-sm">Quick access to your files and storage</p>
       </div>
 
-      {/* Hidden File Input */}
       <input
         type="file"
         ref={fileInputRef}
@@ -112,9 +140,8 @@ const EmployeeDashboard = () => {
             <div className="p-3 bg-blue-100 rounded-lg">
               <FileText className="text-blue-600" size={24} />
             </div>
-            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">+12</span>
           </div>
-          <div className="text-3xl font-bold text-slate-900 mb-1">127</div>
+          <div className="text-3xl font-bold text-slate-900 mb-1">{stats?.totalFiles ?? 0}</div>
           <div className="text-sm text-slate-600">Total Files</div>
         </div>
 
@@ -123,9 +150,8 @@ const EmployeeDashboard = () => {
             <div className="p-3 bg-green-100 rounded-lg">
               <TrendingUp className="text-green-600" size={24} />
             </div>
-            <span className="text-xs font-medium text-green-600 bg-green-50 px-2 py-1 rounded">+8%</span>
           </div>
-          <div className="text-3xl font-bold text-slate-900 mb-1">24</div>
+          <div className="text-3xl font-bold text-slate-900 mb-1">{stats?.filesThisWeek ?? 0}</div>
           <div className="text-sm text-slate-600">Files This Week</div>
         </div>
       </div>
@@ -137,8 +163,8 @@ const EmployeeDashboard = () => {
         </div>
         <div className="flex items-end justify-between mb-4">
           <div>
-            <div className="text-3xl font-bold text-slate-900 mb-1">{storageUsed} GB</div>
-            <div className="text-sm text-slate-600">of {storageTotal} GB used</div>
+            <div className="text-3xl font-bold text-slate-900 mb-1">{storageUsedGB} GB</div>
+            <div className="text-sm text-slate-600">of {storageTotalGB} GB used</div>
           </div>
           <div className="text-right">
             <div className="p-3 bg-slate-100 rounded-lg mb-2">
@@ -150,7 +176,7 @@ const EmployeeDashboard = () => {
         <div className="w-full bg-slate-200 rounded-full h-3">
           <div className="bg-slate-900 h-3 rounded-full" style={{ width: `${storagePercent}%` }}></div>
         </div>
-        <div className="text-sm text-slate-600 mt-2">{storageTotal - storageUsed} GB remaining</div>
+        <div className="text-sm text-slate-600 mt-2">{(parseFloat(storageTotalGB) - parseFloat(storageUsedGB)).toFixed(1)} GB remaining</div>
       </div>
     </div>
   );

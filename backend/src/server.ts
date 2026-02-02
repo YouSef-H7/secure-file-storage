@@ -312,6 +312,32 @@ app.get('/api/files', authenticate, async (req: AuthRequest, res) => {
   }
 });
 
+// ---------- LIST TRASH ----------
+app.get('/api/files/trash', authenticate, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user?.tenantId || !req.user?.userId) {
+      return res.status(401).json({ error: 'Missing user context' });
+    }
+    const rawFiles = await fileRepository.listUserTrashFiles({
+      tenantId: req.user.tenantId,
+      userId: req.user.userId
+    });
+    const list = rawFiles ?? [];
+    const mappedFiles = list.map((f: FileMeta) => ({
+      id: f.id,
+      name: f.filename,
+      size: f.size,
+      created_at: f.created_at,
+      createdAt: f.created_at,
+      mimeType: f.mime_type ?? 'application/octet-stream'
+    }));
+    res.json(mappedFiles);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch trash' });
+  }
+});
+
 // ---------- FILE METADATA ----------
 app.get('/api/files/:id', authenticate, async (req: AuthRequest, res) => {
   try {
@@ -384,15 +410,31 @@ app.delete('/api/files/:id', authenticate, async (req: AuthRequest, res) => {
       return res.status(404).json({ error: 'File not found' });
     }
 
-    // Delete physical file
-    if (await fs.pathExists(fileMeta.storage_path)) {
-      await fs.remove(fileMeta.storage_path);
-    }
-
     res.json({ message: 'File deleted' });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Deletion failed' });
+  }
+});
+
+// ---------- RESTORE ----------
+app.post('/api/files/:id/restore', authenticate, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user?.tenantId || !req.user?.userId) {
+      return res.status(401).json({ error: 'Missing user context' });
+    }
+    const restored = await fileRepository.restoreFileMeta({
+      fileId: req.params.id,
+      tenantId: req.user.tenantId,
+      userId: req.user.userId
+    });
+    if (!restored) {
+      return res.status(404).json({ error: 'File not found' });
+    }
+    res.json({ message: 'Restored' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Restore failed' });
   }
 });
 
