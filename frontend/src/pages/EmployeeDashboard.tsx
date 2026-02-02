@@ -53,8 +53,13 @@ const EmployeeDashboard = () => {
     setUploading(true);
     try {
       const formData = new FormData();
+      formData.append('folderId', '');
+      formData.append('parentId', '');
+      formData.append('is_deleted', 'false');
       formData.append('file', file);
-
+      for (const [key, value] of formData.entries()) {
+        console.log('[FORMDATA]', key, value);
+      }
       await api.request('/api/files/upload', {
         method: 'POST',
         body: formData,

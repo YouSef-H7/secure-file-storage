@@ -41,12 +41,13 @@ export const api = {
   async request(path: string, options: any = {}) {
     const token = this.getToken();
     const isFormData = options.body instanceof FormData;
+    // Uploads must not send Content-Type; browser sets multipart/form-data; boundary=...
     const headers: Record<string, string> = {
       ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
       ...options.headers,
       'Authorization': token ? `Bearer ${token}` : '',
     };
-    if (isFormData && headers['Content-Type']) delete headers['Content-Type'];
+    if (isFormData) delete headers['Content-Type'];
 
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('TIMEOUT')), 1500)

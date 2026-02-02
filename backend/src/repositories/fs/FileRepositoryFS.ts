@@ -163,6 +163,9 @@ class FileRepositoryFS implements FileRepository {
   }
 
   async saveFileMeta(meta: FileMeta): Promise<void> {
+    if (typeof meta.is_deleted !== 'boolean') {
+      meta.is_deleted = false;
+    }
     const files = await this.readFiles();
     const record: FileRecord = {
       ...meta,

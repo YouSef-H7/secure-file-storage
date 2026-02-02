@@ -135,7 +135,8 @@ app.post(
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });
     }
-    console.log('[UPLOAD] req.body:', req.body);
+    console.log('[UPLOAD] BODY AFTER MULTER:', req.body);
+    console.log('[UPLOAD] FILE:', req.file);
 
     const fileId = path.basename(
       req.file.filename,
