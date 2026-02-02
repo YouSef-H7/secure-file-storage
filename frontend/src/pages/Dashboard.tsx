@@ -122,8 +122,9 @@ const Dashboard = () => {
           </div>
 
           <div className="h-64 flex items-end gap-2 sm:gap-4 mt-8">
-            {activity.length > 0 ? activity.map((day, idx) => {
-              const maxCount = Math.max(...activity.map(a => a.count), 1);
+            {(activity ?? []).length > 0 ? (activity ?? []).map((day, idx) => {
+              const safeActivity = activity ?? [];
+              const maxCount = Math.max(...safeActivity.map(a => a.count ?? 0), 1);
               const height = Math.max(((day.count ?? 0) / maxCount) * 100, 4); // min 4% height
               return (
                 <div key={idx} className="flex-1 flex flex-col items-center group">
@@ -158,7 +159,7 @@ const Dashboard = () => {
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-4 pr-1">
-            {recentLogs.length > 0 ? recentLogs.map((log) => (
+            {(recentLogs ?? []).length > 0 ? (recentLogs ?? []).map((log) => (
               <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 hover:shadow-sm transition-all duration-200">
                 <div className="mt-1">
                   {log.type === 'upload' && <FileText size={16} className="text-emerald-600" />}
@@ -167,11 +168,11 @@ const Dashboard = () => {
                   {log.type === 'other' && <Activity size={16} className="text-slate-600" />}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-slate-900 truncate">{log.action}</p>
+                  <p className="text-sm font-medium text-slate-900 truncate">{log.action ?? ''}</p>
                   <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
-                    <span className="truncate max-w-[80px]">{log.user}</span>
+                    <span className="truncate max-w-[80px]">{log.user ?? ''}</span>
                     <span>•</span>
-                    <span>{new Date(log.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>{new Date(log.time ?? 0).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
                 </div>
               </div>

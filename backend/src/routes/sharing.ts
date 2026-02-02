@@ -118,12 +118,13 @@ router.get('/files/shared-with-me', async (req: AuthRequest, res: Response) => {
             [userId, tenantId, tenantId]
         );
 
+        const safeRows = rows ?? [];
         // Map to frontend FileMetadata format (adding owner info)
-        const files = rows.map(row => ({
+        const files = safeRows.map(row => ({
             id: row.id,
             name: row.filename,
             size: row.size,
-            mimeType: row.filename.endsWith('.pdf') ? 'application/pdf' : 'image/jpeg', // Simple inference or fetch real mime if stored
+            mimeType: (row.filename && row.filename.endsWith('.pdf')) ? 'application/pdf' : 'image/jpeg',
             createdAt: row.created_at,
             sharedAt: row.shared_at,
             owner: {
@@ -132,7 +133,7 @@ router.get('/files/shared-with-me', async (req: AuthRequest, res: Response) => {
             }
         }));
 
-        res.json(files);
+        res.json(files ?? []);
     } catch (err) {
         console.error('[SHARE] List error:', err);
         res.status(500).json({ error: 'Failed to fetch shared files' });

@@ -70,15 +70,16 @@ export const useAdminStats = () => {
                 }
 
                 files.forEach(file => {
-                    if (!file.createdAt) return;
-                    const fileDate = new Date(file.createdAt);
+                    const createdAt = file.createdAt ?? (file as any).created_at;
+                    if (!createdAt) return;
+                    const fileDate = new Date(createdAt);
                     if (fileDate >= sevenDaysAgo) {
                         const dateStr = fileDate.toISOString().split('T')[0];
                         if (activityMap.has(dateStr)) {
                             const current = activityMap.get(dateStr)!;
                             activityMap.set(dateStr, {
                                 count: current.count + 1,
-                                size: current.size + (file.size || 0)
+                                size: current.size + (file.size ?? 0)
                             });
                         }
                     }
@@ -110,7 +111,8 @@ export const useAdminStats = () => {
 
                 // Check files for active users (if owner/userId exists)
                 files.forEach((file: any) => {
-                    if (new Date(file.createdAt) >= oneDayAgo && (file.userId || file.owner)) {
+                    const createdAt = file.createdAt ?? file.created_at;
+                    if (createdAt && new Date(createdAt) >= oneDayAgo && (file.userId || file.owner)) {
                         activeUserSet.add(file.userId || file.owner);
                     }
                 });
@@ -129,18 +131,18 @@ export const useAdminStats = () => {
                 const activeUsers24h = activeUserSet.size;
 
                 // Recent Logs aggregation
-                const recentLogs = logs.slice(0, 5).map((log: any) => ({
+                const recentLogs = (logs ?? []).slice(0, 5).map((log: any) => ({
                     id: log.id || Math.random().toString(),
                     action: log.action || 'Unknown Event',
                     user: log.userName || log.user || 'System',
                     time: log.timestamp || log.time || new Date().toISOString(),
-                    type: (log.type || 'other').toLowerCase()
+                    type: ((log.type || 'other') as string).toLowerCase()
                 }));
 
                 setStats({
                     summary: { totalFiles, totalStorage, totalUsers, activeUsers24h },
-                    activity,
-                    recentLogs,
+                    activity: Array.isArray(activity) ? activity : [],
+                    recentLogs: Array.isArray(recentLogs) ? recentLogs : [],
                     loading: false,
                     error: null,
                 });

@@ -15,9 +15,17 @@ const EmployeeRecent = () => {
             try {
                 const data = await api.request('/api/files', { method: 'GET' });
                 if (Array.isArray(data)) {
-                    // Sort by creation date desc
-                    const sorted = data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-                    setFiles(sorted.slice(0, 20)); // Last 20 files
+                    const normalizeFile = (item: any) => ({
+                        ...item,
+                        id: item.id,
+                        name: item.name ?? item.filename ?? '',
+                        mimeType: item.mimeType ?? 'application/octet-stream',
+                        createdAt: item.createdAt ?? item.created_at,
+                        size: item.size ?? 0
+                    });
+                    const normalized = data.map(normalizeFile);
+                    const sorted = normalized.sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
+                    setFiles(sorted.slice(0, 20));
                 }
             } catch (err) {
                 setError("Failed to load recent files");
@@ -39,11 +47,12 @@ const EmployeeRecent = () => {
         return `${val.toFixed(1)} ${units[unitIdx]}`;
     };
 
-    const getFileTypeColor = (mimeType: string) => {
-        if (mimeType.includes('pdf')) return 'bg-red-100 text-red-700';
-        if (mimeType.includes('word') || mimeType.includes('document')) return 'bg-blue-100 text-blue-700';
-        if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'bg-green-100 text-green-700';
-        if (mimeType.includes('image')) return 'bg-purple-100 text-purple-700';
+    const getFileTypeColor = (mimeType: string | undefined) => {
+        const m = mimeType ?? '';
+        if (m.includes('pdf')) return 'bg-red-100 text-red-700';
+        if (m.includes('word') || m.includes('document')) return 'bg-blue-100 text-blue-700';
+        if (m.includes('sheet') || m.includes('excel')) return 'bg-green-100 text-green-700';
+        if (m.includes('image')) return 'bg-purple-100 text-purple-700';
         return 'bg-slate-100 text-slate-700';
     };
 
@@ -98,14 +107,14 @@ const EmployeeRecent = () => {
                                             <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${getFileTypeColor(file.mimeType)}`}>
                                                 <FileText size={16} />
                                             </div>
-                                            <span className="text-sm font-medium text-text-primary">{file.name}</span>
+                                            <span className="text-sm font-medium text-text-primary">{file.name ?? file.filename}</span>
                                         </div>
                                     </td>
                                     <td className="py-4 px-6 text-sm text-text-secondary">
-                                        {new Date(file.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                                        {new Date(file.createdAt ?? file.created_at ?? 0).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                     </td>
                                     <td className="py-4 px-6 text-right text-sm text-text-secondary font-mono">
-                                        {formatSize(file.size)}
+                                        {formatSize(file.size ?? 0)}
                                     </td>
                                 </tr>
                             ))}
@@ -120,11 +129,11 @@ const EmployeeRecent = () => {
                                 <div className={`p-2 rounded ${getFileTypeColor(file.mimeType)}`}>
                                     <FileText size={20} />
                                 </div>
-                                <span className="text-xs text-text-secondary">{formatSize(file.size)}</span>
+                                <span className="text-xs text-text-secondary">{formatSize(file.size ?? 0)}</span>
                             </div>
-                            <h3 className="text-sm font-semibold text-text-primary truncate mb-1">{file.name}</h3>
+                            <h3 className="text-sm font-semibold text-text-primary truncate mb-1">{file.name ?? file.filename}</h3>
                             <p className="text-xs text-text-secondary">
-                                {new Date(file.createdAt).toLocaleDateString()}
+                                {new Date(file.createdAt ?? file.created_at ?? 0).toLocaleDateString()}
                             </p>
                         </div>
                     ))}

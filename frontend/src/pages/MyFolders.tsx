@@ -89,9 +89,8 @@ const MyFolders = () => {
     setShareModalOpen(true);
   };
 
-  const filteredFolders = folders.filter(folder => {
-    return folder.name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const q = searchQuery.toLowerCase();
+  const filteredFolders = folders.filter(folder => (folder.name ?? '').toLowerCase().includes(q));
 
   return (
     <div className="space-y-6">

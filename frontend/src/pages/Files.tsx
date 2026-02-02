@@ -29,7 +29,15 @@ const FileManager = () => {
     try {
       const data = await api.request('/api/files', { method: 'GET' });
       if (Array.isArray(data)) {
-        setFiles(data);
+        const normalizeFile = (item: any) => ({
+          ...item,
+          id: item.id,
+          name: item.name ?? item.filename ?? '',
+          mimeType: item.mimeType ?? 'application/octet-stream',
+          createdAt: item.createdAt ?? item.created_at,
+          size: item.size ?? 0
+        });
+        setFiles(data.map(normalizeFile));
       } else {
         throw new Error("Invalid format received");
       }
@@ -84,10 +92,14 @@ const FileManager = () => {
   };
 
   const filteredFiles = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    const m = (s: string | undefined) => s ?? '';
     return files.filter(file => {
-      const matchesSearch = file.name.toLowerCase().includes(searchQuery.toLowerCase());
-      const isImage = file.mimeType.startsWith('image/');
-      const isDoc = file.mimeType.includes('pdf') || file.mimeType.includes('text') || file.mimeType.includes('word');
+      const name = m(file.name);
+      const mime = m(file.mimeType);
+      const matchesSearch = name.toLowerCase().includes(q);
+      const isImage = mime.startsWith('image/');
+      const isDoc = mime.includes('pdf') || mime.includes('text') || mime.includes('word');
 
       if (activeTab === 'images') return matchesSearch && isImage;
       if (activeTab === 'docs') return matchesSearch && isDoc;
@@ -106,21 +118,23 @@ const FileManager = () => {
     return `${val.toFixed(1)} ${units[unitIdx]}`;
   };
 
-  const getFileTypeColor = (mimeType: string) => {
-    if (mimeType.includes('pdf')) return 'bg-red-100 text-red-700';
-    if (mimeType.includes('word') || mimeType.includes('document')) return 'bg-blue-100 text-blue-700';
-    if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'bg-green-100 text-green-700';
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'bg-orange-100 text-orange-700';
-    if (mimeType.startsWith('image/')) return 'bg-purple-100 text-purple-700';
+  const getFileTypeColor = (mimeType: string | undefined) => {
+    const m = mimeType ?? '';
+    if (m.includes('pdf')) return 'bg-red-100 text-red-700';
+    if (m.includes('word') || m.includes('document')) return 'bg-blue-100 text-blue-700';
+    if (m.includes('sheet') || m.includes('excel')) return 'bg-green-100 text-green-700';
+    if (m.includes('presentation') || m.includes('powerpoint')) return 'bg-orange-100 text-orange-700';
+    if (m.startsWith('image/')) return 'bg-purple-100 text-purple-700';
     return 'bg-slate-100 text-slate-700';
   };
 
-  const getFileTypeLabel = (mimeType: string) => {
-    if (mimeType.includes('pdf')) return 'PDF';
-    if (mimeType.includes('word') || mimeType.includes('document')) return 'DOCX';
-    if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'XLSX';
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'PPTX';
-    if (mimeType.startsWith('image/')) return mimeType.split('/')[1].toUpperCase();
+  const getFileTypeLabel = (mimeType: string | undefined) => {
+    const m = mimeType ?? '';
+    if (m.includes('pdf')) return 'PDF';
+    if (m.includes('word') || m.includes('document')) return 'DOCX';
+    if (m.includes('sheet') || m.includes('excel')) return 'XLSX';
+    if (m.includes('presentation') || m.includes('powerpoint')) return 'PPTX';
+    if (m.startsWith('image/')) return m.split('/')[1].toUpperCase();
     return 'FILE';
   };
 
@@ -229,7 +243,7 @@ const FileManager = () => {
                         <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${getFileTypeColor(file.mimeType)}`}>
                           {getFileTypeLabel(file.mimeType)}
                         </div>
-                        <span className="text-sm text-text-primary font-medium">{file.name}</span>
+                        <span className="text-sm text-text-primary font-medium">{file.name ?? file.filename ?? ''}</span>
                       </div>
                     </td>
                     <td className="py-4 px-6 text-sm text-text-primary">
@@ -240,9 +254,9 @@ const FileManager = () => {
                         <span>Admin User</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-sm text-text-secondary font-mono">{formatSize(file.size)}</td>
+                    <td className="py-4 px-6 text-sm text-text-secondary font-mono">{formatSize(file.size ?? 0)}</td>
                     <td className="py-4 px-6 text-sm text-text-secondary">
-                      {new Date(file.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {new Date(file.createdAt ?? file.created_at ?? 0).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="py-4 px-6">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100">

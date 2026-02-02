@@ -48,11 +48,21 @@ const EmployeeFiles = () => {
       const endpoint = currentFolderId ? `/api/folders/${currentFolderId}/items` : `/api/files`;
       const data = await api.request(endpoint);
 
+      const normalizeFile = (item: any) => ({
+        ...item,
+        id: item.id,
+        name: item.name ?? item.filename ?? '',
+        mimeType: item.mimeType ?? 'application/octet-stream',
+        createdAt: item.createdAt ?? item.created_at,
+        size: item.size ?? 0
+      });
       if (data && typeof data === 'object' && 'files' in data) {
-        setFiles(Array.isArray(data.files) ? data.files : []);
-        setFolders(Array.isArray(data.folders) ? data.folders : []);
+        const rawFiles = Array.isArray(data.files) ? data.files : [];
+        const rawFolders = Array.isArray(data.folders) ? data.folders : [];
+        setFiles(rawFiles.map(normalizeFile));
+        setFolders(rawFolders);
       } else if (Array.isArray(data)) {
-        setFiles(data);
+        setFiles(data.map(normalizeFile));
         setFolders([]);
       } else {
         setFiles([]);
@@ -152,36 +162,36 @@ const EmployeeFiles = () => {
     return `${val.toFixed(1)} ${units[unitIdx]}`;
   };
 
-  const getFileTypeColor = (mimeType: string) => {
-    if (mimeType.includes('pdf')) return 'bg-red-100 text-red-700';
-    if (mimeType.includes('word') || mimeType.includes('document')) return 'bg-blue-100 text-blue-700';
-    if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'bg-green-100 text-green-700';
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'bg-orange-100 text-orange-700';
-    if (mimeType.startsWith('image/')) return 'bg-purple-100 text-purple-700';
+  const getFileTypeColor = (mimeType: string | undefined) => {
+    const m = mimeType ?? '';
+    if (m.includes('pdf')) return 'bg-red-100 text-red-700';
+    if (m.includes('word') || m.includes('document')) return 'bg-blue-100 text-blue-700';
+    if (m.includes('sheet') || m.includes('excel')) return 'bg-green-100 text-green-700';
+    if (m.includes('presentation') || m.includes('powerpoint')) return 'bg-orange-100 text-orange-700';
+    if (m.startsWith('image/')) return 'bg-purple-100 text-purple-700';
     return 'bg-slate-100 text-slate-700';
   };
 
-  const getFileTypeLabel = (mimeType: string) => {
-    if (mimeType.includes('pdf')) return 'PDF';
-    if (mimeType.includes('word') || mimeType.includes('document')) return 'DOCX';
-    if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'XLSX';
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'PPTX';
-    if (mimeType.startsWith('image/')) return mimeType.split('/')[1].toUpperCase();
+  const getFileTypeLabel = (mimeType: string | undefined) => {
+    const m = mimeType ?? '';
+    if (m.includes('pdf')) return 'PDF';
+    if (m.includes('word') || m.includes('document')) return 'DOCX';
+    if (m.includes('sheet') || m.includes('excel')) return 'XLSX';
+    if (m.includes('presentation') || m.includes('powerpoint')) return 'PPTX';
+    if (m.startsWith('image/')) return m.split('/')[1].toUpperCase();
     return 'FILE';
   };
 
   const filteredFiles = useMemo(() => {
     if (!searchQuery) return files;
-    return files.filter(file => {
-      return file.name.toLowerCase().includes(searchQuery.toLowerCase());
-    });
+    const q = searchQuery.toLowerCase();
+    return files.filter(file => (file.name ?? file.filename ?? '').toLowerCase().includes(q));
   }, [files, searchQuery]);
 
   const filteredFolders = useMemo(() => {
     if (!searchQuery) return folders;
-    return folders.filter(folder => {
-      return folder.name.toLowerCase().includes(searchQuery.toLowerCase());
-    });
+    const q = searchQuery.toLowerCase();
+    return folders.filter(folder => (folder.name ?? '').toLowerCase().includes(q));
   }, [folders, searchQuery]);
 
   return (
@@ -318,7 +328,7 @@ const EmployeeFiles = () => {
                 </button>
               </div>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm font-semibold text-slate-900 truncate flex-1" title={file.name}>{file.name}</h3>
+                <h3 className="text-sm font-semibold text-slate-900 truncate flex-1" title={file.name ?? file.filename}>{file.name ?? file.filename}</h3>
                 <button 
                   onClick={() => openShare(file)} 
                   className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-md transition-colors opacity-0 group-hover:opacity-100" 
@@ -328,8 +338,8 @@ const EmployeeFiles = () => {
                 </button>
               </div>
               <div className="flex items-center justify-between text-xs text-slate-600 mt-4 pt-4 border-t border-slate-200">
-                <span className="font-mono">{formatSize(file.size)}</span>
-                <span>{new Date(file.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                <span className="font-mono">{formatSize(file.size ?? 0)}</span>
+                <span>{new Date(file.createdAt ?? file.created_at ?? 0).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
               </div>
             </div>
           ))}
@@ -374,12 +384,12 @@ const EmployeeFiles = () => {
                         <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${getFileTypeColor(file.mimeType)}`}>
                           {getFileTypeLabel(file.mimeType)}
                         </div>
-                        <span className="text-sm text-slate-900 font-medium">{file.name}</span>
+                        <span className="text-sm text-slate-900 font-medium">{file.name ?? file.filename}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-sm text-slate-600 font-mono">{formatSize(file.size)}</td>
+                    <td className="py-4 px-6 text-sm text-slate-600 font-mono">{formatSize(file.size ?? 0)}</td>
                     <td className="py-4 px-6 text-sm text-slate-600">
-                      {new Date(file.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+                      {new Date(file.createdAt ?? file.created_at ?? 0).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="py-4 px-6 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">

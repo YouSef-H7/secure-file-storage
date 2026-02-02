@@ -52,32 +52,32 @@ const EmployeeShared = () => {
     return `${val.toFixed(1)} ${units[unitIdx]}`;
   };
 
-  const getFileTypeColor = (mimeType: string) => {
-    if (mimeType.includes('pdf')) return 'bg-red-100 text-red-700';
-    if (mimeType.includes('word') || mimeType.includes('document')) return 'bg-blue-100 text-blue-700';
-    if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'bg-green-100 text-green-700';
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'bg-orange-100 text-orange-700';
-    if (mimeType.startsWith('image/')) return 'bg-purple-100 text-purple-700';
+  const getFileTypeColor = (mimeType: string | undefined) => {
+    const m = mimeType ?? '';
+    if (m.includes('pdf')) return 'bg-red-100 text-red-700';
+    if (m.includes('word') || m.includes('document')) return 'bg-blue-100 text-blue-700';
+    if (m.includes('sheet') || m.includes('excel')) return 'bg-green-100 text-green-700';
+    if (m.includes('presentation') || m.includes('powerpoint')) return 'bg-orange-100 text-orange-700';
+    if (m.startsWith('image/')) return 'bg-purple-100 text-purple-700';
     return 'bg-slate-100 text-slate-700';
   };
 
-  const getFileTypeLabel = (mimeType: string) => {
-    if (mimeType.includes('pdf')) return 'PDF';
-    if (mimeType.includes('word') || mimeType.includes('document')) return 'DOCX';
-    if (mimeType.includes('sheet') || mimeType.includes('excel')) return 'XLSX';
-    if (mimeType.includes('presentation') || mimeType.includes('powerpoint')) return 'PPTX';
-    if (mimeType.startsWith('image/')) return mimeType.split('/')[1].toUpperCase();
+  const getFileTypeLabel = (mimeType: string | undefined) => {
+    const m = mimeType ?? '';
+    if (m.includes('pdf')) return 'PDF';
+    if (m.includes('word') || m.includes('document')) return 'DOCX';
+    if (m.includes('sheet') || m.includes('excel')) return 'XLSX';
+    if (m.includes('presentation') || m.includes('powerpoint')) return 'PPTX';
+    if (m.startsWith('image/')) return m.split('/')[1].toUpperCase();
     return 'FILE';
   };
 
-  const filteredFiles = files.filter(file => {
-    return file.name.toLowerCase().includes(searchQuery.toLowerCase());
-  });
-
-  const filteredFolders = folders.filter(folder => {
-    return folder.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           folder.owner_email.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const q = searchQuery.toLowerCase();
+  const filteredFiles = files.filter(file => (file.name ?? '').toLowerCase().includes(q));
+  const filteredFolders = folders.filter(folder =>
+    (folder.name ?? '').toLowerCase().includes(q) ||
+    (folder.owner_email ?? '').toLowerCase().includes(q)
+  );
 
   return (
     <div className="space-y-6">

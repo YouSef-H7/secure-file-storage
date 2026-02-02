@@ -287,17 +287,20 @@ app.get('/api/files', authenticate, async (req: AuthRequest, res) => {
     if (!req.user?.tenantId || !req.user?.userId) {
       return res.status(401).json({ error: 'Missing user context' });
     }
-    const files = await fileRepository.listUserFiles({
+    const rawFiles = await fileRepository.listUserFiles({
       tenantId: req.user.tenantId,
       userId: req.user.userId
     });
+    const list = rawFiles ?? [];
 
-    // Map to expected format
-    const mappedFiles = files.map((f: FileMeta) => ({
+    // Map to frontend contract (name, mimeType, createdAt)
+    const mappedFiles = list.map((f: FileMeta) => ({
       id: f.id,
-      filename: f.filename,
+      name: f.filename,
       size: f.size,
-      created_at: f.created_at
+      created_at: f.created_at,
+      createdAt: f.created_at,
+      mimeType: f.mime_type ?? 'application/octet-stream'
     }));
 
     res.json(mappedFiles);

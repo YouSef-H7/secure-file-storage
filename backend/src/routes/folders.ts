@@ -29,7 +29,7 @@ router.get('/', async (req: AuthRequest, res: Response) => {
             [ownerId, tenantId]
         );
 
-        res.json(folders);
+        res.json(folders ?? []);
     } catch (err) {
         console.error('[FOLDER] List error:', err);
         res.status(500).json({ error: 'Failed to fetch folders' });
@@ -172,7 +172,7 @@ router.get('/:id/items', async (req: AuthRequest, res: Response) => {
         const [files] = await db.execute<RowDataPacket[]>(fileQuery, fileParams);
 
         // Clean up response - map mime_type to mimeType for frontend
-        const safeFiles = files.map(f => ({ 
+        const safeFiles = (files ?? []).map(f => ({ 
             id: f.id,
             name: f.name,
             size: f.size,
@@ -180,7 +180,7 @@ router.get('/:id/items', async (req: AuthRequest, res: Response) => {
             mimeType: f.mime_type || 'application/octet-stream',
             type: 'file'
         }));
-        const safeFolders = subfolders.map(f => ({ ...f, type: 'folder' }));
+        const safeFolders = (subfolders ?? []).map(f => ({ ...f, type: 'folder' }));
 
         res.json({
             folders: safeFolders,
@@ -329,7 +329,7 @@ router.get('/shared-with-me', async (req: AuthRequest, res: Response) => {
             [userId, tenantId]
         );
 
-        res.json(rows);
+        res.json(rows ?? []);
     } catch (err) {
         console.error('[FOLDER] Shared list error:', err);
         res.status(500).json({ error: 'Failed to fetch shared folders' });

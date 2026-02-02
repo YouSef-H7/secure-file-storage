@@ -38,10 +38,11 @@ const SharedFolders = () => {
     fetchFolders();
   }, [fetchFolders]);
 
-  const filteredFolders = folders.filter(folder => {
-    return folder.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           folder.owner_email.toLowerCase().includes(searchQuery.toLowerCase());
-  });
+  const q = searchQuery.toLowerCase();
+  const filteredFolders = folders.filter(folder =>
+    (folder.name ?? '').toLowerCase().includes(q) ||
+    (folder.owner_email ?? '').toLowerCase().includes(q)
+  );
 
   return (
     <div className="space-y-6">
