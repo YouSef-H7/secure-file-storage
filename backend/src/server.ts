@@ -62,9 +62,6 @@ app.use(cors({
   origin: 'http://145.241.155.110', // Exact origin match for production IP
   credentials: true,
 }));
-// Increase JSON and URL-encoded payload limits (avoid PayloadTooLargeError on large uploads)
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // ================= DIRECTORIES =================
 const UPLOADS_DIR = path.join(config.DATA_DIR, 'uploads');
@@ -122,6 +119,73 @@ const upload = multer({
     }
   }
 });
+
+// ================= UPLOAD ROUTE (before express.json) =================
+// Multer must handle multipart/form-data first; express.json() would try to parse it as JSON and throw "Unexpected token '-'"
+app.post(
+  '/api/files/upload',
+  authenticate,
+  upload.single('file'),
+  async (req: any, res) => {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file provided' });
+    }
+
+    const fileId = path.basename(
+      req.file.filename,
+      path.extname(req.file.filename)
+    );
+
+    const folderId = req.body.folderId || null;
+
+    try {
+      // Infer mime type from file extension
+      const ext = path.extname(req.file.originalname).toLowerCase();
+      let mimeType = req.file.mimetype || 'application/octet-stream';
+      if (!mimeType || mimeType === 'application/octet-stream') {
+        const mimeMap: Record<string, string> = {
+          '.pdf': 'application/pdf',
+          '.jpg': 'image/jpeg',
+          '.jpeg': 'image/jpeg',
+          '.png': 'image/png',
+          '.doc': 'application/msword',
+          '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          '.xls': 'application/vnd.ms-excel',
+          '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        };
+        mimeType = mimeMap[ext] || 'application/octet-stream';
+      }
+
+      if (!req.user?.tenantId || !req.user?.userId) {
+        return res.status(401).json({ error: 'Missing user context' });
+      }
+      await fileRepository.saveFileMeta({
+        id: fileId,
+        tenant_id: req.user.tenantId,
+        user_id: req.user.userId,
+        filename: req.file.originalname,
+        size: req.file.size,
+        storage_path: req.file.path,
+        folder_id: folderId || null,
+        mime_type: mimeType,
+        created_at: new Date().toISOString()
+      });
+
+      res.status(201).json({
+        id: fileId,
+        name: req.file.originalname
+      });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ error: 'File upload failed' });
+    }
+  }
+);
+
+// ================= BODY PARSERS (after upload route) =================
+// JSON/urlencoded must NOT run on /api/files/upload (multipart); they run for all other routes
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // ================= OIDC ROUTES (BFF Pattern) =================
 // 🔐 All OIDC logic (login, callback, token exchange) happens here
@@ -216,67 +280,6 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ================= FILES =================
-
-// ---------- UPLOAD ----------
-app.post(
-  '/api/files/upload',
-  authenticate,
-  upload.single('file'),
-  async (req: any, res) => {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file provided' });
-    }
-
-    const fileId = path.basename(
-      req.file.filename,
-      path.extname(req.file.filename)
-    );
-
-    const folderId = req.body.folderId || null;
-
-    try {
-      // Infer mime type from file extension
-      const ext = path.extname(req.file.originalname).toLowerCase();
-      let mimeType = req.file.mimetype || 'application/octet-stream';
-      if (!mimeType || mimeType === 'application/octet-stream') {
-        const mimeMap: Record<string, string> = {
-          '.pdf': 'application/pdf',
-          '.jpg': 'image/jpeg',
-          '.jpeg': 'image/jpeg',
-          '.png': 'image/png',
-          '.doc': 'application/msword',
-          '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-          '.xls': 'application/vnd.ms-excel',
-          '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        };
-        mimeType = mimeMap[ext] || 'application/octet-stream';
-      }
-
-      if (!req.user?.tenantId || !req.user?.userId) {
-        return res.status(401).json({ error: 'Missing user context' });
-      }
-      await fileRepository.saveFileMeta({
-        id: fileId,
-        tenant_id: req.user.tenantId,
-        user_id: req.user.userId,
-        filename: req.file.originalname,
-        size: req.file.size,
-        storage_path: req.file.path,
-        folder_id: folderId || null,
-        mime_type: mimeType,
-        created_at: new Date().toISOString()
-      });
-
-      res.status(201).json({
-        id: fileId,
-        name: req.file.originalname
-      });
-    } catch (err) {
-      console.error(err);
-      res.status(500).json({ error: 'File upload failed' });
-    }
-  }
-);
 
 // ---------- LIST FILES ----------
 app.get('/api/files', authenticate, async (req: AuthRequest, res) => {
