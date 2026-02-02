@@ -11,6 +11,7 @@ import {
   resolveUserRole,
 } from '../services/oidc';
 import { AuthRequest } from '../middleware/auth';
+import { normalizeUserId } from '../utils/userId';
 import type { Session } from 'express-session';
 
 const oidcRouter = Router();
@@ -216,6 +217,7 @@ oidcRouter.get('/callback', async (req: Request, res: Response) => {
     }
 
     const sub = decoded.sub;
+    const canonicalSub = normalizeUserId(sub);
     const name = decoded.name;
 
     // Identity Resolution: email -> preferred_username -> upn -> sub
@@ -265,9 +267,10 @@ oidcRouter.get('/callback', async (req: Request, res: Response) => {
     }
 
     // Store user info in session (id and role from DB when present)
+    // Use canonical sub so session and file metadata match (#ext# vs #EXT#)
     req.session.user = {
       id: dbUserId,
-      sub,
+      sub: canonicalSub,
       email,
       name,
       role,

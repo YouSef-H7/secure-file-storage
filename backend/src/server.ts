@@ -319,6 +319,7 @@ app.get('/api/files/trash', authenticate, async (req: AuthRequest, res) => {
     if (!req.user?.tenantId || !req.user?.userId) {
       return res.status(401).json({ error: 'Missing user context' });
     }
+    console.log('[TRASH] Searching for user:', req.user.userId);
     const rawFiles = await fileRepository.listUserTrashFiles({
       tenantId: req.user.tenantId,
       userId: req.user.userId

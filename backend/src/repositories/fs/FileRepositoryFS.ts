@@ -13,6 +13,7 @@ import path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import { FileRepository, FileMeta } from '../FileRepository';
 import { config } from '../../config';
+import { normalizeUserId } from '../../utils/userId';
 
 const METADATA_DIR = path.join(config.DATA_DIR, 'metadata');
 const FILES_METADATA_FILE = path.join(METADATA_DIR, 'files.json');
@@ -83,8 +84,9 @@ class FileRepositoryFS implements FileRepository {
 
   async listUserFiles(input: { tenantId: string; userId: string }): Promise<FileMeta[]> {
     const files = await this.readFiles();
+    const nUserId = normalizeUserId(input.userId);
     return files
-      .filter(f => f.tenant_id === input.tenantId && f.user_id === input.userId && !toBoolean(f.is_deleted))
+      .filter(f => f.tenant_id === input.tenantId && normalizeUserId(f.user_id) === nUserId && !toBoolean(f.is_deleted))
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .map(f => ({
         id: f.id,
@@ -100,12 +102,12 @@ class FileRepositoryFS implements FileRepository {
   }
 
   async listUserTrashFiles(input: { tenantId: string; userId: string }): Promise<FileMeta[]> {
-    const userId = input.userId;
+    const nUserId = normalizeUserId(input.userId);
     const tenantId = input.tenantId;
-    console.log(`[TRASH] Searching for user: ${userId}`);
+    console.log(`[TRASH] Searching for user: ${input.userId}`);
     const files = await this.readFiles();
     const totalRecords = files.length;
-    const afterUserFilter = files.filter(f => f.tenant_id === tenantId && f.user_id === userId);
+    const afterUserFilter = files.filter(f => f.tenant_id === tenantId && normalizeUserId(f.user_id) === nUserId);
     const afterUserCount = afterUserFilter.length;
     const afterDeletedFilter = afterUserFilter.filter(f => toBoolean(f.is_deleted));
     const afterDeletedCount = afterDeletedFilter.length;
@@ -128,14 +130,15 @@ class FileRepositoryFS implements FileRepository {
   async getFileById(input: { fileId: string; tenantId: string; userId: string }): Promise<FileMeta | null> {
     const files = await this.readFiles();
     const shares = await this.readShares();
+    const nUserId = normalizeUserId(input.userId);
 
     const file = files.find(f => f.id === input.fileId && f.tenant_id === input.tenantId);
     if (!file || toBoolean(file.is_deleted)) return null;
 
-    const isOwner = file.user_id === input.userId;
+    const isOwner = normalizeUserId(file.user_id) === nUserId;
     const hasDirectShare = shares.some(s =>
       s.file_id === input.fileId &&
-      s.shared_with_user_id === input.userId &&
+      normalizeUserId(s.shared_with_user_id) === nUserId &&
       s.tenant_id === input.tenantId
     );
 
@@ -181,10 +184,11 @@ class FileRepositoryFS implements FileRepository {
 
   async deleteFileMeta(input: { fileId: string; tenantId: string; userId: string }): Promise<{ storage_path: string } | null> {
     const files = await this.readFiles();
+    const nUserId = normalizeUserId(input.userId);
     const file = files.find(f =>
       f.id === input.fileId &&
       f.tenant_id === input.tenantId &&
-      f.user_id === input.userId
+      normalizeUserId(f.user_id) === nUserId
     );
 
     if (!file) return null;
@@ -200,10 +204,11 @@ class FileRepositoryFS implements FileRepository {
 
   async restoreFileMeta(input: { fileId: string; tenantId: string; userId: string }): Promise<boolean> {
     const files = await this.readFiles();
+    const nUserId = normalizeUserId(input.userId);
     const idx = files.findIndex(f =>
       f.id === input.fileId &&
       f.tenant_id === input.tenantId &&
-      f.user_id === input.userId
+      normalizeUserId(f.user_id) === nUserId
     );
     if (idx === -1) return false;
 
@@ -216,9 +221,10 @@ class FileRepositoryFS implements FileRepository {
     const files = await this.readFiles();
     const shares = await this.readShares();
     const users = await this.readUsers();
+    const nUserId = normalizeUserId(input.userId);
 
     const userShares = shares.filter(s => 
-      s.shared_with_user_id === input.userId && 
+      normalizeUserId(s.shared_with_user_id) === nUserId && 
       s.tenant_id === input.tenantId
     );
 

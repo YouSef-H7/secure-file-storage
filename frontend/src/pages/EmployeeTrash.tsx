@@ -19,10 +19,11 @@ const EmployeeTrash = () => {
   const fetchTrash = () => {
     setLoading(true);
     // api.request uses credentials: 'include' (session cookie) for BFF auth
+    // If ever using userId in path/query, use encodeURIComponent(userId) so # and @ do not break the URL
     api.request('/api/files/trash')
       .then((data: TrashFile[] | unknown) => {
-        console.log('[TRASH API RAW RESPONSE]', data);
         const arr = Array.isArray(data) ? data : [];
+        console.log('[TRASH RAW RESPONSE]', arr.length, data);
         setItems(arr);
       })
       .catch(() => setItems([]))
