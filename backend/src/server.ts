@@ -107,6 +107,11 @@ const storage = multer.diskStorage({
 
 
 
+// Multer configuration
+// upload.single('file') should automatically parse:
+// - File field 'file' → req.file
+// - Text fields (is_deleted, folderId) → req.body
+// If req.body is empty but req.file exists, this indicates a Multer parsing issue
 const upload = multer({
   storage,
   limits: { fileSize: 100 * 1024 * 1024 }, // 100MB
@@ -117,6 +122,7 @@ const upload = multer({
       cb(new Error(`Invalid file type: ${file.mimetype}`));
     }
   }
+  // Note: No custom field parsing - Multer should handle text fields automatically
 });
 
 // ================= UPLOAD ROUTE (CRITICAL: Must be before body parsers) =================
@@ -127,15 +133,32 @@ const upload = multer({
 // Field name 'file' must match the frontend FormData key: formData.append('file', file)
 app.post(
   '/api/files/upload',
+  // Stream check middleware: verify stream is not consumed before Multer
+  (req: any, res, next) => {
+    console.log('[STREAM CHECK] Stream readable:', req.readable);
+    console.log('[STREAM CHECK] Stream destroyed:', req.destroyed);
+    console.log('[STREAM CHECK] Has body parser:', !!req.body);
+    next();
+  },
   authenticate,
   upload.single('file'), // must match browser payload field name exactly
   async (req: any, res) => {
+    // DIAGNOSTIC: Log request state before any processing
+    console.log('[UPLOAD DEBUG] content-type:', req.headers['content-type']);
+    console.log('[UPLOAD DEBUG] req.body keys:', Object.keys(req.body || {}));
+    console.log('[UPLOAD DEBUG] req.body:', req.body);
+    console.log('[UPLOAD DEBUG] req.file exists:', !!req.file);
+    console.log('[UPLOAD DEBUG] req.file:', req.file);
+    
+    // If body is empty, log request properties for forensic analysis
+    if (!req.body || Object.keys(req.body).length === 0) {
+      console.log('[UPLOAD DEBUG] Request properties:', Object.getOwnPropertyNames(req));
+      console.log('[UPLOAD DEBUG] Request rawHeaders:', req.rawHeaders);
+    }
+    
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });
     }
-    console.log('[UPLOAD DEBUG] content-type:', req.headers['content-type']);
-    console.log('[UPLOAD DEBUG] req.body:', req.body);
-    console.log('[UPLOAD DEBUG] req.file:', req.file);
 
     const fileId = path.basename(
       req.file.filename,

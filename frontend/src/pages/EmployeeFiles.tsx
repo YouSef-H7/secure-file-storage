@@ -119,8 +119,9 @@ const EmployeeFiles = () => {
       if (effectiveFolderId) formData.append('folderId', effectiveFolderId);
       formData.append('file', file);
       for (const [key, value] of formData.entries()) {
-        console.log('[FORMDATA ASSERT]', key, value);
+        console.log('[FORMDATA ASSERT]', key, value instanceof File ? 'File' : value);
       }
+      console.log('[FORMDATA] Sending to:', '/api/files/upload');
       await api.request('/api/files/upload', {
         method: 'POST',
         body: formData,

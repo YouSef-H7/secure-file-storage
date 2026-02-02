@@ -47,7 +47,13 @@ export const api = {
       ...options.headers,
       'Authorization': token ? `Bearer ${token}` : '',
     };
-    if (isFormData) delete headers['Content-Type'];
+    if (isFormData) {
+      delete headers['Content-Type'];
+      // VERIFY: Log if Content-Type was somehow set (this breaks Multer)
+      if (headers['Content-Type']) {
+        console.error('[API ERROR] Content-Type set for FormData!', headers['Content-Type']);
+      }
+    }
 
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('TIMEOUT')), 1500)
