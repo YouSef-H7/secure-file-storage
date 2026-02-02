@@ -119,8 +119,11 @@ const upload = multer({
   }
 });
 
-// ================= UPLOAD ROUTE (before express.json) =================
-// Multer must handle multipart/form-data first; express.json() would try to parse it as JSON and throw "Unexpected token '-'"
+// ================= UPLOAD ROUTE (CRITICAL: Must be before body parsers) =================
+// This route MUST be registered before express.json() and express.urlencoded() so Multer
+// is the first and only consumer of the multipart/form-data request body stream.
+// Session and CORS middleware above do NOT consume the body stream (session reads cookies,
+// CORS only modifies headers), so they are safe to have before this route.
 // Field name 'file' must match the frontend FormData key: formData.append('file', file)
 app.post(
   '/api/files/upload',
