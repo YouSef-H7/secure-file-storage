@@ -42,17 +42,16 @@ console.warn = function (msg: unknown, ...args: unknown[]) {
 };
 app.use(session({
   name: 'connect.sid',
-  secret: process.env.SESSION_SECRET || config.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true,
+  secret: process.env.SESSION_SECRET || config.SESSION_SECRET || 'secure-secret',
+  resave: true,              // MUST be true for stable sessions over HTTP
+  saveUninitialized: true,   // MUST be true for OIDC state/nonce before redirect
   rolling: true,
-  proxy: true, // required behind nginx / reverse proxy
+  proxy: true,               // required behind nginx / reverse proxy
   cookie: {
-    secure: false,   // MUST be false for HTTP (SameSite=None requires Secure=true)
+    secure: false,           // Required for HTTP
+    sameSite: 'lax',        // Required for OIDC redirects over HTTP
     httpOnly: true,
-    sameSite: 'lax', // REQUIRED for OIDC redirects over HTTP; do NOT use 'none' on HTTP
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    // domain: do NOT set on IP-based origins; browser scopes cookie automatically
   },
 }));
 console.warn = _warn;
@@ -122,10 +121,11 @@ const upload = multer({
 
 // ================= UPLOAD ROUTE (before express.json) =================
 // Multer must handle multipart/form-data first; express.json() would try to parse it as JSON and throw "Unexpected token '-'"
+// Field name 'file' must match the frontend FormData key: formData.append('file', file)
 app.post(
   '/api/files/upload',
   authenticate,
-  upload.single('file'),
+  upload.single('file'), // must match browser payload field name exactly
   async (req: any, res) => {
     if (!req.file) {
       return res.status(400).json({ error: 'No file provided' });
