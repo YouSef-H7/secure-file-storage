@@ -25,6 +25,12 @@ export interface AdminStats {
     error: string | null;
 }
 
+const toLogType = (s: string | undefined): 'upload' | 'delete' | 'login' | 'other' => {
+    const t = (s || 'other').toLowerCase();
+    if (t === 'upload' || t === 'delete' || t === 'login') return t;
+    return 'other';
+};
+
 export const useAdminStats = () => {
     const [stats, setStats] = useState<AdminStats>({
         summary: { totalFiles: 0, totalStorage: 0, totalUsers: 0, activeUsers24h: 0 },
@@ -136,7 +142,7 @@ export const useAdminStats = () => {
                     action: log.action || 'Unknown Event',
                     user: log.userName || log.user || 'System',
                     time: log.timestamp || log.time || new Date().toISOString(),
-                    type: ((log.type || 'other') as string).toLowerCase()
+                    type: toLogType(log.type)
                 }));
 
                 setStats({
