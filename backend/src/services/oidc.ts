@@ -87,16 +87,25 @@ export async function getOIDCConfig(): Promise<OIDCConfig> {
       jwks_uri: discovery.jwks_uri,
     });
 
-    if (!discovery.authorization_endpoint || !discovery.token_endpoint || !discovery.jwks_uri) {
-      throw new Error('Discovery document missing required endpoints: authorization_endpoint, token_endpoint, or jwks_uri');
+    // Oracle IDCS / OpenID discovery: support both snake_case and camelCase
+    const authorizationEndpoint =
+      discovery.authorization_endpoint ?? discovery.authorizationEndpoint;
+    const tokenEndpoint =
+      discovery.token_endpoint ?? discovery.tokenEndpoint;
+    const jwksUri = discovery.jwks_uri ?? discovery.jwksUri;
+
+    if (!authorizationEndpoint || !tokenEndpoint || !jwksUri) {
+      throw new Error(
+        'Discovery document missing required endpoints: authorization_endpoint, token_endpoint, or jwks_uri'
+      );
     }
 
     cachedConfig = {
       issuer: discovery.issuer,
-      authorizationEndpoint: discovery.authorization_endpoint,
-      tokenEndpoint: discovery.token_endpoint,
-      userInfoEndpoint: discovery.userinfo_endpoint,
-      jwksUri: discovery.jwks_uri,
+      authorizationEndpoint,
+      tokenEndpoint,
+      userInfoEndpoint: discovery.userinfo_endpoint ?? discovery.userInfoEndpoint,
+      jwksUri,
     };
 
     return cachedConfig;
@@ -109,6 +118,7 @@ export async function getOIDCConfig(): Promise<OIDCConfig> {
 /**
  * Generate authorization URL for user to sign in
  * Uses Authorization Code + PKCE
+ * MUST return { url, state, nonce, codeVerifier } with url a valid string (safe for .substring() / redirect).
  */
 export function generateAuthorizationUrl(): {
   url: string;
@@ -141,13 +151,19 @@ export function generateAuthorizationUrl(): {
     code_challenge_method: 'S256',
   });
 
-  if (!cachedConfig?.authorizationEndpoint) {
-    throw new Error('Authorization endpoint not available - discovery must be called first');
+  const endpoint = cachedConfig?.authorizationEndpoint;
+  if (!endpoint || typeof endpoint !== 'string' || !endpoint.startsWith('http')) {
+    throw new Error(
+      'Authorization endpoint not available or invalid - call getOIDCConfig() first and ensure discovery returns authorization_endpoint'
+    );
   }
 
-  const url = `${cachedConfig.authorizationEndpoint}?${params.toString()}`;
+  const url = `${endpoint}?${params.toString()}`;
+  if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+    throw new Error('Generated authorization URL is invalid');
+  }
 
-  console.log('[OIDC] Generated authorization URL for endpoint:', cachedConfig.authorizationEndpoint);
+  console.log('[OIDC] Generated authorization URL for endpoint:', endpoint);
   console.log('[OIDC] Auth state:', state.substring(0, 8) + '...');
 
   return { url, state, nonce, codeVerifier };

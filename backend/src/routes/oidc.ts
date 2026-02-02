@@ -101,8 +101,19 @@ oidcRouter.get('/login', async (req: Request, res: Response) => {
     // Initialize OIDC config (fetches discovery document)
     await getOIDCConfig();
 
-    // Generate auth URL with PKCE
-    const { url, state, nonce, codeVerifier } = generateAuthorizationUrl();
+    // Generate auth URL with PKCE (always returns { url, state, nonce, codeVerifier })
+    const authResult = generateAuthorizationUrl();
+    const { url, state, nonce, codeVerifier } = authResult;
+
+    if (!url || typeof url !== 'string' || !state || typeof state !== 'string') {
+      console.error('[OIDC/LOGIN] ❌ generateAuthorizationUrl() returned invalid result:', {
+        hasUrl: !!url,
+        urlType: typeof url,
+        hasState: !!state,
+        stateType: typeof state,
+      });
+      return res.status(500).json({ error: 'Failed to generate authorization URL' });
+    }
 
     // 📍 INSTRUMENTATION: Log login details
     console.log('[OIDC/LOGIN]', timestamp);
