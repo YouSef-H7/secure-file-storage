@@ -41,6 +41,10 @@ const EmployeeFiles = () => {
     }
   }, [currentFolderId, setSearchParams]);
 
+  useEffect(() => {
+    setCurrentFolderId(searchParams.get('folderId') || null);
+  }, [searchParams]);
+
   const fetchContent = useCallback(async () => {
     setLoading(true);
     setError(null);

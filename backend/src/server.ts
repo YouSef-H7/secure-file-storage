@@ -292,9 +292,10 @@ app.get('/api/files', authenticate, async (req: AuthRequest, res) => {
       userId: req.user.userId
     });
     const list = rawFiles ?? [];
+    const rootOnly = list.filter((f: FileMeta) => f.folder_id == null);
 
     // Map to frontend contract (name, mimeType, createdAt)
-    const mappedFiles = list.map((f: FileMeta) => ({
+    const mappedFiles = rootOnly.map((f: FileMeta) => ({
       id: f.id,
       name: f.filename,
       size: f.size,
