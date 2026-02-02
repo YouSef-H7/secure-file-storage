@@ -141,36 +141,43 @@ app.post(
     next();
   },
   authenticate,
-  upload.single('file'), // must match browser payload field name exactly
+  upload.fields([
+    { name: 'file', maxCount: 1 },
+    { name: 'is_deleted', maxCount: 1 },
+    { name: 'folderId', maxCount: 1 }
+  ]),
   async (req: any, res) => {
-    // DIAGNOSTIC: Log request state before any processing
-    console.log('[UPLOAD DEBUG] content-type:', req.headers['content-type']);
-    console.log('[UPLOAD DEBUG] req.body keys:', Object.keys(req.body || {}));
-    console.log('[UPLOAD DEBUG] req.body:', req.body);
-    console.log('[UPLOAD DEBUG] req.file exists:', !!req.file);
-    console.log('[UPLOAD DEBUG] req.file:', req.file);
+    // Extract file from req.files (upload.fields() returns files object)
+    const uploadedFile = (req.files as any)?.file?.[0];
     
-    // If body is empty, log request properties for forensic analysis
-    if (!req.body || Object.keys(req.body).length === 0) {
-      console.log('[UPLOAD DEBUG] Request properties:', Object.getOwnPropertyNames(req));
-      console.log('[UPLOAD DEBUG] Request rawHeaders:', req.rawHeaders);
-    }
-    
-    if (!req.file) {
+    if (!uploadedFile) {
       return res.status(400).json({ error: 'No file provided' });
     }
 
+    // DIAGNOSTIC: Verify body parsing
+    console.log('[UPLOAD DEBUG] req.body:', req.body);
+    console.log('[UPLOAD DEBUG] req.files:', req.files);
+
+    // Hard assertions - stop if data is missing
+    if (!req.body.is_deleted) {
+      console.error('[UPLOAD ERROR] is_deleted missing from req.body');
+      return res.status(400).json({ error: 'Missing is_deleted field' });
+    }
+
+    // Convert is_deleted from string to boolean
+    const isDeleted = req.body.is_deleted === 'true';
+
     const fileId = path.basename(
-      req.file.filename,
-      path.extname(req.file.filename)
+      uploadedFile.filename,
+      path.extname(uploadedFile.filename)
     );
 
     const folderId = (req.body.folderId === 'null' || !req.body.folderId) ? null : req.body.folderId;
 
     try {
       // Infer mime type from file extension
-      const ext = path.extname(req.file.originalname).toLowerCase();
-      let mimeType = req.file.mimetype || 'application/octet-stream';
+      const ext = path.extname(uploadedFile.originalname).toLowerCase();
+      let mimeType = uploadedFile.mimetype || 'application/octet-stream';
       if (!mimeType || mimeType === 'application/octet-stream') {
         const mimeMap: Record<string, string> = {
           '.pdf': 'application/pdf',
@@ -192,17 +199,18 @@ app.post(
         id: fileId,
         tenant_id: req.user.tenantId,
         user_id: req.user.userId,
-        filename: req.file.originalname,
-        size: req.file.size,
-        storage_path: req.file.path,
+        filename: uploadedFile.originalname,
+        size: uploadedFile.size,
+        storage_path: uploadedFile.path,
         folder_id: folderId || null,
         mime_type: mimeType,
+        is_deleted: isDeleted,
         created_at: new Date().toISOString()
       });
 
       res.status(201).json({
         id: fileId,
-        name: req.file.originalname
+        name: uploadedFile.originalname
       });
     } catch (err) {
       console.error(err);
