@@ -65,14 +65,11 @@ const FileManager = () => {
     try {
       await new Promise(r => setTimeout(r, 1200));
       const formData = new FormData();
-      formData.append('folderId', '');
-      formData.append('parentId', '');
       formData.append('is_deleted', 'false');
       formData.append('file', file);
       for (const [key, value] of formData.entries()) {
-        console.log('[FORMDATA]', key, value);
+        console.log('[FORMDATA ASSERT]', key, value);
       }
-      console.log('[DEBUG] FormData Entries:', Array.from(formData.entries()));
       await api.request('/api/files/upload', {
         method: 'POST',
         body: formData,

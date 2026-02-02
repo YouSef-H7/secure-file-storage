@@ -115,16 +115,12 @@ const EmployeeFiles = () => {
     setUploading(true);
     try {
       const formData = new FormData();
-      const folderId = effectiveFolderId ?? '';
-      const parentId = effectiveFolderId ?? '';
-      formData.append('folderId', folderId);
-      formData.append('parentId', parentId);
       formData.append('is_deleted', 'false');
+      if (effectiveFolderId) formData.append('folderId', effectiveFolderId);
       formData.append('file', file);
       for (const [key, value] of formData.entries()) {
-        console.log('[FORMDATA]', key, value);
+        console.log('[FORMDATA ASSERT]', key, value);
       }
-      console.log('[DEBUG] FormData Entries:', Array.from(formData.entries()));
       await api.request('/api/files/upload', {
         method: 'POST',
         body: formData,
