@@ -62,7 +62,9 @@ app.use(cors({
   origin: 'http://145.241.155.110', // Exact origin match for production IP
   credentials: true,
 }));
-app.use(express.json());
+// Increase JSON and URL-encoded payload limits (avoid PayloadTooLargeError on large uploads)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // ================= DIRECTORIES =================
 const UPLOADS_DIR = path.join(config.DATA_DIR, 'uploads');
