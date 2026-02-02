@@ -62,6 +62,11 @@ app.use(cors({
   credentials: true,
 }));
 
+// ================= BODY PARSERS (before any routes) =================
+// For multipart/form-data, these skip parsing and leave body for Multer on upload route
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
+
 // ================= DIRECTORIES =================
 const UPLOADS_DIR = path.join(config.DATA_DIR, 'uploads');
 fs.ensureDirSync(UPLOADS_DIR);
@@ -183,11 +188,6 @@ app.post(
   }
 );
 
-// ================= BODY PARSERS (after upload route) =================
-// JSON/urlencoded must NOT run on /api/files/upload (multipart); they run for all other routes
-app.use(express.json({ limit: '100mb' }));
-app.use(express.urlencoded({ limit: '100mb', extended: true }));
-
 // ================= OIDC ROUTES (BFF Pattern) =================
 // 🔐 All OIDC logic (login, callback, token exchange) happens here
 // Frontend never sees tokens; they're stored server-side only
@@ -292,7 +292,7 @@ app.get('/api/files', authenticate, async (req: AuthRequest, res) => {
       tenantId: req.user.tenantId,
       userId: req.user.userId
     });
-    const list = rawFiles ?? [];
+    const list = (rawFiles ?? []).filter((f: FileMeta) => (f as any).is_deleted !== true);
     const rootOnly = list.filter((f: FileMeta) => f.folder_id == null);
 
     // Map to frontend contract (name, mimeType, createdAt)

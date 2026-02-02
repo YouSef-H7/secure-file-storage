@@ -18,6 +18,15 @@ const METADATA_DIR = path.join(config.DATA_DIR, 'metadata');
 const FILES_METADATA_FILE = path.join(METADATA_DIR, 'files.json');
 const SHARES_METADATA_FILE = path.join(METADATA_DIR, 'shares.json');
 
+/** Coerce is_deleted from JSON (handles legacy "true", 1, etc.) to boolean */
+function toBoolean(v: unknown): boolean {
+  if (v === true) return true;
+  if (v === false) return false;
+  if (v === 'true' || v === 1) return true;
+  if (v === 'false' || v === 0) return false;
+  return false;
+}
+
 interface FileRecord {
   id: string;
   filename: string;
@@ -75,7 +84,7 @@ class FileRepositoryFS implements FileRepository {
   async listUserFiles(input: { tenantId: string; userId: string }): Promise<FileMeta[]> {
     const files = await this.readFiles();
     return files
-      .filter(f => f.tenant_id === input.tenantId && f.user_id === input.userId && !(f.is_deleted === true))
+      .filter(f => f.tenant_id === input.tenantId && f.user_id === input.userId && !toBoolean(f.is_deleted))
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .map(f => ({
         id: f.id,
@@ -91,9 +100,17 @@ class FileRepositoryFS implements FileRepository {
   }
 
   async listUserTrashFiles(input: { tenantId: string; userId: string }): Promise<FileMeta[]> {
+    const userId = input.userId;
+    const tenantId = input.tenantId;
+    console.log(`[TRASH] Searching for user: ${userId}`);
     const files = await this.readFiles();
-    return files
-      .filter(f => f.tenant_id === input.tenantId && f.user_id === input.userId && f.is_deleted === true)
+    const totalRecords = files.length;
+    const afterUserFilter = files.filter(f => f.tenant_id === tenantId && f.user_id === userId);
+    const afterUserCount = afterUserFilter.length;
+    const afterDeletedFilter = afterUserFilter.filter(f => toBoolean(f.is_deleted));
+    const afterDeletedCount = afterDeletedFilter.length;
+    console.log(`[TRASH] Total records in files.json: ${totalRecords}, after user filter: ${afterUserCount}, after is_deleted===true: ${afterDeletedCount}`);
+    return afterDeletedFilter
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .map(f => ({
         id: f.id,
@@ -113,7 +130,7 @@ class FileRepositoryFS implements FileRepository {
     const shares = await this.readShares();
 
     const file = files.find(f => f.id === input.fileId && f.tenant_id === input.tenantId);
-    if (!file || file.is_deleted === true) return null;
+    if (!file || toBoolean(file.is_deleted)) return null;
 
     const isOwner = file.user_id === input.userId;
     const hasDirectShare = shares.some(s =>
@@ -153,7 +170,7 @@ class FileRepositoryFS implements FileRepository {
       created_at: typeof meta.created_at === 'string' ? meta.created_at : meta.created_at.toISOString(),
       mime_type: meta.mime_type || null,
       folder_id: meta.folder_id ?? null,
-      is_deleted: meta.is_deleted ?? false
+      is_deleted: meta.is_deleted === true
     };
     files.push(record);
     await this.writeFiles(files);
@@ -169,9 +186,9 @@ class FileRepositoryFS implements FileRepository {
 
     if (!file) return null;
 
-    // Soft delete: set is_deleted = true; do not remove record or physical file
+    // Soft delete: set is_deleted = true (boolean); do not remove record or physical file
     const updatedFiles = files.map(f =>
-      f.id === input.fileId ? { ...f, is_deleted: true } : f
+      f.id === input.fileId ? { ...f, is_deleted: true as boolean } : f
     );
     await this.writeFiles(updatedFiles);
 
@@ -187,7 +204,7 @@ class FileRepositoryFS implements FileRepository {
     );
     if (idx === -1) return false;
 
-    files[idx] = { ...files[idx], is_deleted: false };
+    files[idx] = { ...files[idx], is_deleted: false as boolean };
     await this.writeFiles(files);
     return true;
   }
@@ -204,7 +221,7 @@ class FileRepositoryFS implements FileRepository {
 
     return userShares.map(share => {
       const file = files.find(f => f.id === share.file_id);
-      if (!file || file.is_deleted === true) return null;
+      if (!file || toBoolean(file.is_deleted)) return null;
       const owner = users.find(u => u.id === share.owner_user_id);
       return {
         id: file.id,

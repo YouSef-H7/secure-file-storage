@@ -18,9 +18,12 @@ const EmployeeTrash = () => {
 
   const fetchTrash = () => {
     setLoading(true);
+    // api.request uses credentials: 'include' (session cookie) for BFF auth
     api.request('/api/files/trash')
       .then((data: TrashFile[] | unknown) => {
-        setItems(Array.isArray(data) ? data : []);
+        console.log('[TRASH API RAW RESPONSE]', data);
+        const arr = Array.isArray(data) ? data : [];
+        setItems(arr);
       })
       .catch(() => setItems([]))
       .finally(() => setLoading(false));
