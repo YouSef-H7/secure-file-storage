@@ -249,9 +249,9 @@ export class FileRepositoryDB implements FileRepository {
         return null;
       }
 
-      // Soft delete: set is_deleted = TRUE
+      // Soft delete: set is_deleted = 1
       await db.execute<ResultSetHeader>(
-        `UPDATE files SET is_deleted = TRUE
+        `UPDATE files SET is_deleted = 1
          WHERE id = ? AND tenant_id = ?`,
         [input.fileId, input.tenantId]
       );

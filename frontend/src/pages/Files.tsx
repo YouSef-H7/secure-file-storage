@@ -85,12 +85,12 @@ const FileManager = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Execute permanent asset destruction?')) return;
+    if (!confirm('Move this file to Trash?')) return;
     try {
       await api.request(`/api/files/${id}`, { method: 'DELETE' });
       setFiles(prev => prev.filter(f => f.id !== id));
     } catch (err) {
-      alert("Destruction sequence interrupted.");
+      alert("Failed to move file to trash.");
     }
   };
 
