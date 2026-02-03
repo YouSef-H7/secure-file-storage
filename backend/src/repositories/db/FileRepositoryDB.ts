@@ -203,9 +203,9 @@ export class FileRepositoryDB implements FileRepository {
   async saveFileMeta(meta: FileMeta): Promise<void> {
     try {
       const isDeleted = meta.is_deleted === true ? true : false;
-      const createdAt = typeof meta.created_at === 'string' 
+      const createdAt = meta.created_at instanceof Date 
         ? meta.created_at 
-        : (meta.created_at instanceof Date ? meta.created_at.toISOString() : new Date().toISOString());
+        : (typeof meta.created_at === 'string' ? new Date(meta.created_at) : new Date());
 
       await db.execute<ResultSetHeader>(
         `INSERT INTO files (id, filename, size, created_at, storage_path, folder_id, tenant_id, user_id, mime_type, is_deleted)
