@@ -26,7 +26,7 @@ export class FileRepositoryDB implements FileRepository {
       const [rows] = await db.execute<RowDataPacket[]>(
         `SELECT id, filename, size, created_at, storage_path, folder_id, tenant_id, user_id, mime_type, is_deleted
          FROM files
-         WHERE tenant_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)
+         WHERE tenant_id = ? AND is_deleted = 0
          ORDER BY created_at DESC`,
         [input.tenantId]
       );
@@ -62,7 +62,7 @@ export class FileRepositoryDB implements FileRepository {
       const [rows] = await db.execute<RowDataPacket[]>(
         `SELECT id, filename, size, created_at, storage_path, folder_id, tenant_id, user_id, mime_type, is_deleted
          FROM files
-         WHERE tenant_id = ? AND is_deleted = TRUE
+         WHERE tenant_id = ? AND is_deleted = 1
          ORDER BY created_at DESC`,
         [input.tenantId]
       );
