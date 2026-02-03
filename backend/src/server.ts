@@ -1,3 +1,17 @@
+// Global crash handlers - MUST be first
+process.on('uncaughtException', (err) => {
+  console.error('[FATAL] uncaughtException:', err);
+  console.error('[FATAL] Stack:', err.stack);
+  // Keep process alive long enough to flush logs
+  setTimeout(() => process.exit(1), 250);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('[FATAL] unhandledRejection:', reason);
+  console.error('[FATAL] Promise:', promise);
+  setTimeout(() => process.exit(1), 250);
+});
+
 import express, { Express } from 'express';
 import cors from 'cors';
 import session from 'express-session';
@@ -18,12 +32,6 @@ import foldersRouter from './routes/folders';
 import { fileRepository } from './repositories';
 import { FileMeta } from './repositories/FileRepository';
 import initSchema from './services/db_init';
-
-// Init DB Schema (required for register/login and folder/share routes)
-// Run asynchronously - don't block server startup if DB is unavailable
-initSchema().catch(err => {
-  console.warn('[SERVER] Database schema initialization failed (this is OK if using filesystem mode):', err.message);
-});
 
 const app: Express = express();
 
@@ -68,16 +76,16 @@ if (process.env.REDIS_URL) {
 app.use(session({
   name: 'connect.sid',
   secret: process.env.SESSION_SECRET || config.SESSION_SECRET || 'secure-secret',
-  resave: true,              // MUST be true for stable sessions over HTTP
-  saveUninitialized: true,   // MUST be true for OIDC state/nonce before redirect
-  rolling: true,
+  resave: true,              // Temporary hardening (not ideal long-term)
+  saveUninitialized: false,  // Changed: only save initialized sessions
+  rolling: true,             // Refresh expiration on activity
   proxy: true,               // required behind nginx / reverse proxy
   store: sessionStore,       // Redis store if configured, else MemoryStore (default)
   cookie: {
     secure: false,           // Required for HTTP
     sameSite: 'lax',        // Required for OIDC redirects over HTTP
     httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    maxAge: 1000 * 60 * 60 * 12, // 12 hours (increased for stability)
   },
 }));
 console.warn = _warn;
@@ -509,7 +517,28 @@ app.get('*', (req, res, next) => {
 });
 
 // ================= START SERVER =================
-app.listen(config.PORT, () => {
-  console.log(`[BACKEND] Running on port ${config.PORT}`);
-  console.log(`[BACKEND] Data storage: ${config.DATA_DIR}`);
-});
+async function startServer() {
+  try {
+    // Initialize DB schema with explicit error handling
+    try {
+      await initSchema();
+      console.log('[SERVER] Database schema initialized successfully');
+    } catch (dbErr: any) {
+      console.warn('[SERVER] Database schema initialization failed (this is OK if using filesystem mode):', dbErr.message);
+      console.warn('[SERVER] Stack:', dbErr.stack);
+      // Continue startup even if DB init fails (filesystem mode)
+    }
+
+    // Start HTTP server
+    app.listen(config.PORT, () => {
+      console.log(`[BACKEND] Running on port ${config.PORT}`);
+      console.log(`[BACKEND] Data storage: ${config.DATA_DIR}`);
+    });
+  } catch (err: any) {
+    console.error('[BOOT FATAL] Startup failed:', err);
+    console.error('[BOOT FATAL] Stack:', err.stack);
+    process.exit(1);
+  }
+}
+
+startServer();

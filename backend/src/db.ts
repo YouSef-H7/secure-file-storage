@@ -11,6 +11,11 @@ const db = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
 });
+
+// Note: mysql2/promise pools handle errors at query time
+// Connection errors are caught in try/catch blocks where queries are executed
 
 export default db;
