@@ -33,8 +33,8 @@ export class FileRepositoryDB implements FileRepository {
 
       // Filter by case-insensitive user_id match
       const userFiles = (rows || []).filter(row => {
-        const rowUid = normUser(row.user_id);
-        return rowUid === uid;
+        const rowUid = normUser(row.user_id).toLowerCase();
+        return rowUid === uid.toLowerCase();
       });
 
       return userFiles.map(row => ({
@@ -69,8 +69,8 @@ export class FileRepositoryDB implements FileRepository {
 
       // Filter by case-insensitive user_id match
       const trashFiles = (rows || []).filter(row => {
-        const rowUid = normUser(row.user_id);
-        return rowUid === uid;
+        const rowUid = normUser(row.user_id).toLowerCase();
+        return rowUid === uid.toLowerCase();
       });
 
       return trashFiles.map(row => ({
