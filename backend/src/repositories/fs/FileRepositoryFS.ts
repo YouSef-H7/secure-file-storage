@@ -104,14 +104,9 @@ class FileRepositoryFS implements FileRepository {
   async listUserTrashFiles(input: { tenantId: string; userId: string }): Promise<FileMeta[]> {
     const nUserId = normalizeUserId(input.userId);
     const tenantId = input.tenantId;
-    console.log(`[TRASH] Searching for user: ${input.userId}`);
     const files = await this.readFiles();
-    const totalRecords = files.length;
     const afterUserFilter = files.filter(f => f.tenant_id === tenantId && normalizeUserId(f.user_id) === nUserId);
-    const afterUserCount = afterUserFilter.length;
     const afterDeletedFilter = afterUserFilter.filter(f => toBoolean(f.is_deleted));
-    const afterDeletedCount = afterDeletedFilter.length;
-    console.log(`[TRASH] Total records in files.json: ${totalRecords}, after user filter: ${afterUserCount}, after is_deleted===true: ${afterDeletedCount}`);
     return afterDeletedFilter
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .map(f => ({
@@ -166,9 +161,11 @@ class FileRepositoryFS implements FileRepository {
   }
 
   async saveFileMeta(meta: FileMeta): Promise<void> {
+    // Ensure is_deleted is always a boolean (defensive)
     if (typeof meta.is_deleted !== 'boolean') {
       meta.is_deleted = false;
     }
+    meta.is_deleted = Boolean(meta.is_deleted); // Explicit conversion
     const files = await this.readFiles();
     const record: FileRecord = {
       ...meta,
@@ -178,6 +175,7 @@ class FileRepositoryFS implements FileRepository {
       folder_id: meta.folder_id ?? null,
       is_deleted: meta.is_deleted === true
     };
+
     files.push(record);
     await this.writeFiles(files);
   }

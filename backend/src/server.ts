@@ -135,9 +135,11 @@ app.post(
   '/api/files/upload',
   // Stream check middleware: verify stream is not consumed before Multer
   (req: any, res, next) => {
-    console.log('[STREAM CHECK] Stream readable:', req.readable);
-    console.log('[STREAM CHECK] Stream destroyed:', req.destroyed);
-    console.log('[STREAM CHECK] Has body parser:', !!req.body);
+    if (process.env.DEBUG === 'true') {
+      console.log('[STREAM CHECK] Stream readable:', req.readable);
+      console.log('[STREAM CHECK] Stream destroyed:', req.destroyed);
+      console.log('[STREAM CHECK] Has body parser:', !!req.body);
+    }
     next();
   },
   authenticate,
@@ -154,18 +156,9 @@ app.post(
       return res.status(400).json({ error: 'No file provided' });
     }
 
-    // DIAGNOSTIC: Verify body parsing
-    console.log('[UPLOAD DEBUG] req.body:', req.body);
-    console.log('[UPLOAD DEBUG] req.files:', req.files);
-
-    // Hard assertions - stop if data is missing
-    if (!req.body.is_deleted) {
-      console.error('[UPLOAD ERROR] is_deleted missing from req.body');
-      return res.status(400).json({ error: 'Missing is_deleted field' });
-    }
-
-    // Convert is_deleted from string to boolean
-    const isDeleted = req.body.is_deleted === 'true';
+    // RESILIENT DEFAULT: is_deleted defaults to false if missing (Multer may drop text fields)
+    // This ensures uploads NEVER fail due to missing text fields
+    const isDeleted = req.body?.is_deleted === 'true';
 
     const fileId = path.basename(
       uploadedFile.filename,
@@ -195,6 +188,7 @@ app.post(
       if (!req.user?.tenantId || !req.user?.userId) {
         return res.status(401).json({ error: 'Missing user context' });
       }
+
       await fileRepository.saveFileMeta({
         id: fileId,
         tenant_id: req.user.tenantId,
@@ -354,7 +348,6 @@ app.get('/api/files/trash', authenticate, async (req: AuthRequest, res) => {
     if (!req.user?.tenantId || !req.user?.userId) {
       return res.status(401).json({ error: 'Missing user context' });
     }
-    console.log('[TRASH] Searching for user:', req.user.userId);
     const rawFiles = await fileRepository.listUserTrashFiles({
       tenantId: req.user.tenantId,
       userId: req.user.userId
