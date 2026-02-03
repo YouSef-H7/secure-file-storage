@@ -384,6 +384,7 @@ app.get('/api/files/trash', authenticate, async (req: AuthRequest, res) => {
       return res.status(401).json({ error: 'Missing user context' });
     }
     console.log('[SESSION DEBUG] UserID:', req.user.userId, '| SessionID:', req.sessionID, '| TenantID:', req.user.tenantId);
+    console.log('[TRASH ROUTE] Using repository:', fileRepository.constructor.name);
     const rawFiles = await fileRepository.listUserTrashFiles({
       tenantId: req.user.tenantId,
       userId: req.user.userId

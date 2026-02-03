@@ -62,10 +62,14 @@ export class FileRepositoryDB implements FileRepository {
         [input.tenantId]
       );
 
+      console.log('[TRASH QUERY] Returned rows:', rows.length);
+
       // Filter by case-insensitive user_id match
       const trashFiles = (rows || []).filter(row => {
         return row.user_id.toLowerCase().trim() === input.userId.toLowerCase().trim();
       });
+
+      console.log('[TRASH QUERY] After user filter:', trashFiles.length);
 
       return trashFiles.map(row => ({
         id: row.id,
