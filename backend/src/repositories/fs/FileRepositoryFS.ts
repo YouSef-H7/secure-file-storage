@@ -62,14 +62,36 @@ class FileRepositoryFS implements FileRepository {
     }
   }
 
-  private async readFiles(): Promise<FileRecord[]> {
+  private async readFilesSafe(maxRetries = 3): Promise<FileRecord[]> {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        await this.ensureMetadataDir();
+        const data = await fs.readJSON(FILES_METADATA_FILE);
+        return Array.isArray(data) ? data : [];
+      } catch (err: any) {
+        if (i === maxRetries - 1) throw err;
+        // Retry with exponential backoff: 10ms, 20ms, 30ms
+        await new Promise(resolve => setTimeout(resolve, 10 * (i + 1)));
+      }
+    }
+    return [];
+  }
+
+  private async writeFilesSafe(files: FileRecord[]): Promise<void> {
     await this.ensureMetadataDir();
-    return await fs.readJSON(FILES_METADATA_FILE);
+    const tempFile = FILES_METADATA_FILE + '.tmp';
+    // Write to temp file first (atomic write)
+    await fs.writeJSON(tempFile, files, { spaces: 2 });
+    // Move temp file to actual file (atomic operation)
+    await fs.move(tempFile, FILES_METADATA_FILE, { overwrite: true });
+  }
+
+  private async readFiles(): Promise<FileRecord[]> {
+    return this.readFilesSafe();
   }
 
   private async writeFiles(files: FileRecord[]): Promise<void> {
-    await this.ensureMetadataDir();
-    await fs.writeJSON(FILES_METADATA_FILE, files, { spaces: 2 });
+    return this.writeFilesSafe(files);
   }
 
   private async readShares(): Promise<ShareRecord[]> {

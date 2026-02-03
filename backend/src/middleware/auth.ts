@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import jwksClient from 'jwks-rsa';
 import type { Session } from 'express-session';
+import { normalizeUserId } from '../utils/userId';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -52,8 +53,9 @@ export const authenticate = (
     const sessionUser = (req.session as any).user;
     
     // Map OIDC session user to our auth context
+    // Normalize user ID to ensure consistent matching (#ext# vs #EXT#)
     req.user = {
-      userId: sessionUser.sub,     // OIDC subject
+      userId: normalizeUserId(sessionUser.sub),     // OIDC subject (normalized)
       email: sessionUser.email,
       tenantId: 'default-tenant',  // Default tenant for OIDC users
       sub: sessionUser.sub,
@@ -86,9 +88,10 @@ export const authenticate = (
 
       /**
        * 🧠 Mapping OCI token claims → app context
+       * Normalize user ID to ensure consistent matching (#ext# vs #EXT#)
        */
       req.user = {
-        userId: decoded.sub,                 // OCI user ID
+        userId: normalizeUserId(decoded.sub),                 // OCI user ID (normalized)
         email: decoded.email || decoded.upn, // depends on IdP
         tenantId: decoded.tenant || 'default-tenant',
         sub: decoded.sub,

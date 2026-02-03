@@ -40,6 +40,31 @@ console.warn = function (msg: unknown, ...args: unknown[]) {
   if (typeof msg === 'string' && msg.includes('MemoryStore')) return;
   return _warn.apply(console, [msg, ...args]);
 };
+
+// Configure session store: Redis if available, else MemoryStore
+let sessionStore: any = undefined;
+if (process.env.REDIS_URL) {
+  try {
+    const RedisStore = require('connect-redis').default;
+    const redis = require('redis');
+    const redisClient = redis.createClient({ url: process.env.REDIS_URL });
+    redisClient.on('error', (err: Error) => {
+      console.error('[SESSION] Redis connection error:', err.message);
+      console.warn('[SESSION] Falling back to MemoryStore');
+    });
+    redisClient.connect().catch(() => {
+      console.warn('[SESSION] Redis connection failed, falling back to MemoryStore');
+    });
+    sessionStore = new RedisStore({ client: redisClient });
+    console.log('[SESSION] Using Redis session store');
+  } catch (err) {
+    console.warn('[SESSION] Redis packages not installed or connection failed, using MemoryStore');
+    console.warn('[SESSION] To use Redis: npm install connect-redis redis');
+  }
+} else {
+  console.log('[SESSION] Using MemoryStore (set REDIS_URL to use Redis for PM2 clusters)');
+}
+
 app.use(session({
   name: 'connect.sid',
   secret: process.env.SESSION_SECRET || config.SESSION_SECRET || 'secure-secret',
@@ -47,6 +72,7 @@ app.use(session({
   saveUninitialized: true,   // MUST be true for OIDC state/nonce before redirect
   rolling: true,
   proxy: true,               // required behind nginx / reverse proxy
+  store: sessionStore,       // Redis store if configured, else MemoryStore (default)
   cookie: {
     secure: false,           // Required for HTTP
     sameSite: 'lax',        // Required for OIDC redirects over HTTP
@@ -318,6 +344,7 @@ app.get('/api/files', authenticate, async (req: AuthRequest, res) => {
     if (!req.user?.tenantId || !req.user?.userId) {
       return res.status(401).json({ error: 'Missing user context' });
     }
+    console.log('[SESSION DEBUG] UserID:', req.user.userId, '| SessionID:', req.sessionID, '| TenantID:', req.user.tenantId);
     const rawFiles = await fileRepository.listUserFiles({
       tenantId: req.user.tenantId,
       userId: req.user.userId
@@ -348,6 +375,7 @@ app.get('/api/files/trash', authenticate, async (req: AuthRequest, res) => {
     if (!req.user?.tenantId || !req.user?.userId) {
       return res.status(401).json({ error: 'Missing user context' });
     }
+    console.log('[SESSION DEBUG] UserID:', req.user.userId, '| SessionID:', req.sessionID, '| TenantID:', req.user.tenantId);
     const rawFiles = await fileRepository.listUserTrashFiles({
       tenantId: req.user.tenantId,
       userId: req.user.userId
