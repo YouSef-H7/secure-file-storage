@@ -128,7 +128,11 @@ class FileRepositoryFS implements FileRepository {
     const tenantId = input.tenantId;
     const files = await this.readFiles();
     const afterUserFilter = files.filter(f => f.tenant_id === tenantId && normalizeUserId(f.user_id) === nUserId);
-    const afterDeletedFilter = afterUserFilter.filter(f => toBoolean(f.is_deleted));
+    const afterDeletedFilter = afterUserFilter.filter(f => {
+      const isDeleted = String(f.is_deleted) === 'true';
+      console.log(`[TRASH DEBUG] File: ${f.filename} | is_deleted value: ${f.is_deleted} | type: ${typeof f.is_deleted} | matched: ${isDeleted}`);
+      return isDeleted;
+    });
     return afterDeletedFilter
       .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
       .map(f => ({
@@ -195,7 +199,7 @@ class FileRepositoryFS implements FileRepository {
       created_at: typeof meta.created_at === 'string' ? meta.created_at : meta.created_at.toISOString(),
       mime_type: meta.mime_type || null,
       folder_id: meta.folder_id ?? null,
-      is_deleted: meta.is_deleted === true
+      is_deleted: Boolean(meta.is_deleted) === true
     };
 
     files.push(record);
