@@ -19,8 +19,6 @@ const normUser = (v: unknown): string => {
 export class FileRepositoryDB implements FileRepository {
   async listUserFiles(input: { tenantId: string; userId: string }): Promise<FileMeta[]> {
     try {
-      const uid = normUser(input.userId);
-      
       // Get all files for tenant, then filter by normalized user_id in application code
       // MySQL doesn't have a direct way to do case-insensitive #ext# normalization
       const [rows] = await db.execute<RowDataPacket[]>(
@@ -33,8 +31,7 @@ export class FileRepositoryDB implements FileRepository {
 
       // Filter by case-insensitive user_id match
       const userFiles = (rows || []).filter(row => {
-        const rowUid = normUser(row.user_id).toLowerCase();
-        return rowUid === uid.toLowerCase();
+        return row.user_id.toLowerCase().trim() === input.userId.toLowerCase().trim();
       });
 
       return userFiles.map(row => ({
@@ -57,8 +54,6 @@ export class FileRepositoryDB implements FileRepository {
 
   async listUserTrashFiles(input: { tenantId: string; userId: string }): Promise<FileMeta[]> {
     try {
-      const uid = normUser(input.userId);
-      
       const [rows] = await db.execute<RowDataPacket[]>(
         `SELECT id, filename, size, created_at, storage_path, folder_id, tenant_id, user_id, mime_type, is_deleted
          FROM files
@@ -69,8 +64,7 @@ export class FileRepositoryDB implements FileRepository {
 
       // Filter by case-insensitive user_id match
       const trashFiles = (rows || []).filter(row => {
-        const rowUid = normUser(row.user_id).toLowerCase();
-        return rowUid === uid.toLowerCase();
+        return row.user_id.toLowerCase().trim() === input.userId.toLowerCase().trim();
       });
 
       return trashFiles.map(row => ({
@@ -110,8 +104,7 @@ export class FileRepositoryDB implements FileRepository {
       const file = fileRows[0];
       
       // Check ownership (case-insensitive)
-      const fileUid = normUser(file.user_id);
-      const isOwner = fileUid === uid;
+      const isOwner = file.user_id.toLowerCase().trim() === input.userId.toLowerCase().trim();
 
       if (isOwner) {
         return {
