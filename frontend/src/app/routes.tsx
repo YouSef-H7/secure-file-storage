@@ -20,6 +20,7 @@ import EmployeeStorage from '../pages/EmployeeStorage';
 import MyFolders from '../pages/MyFolders';
 import SharedFolders from '../pages/SharedFolders';
 import PublicShare from '../pages/PublicShare';
+import PublicLinks from '../pages/PublicLinks';
 import ProtectedLayout from '../layouts/ProtectedLayout';
 
 const AdminGuard = () => {
@@ -118,6 +119,7 @@ export const AppRoutes = () => (
         <Route path="/app/employee/upload" element={<EmployeeUpload />} />
         <Route path="/app/employee/recent" element={<EmployeeRecent />} />
         <Route path="/app/employee/shared" element={<EmployeeShared />} />
+        <Route path="/app/employee/public-links" element={<PublicLinks />} />
         <Route path="/app/employee/trash" element={<EmployeeTrash />} />
         <Route path="/app/employee/storage" element={<EmployeeStorage />} />
         <Route path="/app/employee/folders" element={<MyFolders />} />

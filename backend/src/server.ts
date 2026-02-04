@@ -263,14 +263,26 @@ app.use('/api/auth', oidcRouter);
 app.get('/api/public/share/:token', async (req, res) => {
   try {
     const { token } = req.params;
+    
+    // Check if user is authenticated (optional - doesn't block if not)
+    let user: { userId?: string; tenantId?: string } | undefined;
+    if (req.session && (req.session as any).user) {
+      const sessionUser = (req.session as any).user;
+      user = {
+        userId: sessionUser.sub || sessionUser.userId,
+        tenantId: sessionUser.tenantId || 'default-tenant'
+      };
+    }
 
-    // Look up share link
+    // Look up share link (supports both file_id and folder_id)
     const [links] = await db.execute<RowDataPacket[]>(
-      `SELECT sl.file_id, sl.created_by, sl.tenant_id, sl.expires_at,
-              f.filename, f.size, f.created_at, f.mime_type, f.storage_path
+      `SELECT sl.file_id, sl.folder_id, sl.created_by, sl.tenant_id, sl.expires_at,
+              f.filename, f.size, f.created_at, f.mime_type, f.storage_path,
+              fo.name as folder_name, fo.created_at as folder_created_at
        FROM shared_links sl
-       JOIN files f ON sl.file_id = f.id
-       WHERE sl.share_token = ? AND (f.is_deleted = 0 OR f.is_deleted IS NULL)`,
+       LEFT JOIN files f ON sl.file_id = f.id AND (f.is_deleted = 0 OR f.is_deleted IS NULL)
+       LEFT JOIN folders fo ON sl.folder_id = fo.id AND (fo.is_deleted = FALSE OR fo.is_deleted IS NULL)
+       WHERE sl.share_token = ? AND (sl.file_id IS NOT NULL OR sl.folder_id IS NOT NULL)`,
       [token]
     );
 
@@ -285,14 +297,79 @@ app.get('/api/public/share/:token', async (req, res) => {
       return res.status(410).json({ error: 'Share link has expired' });
     }
 
-    // Return file metadata
-    res.json({
-      id: link.file_id,
-      filename: link.filename,
-      size: link.size,
-      created_at: link.created_at,
-      mime_type: link.mime_type
-    });
+    // Auto-internal share for authenticated users
+    if (user?.userId && user?.tenantId) {
+      try {
+        if (link.file_id) {
+          // Check if already shared
+          const [existingFileShare] = await db.execute<RowDataPacket[]>(
+            'SELECT id FROM shared_files WHERE file_id = ? AND shared_with_user_id = ?',
+            [link.file_id, user.userId]
+          );
+          
+          if (existingFileShare.length === 0) {
+            await db.execute<ResultSetHeader>(
+              `INSERT INTO shared_files (id, file_id, owner_user_id, shared_with_user_id, tenant_id, permission, created_at)
+               VALUES (?, ?, ?, ?, ?, 'read', NOW())`,
+              [uuidv4(), link.file_id, link.created_by, user.userId, link.tenant_id]
+            );
+          }
+        } else if (link.folder_id) {
+          // Check if already shared
+          const [existingFolderShare] = await db.execute<RowDataPacket[]>(
+            'SELECT id FROM folder_shares WHERE folder_id = ? AND shared_with_user_id = ?',
+            [link.folder_id, user.userId]
+          );
+          
+          if (existingFolderShare.length === 0) {
+            await db.execute<ResultSetHeader>(
+              `INSERT INTO folder_shares (id, folder_id, shared_with_user_id, tenant_id, permission, created_at)
+               VALUES (?, ?, ?, ?, 'read', NOW())`,
+              [uuidv4(), link.folder_id, user.userId, link.tenant_id]
+            );
+          }
+        }
+      } catch (shareErr: any) {
+        // Log but don't fail the request
+        console.error('[AUTO-SHARE] Error:', shareErr);
+      }
+    }
+
+    // Return file or folder metadata
+    if (link.file_id) {
+      res.json({
+        type: 'file',
+        id: link.file_id,
+        filename: link.filename,
+        size: link.size,
+        created_at: link.created_at,
+        mime_type: link.mime_type
+      });
+    } else if (link.folder_id) {
+      // Fetch folder contents
+      const [contents] = await db.execute<RowDataPacket[]>(
+        `SELECT 
+          f.id, f.filename as name, f.size, f.created_at, f.mime_type, 'file' as type
+         FROM files f
+         WHERE f.folder_id = ? AND f.tenant_id = ? AND (f.is_deleted = 0 OR f.is_deleted IS NULL)
+         UNION ALL
+         SELECT 
+          fo.id, fo.name, NULL as size, fo.created_at, NULL as mime_type, 'folder' as type
+         FROM folders fo
+         WHERE fo.parent_folder_id = ? AND fo.tenant_id = ? AND (fo.is_deleted = FALSE OR fo.is_deleted IS NULL)`,
+        [link.folder_id, link.tenant_id, link.folder_id, link.tenant_id]
+      );
+
+      res.json({
+        type: 'folder',
+        id: link.folder_id,
+        name: link.folder_name,
+        created_at: link.folder_created_at,
+        contents: contents || []
+      });
+    } else {
+      return res.status(404).json({ error: 'Invalid share link' });
+    }
   } catch (err) {
     console.error('[PUBLIC SHARE] Error:', err);
     res.status(500).json({ error: 'Failed to access shared file' });
@@ -606,6 +683,96 @@ app.post('/api/files/:id/share-link', authenticate, async (req: AuthRequest, res
       return res.status(409).json({ error: 'Share link already exists for this file' });
     }
     res.status(500).json({ error: 'Failed to generate share link' });
+  }
+});
+
+// ---------- GENERATE FOLDER SHARE LINK ----------
+app.post('/api/folders/:id/share-link', authenticate, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user?.tenantId || !req.user?.userId) {
+      return res.status(401).json({ error: 'Missing user context' });
+    }
+
+    const folderId = req.params.id;
+    
+    // Verify folder ownership
+    const [folders] = await db.execute<RowDataPacket[]>(
+      'SELECT id, name FROM folders WHERE id = ? AND owner_user_id = ? AND tenant_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)',
+      [folderId, req.user.userId, req.user.tenantId]
+    );
+
+    if (folders.length === 0) {
+      return res.status(404).json({ error: 'Folder not found or access denied' });
+    }
+
+    const folder = folders[0];
+
+    // Generate secure token (UUID v4)
+    const shareToken = uuidv4();
+    const linkId = uuidv4();
+
+    // Insert into existing shared_links table (with folder_id)
+    await db.execute<ResultSetHeader>(
+      `INSERT INTO shared_links (id, folder_id, share_token, created_by, tenant_id, created_at)
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [linkId, folderId, shareToken, req.user.userId, req.user.tenantId]
+    );
+
+    // Construct public URL using frontend base URL
+    const baseUrl = config.FRONTEND_BASE_URL.replace(/\/$/, '');
+    const publicUrl = `${baseUrl}/public/share/${shareToken}`;
+
+    res.json({
+      shareToken,
+      publicUrl,
+      folderId: folder.id,
+      folderName: folder.name
+    });
+  } catch (err: any) {
+    console.error('[FOLDER SHARE LINK] Error:', err);
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'Share link already exists for this folder' });
+    }
+    res.status(500).json({ error: 'Failed to generate share link' });
+  }
+});
+
+// ---------- LIST MY PUBLIC LINKS ----------
+app.get('/api/share-links', authenticate, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user?.tenantId || !req.user?.userId) {
+      return res.status(401).json({ error: 'Missing user context' });
+    }
+
+    const [links] = await db.execute<RowDataPacket[]>(
+      `SELECT 
+        sl.id, sl.share_token, sl.file_id, sl.folder_id, sl.created_at, sl.expires_at,
+        f.filename as file_name, f.size as file_size,
+        fo.name as folder_name
+       FROM shared_links sl
+       LEFT JOIN files f ON sl.file_id = f.id
+       LEFT JOIN folders fo ON sl.folder_id = fo.id
+       WHERE sl.created_by = ? AND sl.tenant_id = ?
+       ORDER BY sl.created_at DESC`,
+      [req.user.userId, req.user.tenantId]
+    );
+
+    const formattedLinks = (links || []).map(link => ({
+      id: link.id,
+      shareToken: link.share_token,
+      type: link.file_id ? 'file' : 'folder',
+      entityId: link.file_id || link.folder_id,
+      name: link.file_name || link.folder_name,
+      size: link.file_size || null,
+      createdAt: link.created_at,
+      expiresAt: link.expires_at,
+      publicUrl: `${config.FRONTEND_BASE_URL.replace(/\/$/, '')}/public/share/${link.share_token}`
+    }));
+
+    res.json(formattedLinks);
+  } catch (err) {
+    console.error('[SHARE LINKS LIST] Error:', err);
+    res.status(500).json({ error: 'Failed to fetch share links' });
   }
 });
 

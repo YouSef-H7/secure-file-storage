@@ -11,7 +11,8 @@ import {
   UploadCloud,
   Clock,
   Trash2,
-  Folder
+  Folder,
+  Link as LinkIcon
 } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -39,6 +40,7 @@ const Sidebar = () => {
     { name: 'Upload', path: '/app/employee/upload', icon: UploadCloud },
     { name: 'Recent', path: '/app/employee/recent', icon: Clock },
     { name: 'Shared with Me', path: '/app/employee/shared', icon: Users },
+    { name: 'Public Links', path: '/app/employee/public-links', icon: LinkIcon },
     { name: 'Trash', path: '/app/employee/trash', icon: Trash2 },
   ];
 

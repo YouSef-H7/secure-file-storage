@@ -83,12 +83,16 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
     };
 
     const handleGenerateLink = async () => {
-        if (!file.id || isFolder) return;
+        if (!file.id) return;
         setLinkLoading(true);
         setStatus('idle');
         setErrorMsg('');
         try {
-            const res = await api.request(`/api/files/${file.id}/share-link`, {
+            const endpoint = isFolder 
+                ? `/api/folders/${file.id}/share-link`
+                : `/api/files/${file.id}/share-link`;
+            
+            const res = await api.request(endpoint, {
                 method: 'POST'
             });
             setShareLink(res.publicUrl);
@@ -125,30 +129,28 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
 
                 <div className="p-6">
                     {/* Mode Toggle */}
-                    {!isFolder && (
-                        <div className="mb-4 flex gap-2 border-b border-slate-200">
-                            <button
-                                onClick={() => { setShareLinkMode('user'); setStatus('idle'); setErrorMsg(''); }}
-                                className={`px-4 py-2 text-sm font-medium transition-colors ${
-                                    shareLinkMode === 'user'
-                                        ? 'text-brand border-b-2 border-brand'
-                                        : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                Share with people
-                            </button>
-                            <button
-                                onClick={() => { setShareLinkMode('link'); setStatus('idle'); setErrorMsg(''); }}
-                                className={`px-4 py-2 text-sm font-medium transition-colors ${
-                                    shareLinkMode === 'link'
-                                        ? 'text-brand border-b-2 border-brand'
-                                        : 'text-slate-600 hover:text-slate-900'
-                                }`}
-                            >
-                                Get link
-                            </button>
-                        </div>
-                    )}
+                    <div className="mb-4 flex gap-2 border-b border-slate-200">
+                        <button
+                            onClick={() => { setShareLinkMode('user'); setStatus('idle'); setErrorMsg(''); }}
+                            className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                shareLinkMode === 'user'
+                                    ? 'text-brand border-b-2 border-brand'
+                                    : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                        >
+                            Share with people
+                        </button>
+                        <button
+                            onClick={() => { setShareLinkMode('link'); setStatus('idle'); setErrorMsg(''); }}
+                            className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                shareLinkMode === 'link'
+                                    ? 'text-brand border-b-2 border-brand'
+                                    : 'text-slate-600 hover:text-slate-900'
+                            }`}
+                        >
+                            Get link
+                        </button>
+                    </div>
 
                     {/* Share with People Mode */}
                     {shareLinkMode === 'user' && (
@@ -172,7 +174,7 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
                     )}
 
                     {/* Get Link Mode */}
-                    {shareLinkMode === 'link' && !isFolder && (
+                    {shareLinkMode === 'link' && (
                         <div className="mb-4">
                             <label className="block text-sm font-medium text-slate-700 mb-2">
                                 Generate shareable link
@@ -222,7 +224,7 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
                                         </button>
                                     </div>
                                     <p className="text-xs text-slate-500">
-                                        Anyone with this link can view and download the file.
+                                        Anyone with this link can view {isFolder ? 'the folder' : 'and download the file'}.
                                     </p>
                                 </div>
                             )}
