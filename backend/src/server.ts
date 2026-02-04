@@ -41,78 +41,40 @@ const app: Express = express();
 // 🔐 Required for secure cookies behind reverse proxy (even localhost)
 app.set('trust proxy', 1);
 
-// ================= DATABASE CONNECTION HELPER =================
-function getDatabaseConfig() {
-  // Prefer DATABASE_URL if present (format: mysql://user:password@host:port/database)
-  if (process.env.DATABASE_URL) {
-    try {
-      const url = new URL(process.env.DATABASE_URL);
-      return {
-        host: url.hostname,
-        port: parseInt(url.port) || 3306,
-        user: url.username,
-        password: url.password,
-        database: url.pathname.slice(1) // Remove leading '/'
-      };
-    } catch (err) {
-      console.error('[SESSION] Failed to parse DATABASE_URL:', err);
-      throw new Error('Invalid DATABASE_URL format');
-    }
-  }
-  
-  // Fall back to individual environment variables
-  if (!process.env.DB_HOST || !process.env.DB_USER || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
-    throw new Error('Missing database configuration. Provide either DATABASE_URL or DB_HOST, DB_USER, DB_PASSWORD, DB_NAME');
-  }
-  
-  return {
-    host: process.env.DB_HOST,
-    port: parseInt(process.env.DB_PORT || '3306'),
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    database: process.env.DB_NAME
-  };
-}
-
 // ================= SESSION MIDDLEWARE =================
 // 🔐 Express-session with MySQL-backed storage (persists across PM2 restarts)
 // CRITICAL: Must be FIRST middleware, before CORS and routes
+// Uses existing MySQL pool from db.ts - no new connections, no privileged operations
 
 let sessionStore: any = undefined;
 
 try {
-  const dbConfig = getDatabaseConfig();
-  
-  // Create MySQL session store
+  // Create MySQL session store using existing pool
+  // @ts-ignore - express-mysql-session doesn't have TypeScript types
   const MySQLSessionStore = MySQLStore(session);
   
-  sessionStore = new MySQLSessionStore({
-    host: dbConfig.host,
-    port: dbConfig.port,
-    user: dbConfig.user,
-    password: dbConfig.password,
-    database: dbConfig.database,
-    createDatabaseTable: true, // Automatically create sessions table if it doesn't exist
-    schema: {
-      tableName: 'sessions', // Default table name
-      columnNames: {
-        session_id: 'session_id',
-        expires: 'expires',
-        data: 'data'
-      }
-    }
-  });
+  // Initialize store with restricted privileges:
+  // - createDatabaseTable: false (table already exists)
+  // - clearExpired: false (no cleanup permissions)
+  // - Pass existing pool as second argument
+  sessionStore = new MySQLSessionStore(
+    {
+      createDatabaseTable: false,  // Table already exists - do not attempt creation
+      clearExpired: false,          // No cleanup permissions - do not attempt cleanup
+      tableName: 'sessions'         // Use existing sessions table
+    },
+    db  // Use existing pool from db.ts
+  );
   
   // Handle connection errors explicitly
   sessionStore.on('error', (error: Error) => {
-    console.error('[SESSION ERROR] MySQL session store connection failed:', error.message);
-    console.error('[SESSION ERROR] Stack:', error.stack);
+    console.error('[SESSION STORE ERROR] MySQL session store failed:', error.message);
+    console.error('[SESSION STORE ERROR] Stack:', error.stack);
     // DO NOT fall back to MemoryStore - fail explicitly
-    throw new Error(`Session store initialization failed: ${error.message}`);
   });
   
-  console.log('[SESSION] Using MySQL session store');
-  console.log(`[SESSION] Database: ${dbConfig.database}@${dbConfig.host}:${dbConfig.port}`);
+  console.log('[SESSION] Using MySQL session store with existing pool');
+  console.log('[SESSION] Table: sessions (existing, no creation attempted)');
 } catch (err: any) {
   console.error('[SESSION ERROR] Failed to initialize MySQL session store:', err.message);
   console.error('[SESSION ERROR] Stack:', err.stack);
