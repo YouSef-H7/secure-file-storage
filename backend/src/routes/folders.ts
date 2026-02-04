@@ -132,7 +132,13 @@ router.get('/:id/items', async (req: AuthRequest, res: Response) => {
             }
 
             const [subfolders] = await db.execute<RowDataPacket[]>(folderQuery, queryParams);
-            safeFolders = (subfolders ?? []).map(f => ({ ...f, type: 'folder' }));
+            safeFolders = (subfolders ?? []).map((f: any) => ({
+              id: f.id,
+              name: f.name,
+              created_at: f.created_at,
+              owner_user_id: f.owner_user_id,
+              type: 'folder'
+            }));
         } catch (err: any) {
             console.error('[FOLDER VIEW ERROR] Failed to fetch subfolders:', err);
             console.error('[FOLDER VIEW ERROR] Stack:', err.stack);
