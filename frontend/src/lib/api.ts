@@ -56,10 +56,15 @@ export const api = {
     }
 
     const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('TIMEOUT')), 1500)
+      setTimeout(() => reject(new Error('Request timeout')), 30000) // 30s for VM
     );
 
-    const fetchPromise = fetch(path, { ...options, headers, credentials: 'include' })
+    const fetchPromise = fetch(path, { 
+      ...options, 
+      headers, 
+      credentials: 'include',
+      signal: options.signal // Support AbortController
+    })
       .then(async (res) => {
         const contentType = res.headers.get('content-type');
         if (!res.ok || !contentType || !contentType.includes('application/json')) {
@@ -70,8 +75,14 @@ export const api = {
 
     try {
       return await Promise.race([fetchPromise, timeoutPromise]);
-    } catch (error) {
-      return this.mockHandler(path, options);
+    } catch (error: any) {
+      if (error.name === 'AbortError') {
+        throw error; // Re-throw abort errors
+      }
+      if (error.message === 'Request timeout') {
+        throw new Error('Request timed out. Please try again.');
+      }
+      throw error; // Re-throw actual errors - no mock fallback in production
     }
   },
 

@@ -32,6 +32,7 @@ const EmployeeFiles = () => {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [selectedFileForShare, setSelectedFileForShare] = useState<FileMetadata | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     if (currentFolderId) {
@@ -52,14 +53,31 @@ const EmployeeFiles = () => {
   }, [searchParams, currentFolderId]);
 
   const fetchContent = useCallback(async () => {
+    // Cancel previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new abort controller
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    
     // Clear stale state FIRST
     setFiles([]);
     setFolders([]);
     setError(null);
     setLoading(true);
+    
     try {
       const endpoint = currentFolderId ? `/api/folders/${currentFolderId}/items` : `/api/files`;
-      const data = await api.request(endpoint);
+      const data = await api.request(endpoint, {
+        signal: abortController.signal
+      });
+      
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        return;
+      }
 
       const normalizeFile = (item: any) => ({
         ...item,
@@ -82,17 +100,32 @@ const EmployeeFiles = () => {
         setFolders([]);
       }
     } catch (err: any) {
+      // Ignore abort errors
+      if (err.name === 'AbortError') {
+        return;
+      }
       setError("Failed to retrieve content.");
       setFiles([]);
       setFolders([]);
     } finally {
-      setLoading(false);
+      if (!abortController.signal.aborted) {
+        setLoading(false);
+      }
     }
   }, [currentFolderId]);
 
   useEffect(() => {
     fetchContent();
   }, [fetchContent]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const handleCreateFolder = async () => {
     const name = prompt("Folder Name:");

@@ -13,6 +13,11 @@ const db = mysql.createPool({
   connectionLimit: 10,
   enableKeepAlive: true,
   keepAliveInitialDelay: 0,
+  // VM-specific resilience
+  queueLimit: 0, // Unlimited queue (VM may be slow)
+  // Connection timeout (for establishing new connections)
+  connectTimeout: 60000, // 60s timeout for establishing connection
+  // mysql2/promise automatically handles reconnection on connection loss
 });
 
 // Note: mysql2/promise pools handle errors at query time

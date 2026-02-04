@@ -102,6 +102,26 @@ app.use(session({
   },
 }));
 
+// Harden session store error handling - wrap session.save to catch store failures
+app.use((req: any, res, next) => {
+  // Wrap session operations to catch store errors gracefully
+  const originalSave = req.session.save;
+  req.session.save = function(callback?: (err?: any) => void) {
+    if (callback) {
+      return originalSave.call(this, (err?: any) => {
+        if (err) {
+          console.error('[SESSION SAVE ERROR]', err);
+          console.error('[SESSION SAVE ERROR] Stack:', err.stack);
+          // Don't crash - continue request even if session save fails
+        }
+        callback(err);
+      });
+    }
+    return originalSave.call(this);
+  };
+  next();
+});
+
 // ================= MIDDLEWARE =================
 app.use(cors({
   origin: 'http://145.241.155.110', // Exact origin match for production IP
@@ -214,6 +234,9 @@ app.post(
 
     const folderId = (req.body.folderId === 'null' || !req.body.folderId) ? null : req.body.folderId;
 
+    // File already written by Multer at this point
+    let fileWritten = true;
+
     try {
       // Infer mime type from file extension
       const ext = path.extname(uploadedFile.originalname).toLowerCase();
@@ -233,6 +256,15 @@ app.post(
       }
 
       if (!req.user?.tenantId || !req.user?.userId) {
+        // Cleanup file if user context is missing
+        if (uploadedFile?.path) {
+          try {
+            await fs.promises.unlink(uploadedFile.path);
+            console.log('[UPLOAD CLEANUP] Removed file due to missing user context:', uploadedFile.path);
+          } catch (cleanupErr: any) {
+            console.error('[UPLOAD CLEANUP ERROR] Failed to remove file:', cleanupErr);
+          }
+        }
         return res.status(401).json({ error: 'Missing user context' });
       }
 
@@ -253,8 +285,19 @@ app.post(
         id: fileId,
         name: uploadedFile.originalname
       });
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      console.error('[UPLOAD ERROR]', err);
+      
+      // Cleanup: Remove file if DB insert failed
+      if (fileWritten && uploadedFile?.path) {
+        try {
+          await fs.promises.unlink(uploadedFile.path);
+          console.log('[UPLOAD CLEANUP] Removed orphaned file:', uploadedFile.path);
+        } catch (cleanupErr: any) {
+          console.error('[UPLOAD CLEANUP ERROR] Failed to remove file:', cleanupErr);
+        }
+      }
+      
       res.status(500).json({ error: 'File upload failed' });
     }
   }

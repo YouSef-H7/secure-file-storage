@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Trash2, RotateCcw, Loader2 } from 'lucide-react';
 import { api, notifyFilesChanged } from '../lib/api';
 
@@ -15,24 +15,55 @@ const EmployeeTrash = () => {
   const [items, setItems] = useState<TrashFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [restoringId, setRestoringId] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchTrash = () => {
+    // Cancel previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new abort controller
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    
     setItems([]); // Clear stale state
     setLoading(true);
     // api.request uses credentials: 'include' (session cookie) for BFF auth
     // If ever using userId in path/query, use encodeURIComponent(userId) so # and @ do not break the URL
-    api.request('/api/files/trash')
+    api.request('/api/files/trash', { signal: abortController.signal })
       .then((data: TrashFile[] | unknown) => {
+        // Check if request was aborted
+        if (abortController.signal.aborted) {
+          return;
+        }
         const arr = Array.isArray(data) ? data : [];
         console.log('[TRASH RAW RESPONSE]', arr.length, data);
         setItems(arr);
       })
-      .catch(() => setItems([]))
-      .finally(() => setLoading(false));
+      .catch((err: any) => {
+        // Ignore abort errors
+        if (err.name === 'AbortError') {
+          return;
+        }
+        setItems([]);
+      })
+      .finally(() => {
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
+      });
   };
 
   useEffect(() => {
     fetchTrash();
+    
+    // Cleanup on unmount
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
   }, []);
 
   const handleRestore = async (id: string) => {

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link as LinkIcon, Copy, Check, FileText, Folder, Loader2, AlertCircle } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -19,24 +19,55 @@ const PublicLinks = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchLinks();
-  }, []);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   const fetchLinks = async () => {
+    // Cancel previous request if exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    
+    // Create new abort controller
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+    
     setLinks([]); // Clear stale state
     setLoading(true);
     setError(null);
     try {
-      const data = await api.request('/api/share-links');
+      const data = await api.request('/api/share-links', {
+        signal: abortController.signal
+      });
+      
+      // Check if request was aborted
+      if (abortController.signal.aborted) {
+        return;
+      }
+      
       setLinks(Array.isArray(data) ? data : []);
     } catch (err: any) {
+      // Ignore abort errors
+      if (err.name === 'AbortError') {
+        return;
+      }
       setError(err.message || 'Failed to fetch share links');
     } finally {
-      setLoading(false);
+      if (!abortController.signal.aborted) {
+        setLoading(false);
+      }
     }
   };
+
+  useEffect(() => {
+    fetchLinks();
+    
+    // Cleanup on unmount
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const handleCopy = async (url: string, id: string) => {
     try {
