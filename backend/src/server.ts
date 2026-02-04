@@ -1,14 +1,18 @@
+// Boot tracking - identify restarts
+const BOOT_ID = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+console.log(`[BOOT] boot_id=${BOOT_ID} pid=${process.pid}`);
+
 // Global crash handlers - MUST be first
 process.on('uncaughtException', (err) => {
-  console.error('[FATAL] uncaughtException:', err);
-  console.error('[FATAL] Stack:', err.stack);
+  console.error(`[FATAL][${BOOT_ID}] uncaughtException:`, err);
+  console.error(`[FATAL][${BOOT_ID}] Stack:`, err.stack);
   // Keep process alive long enough to flush logs
   setTimeout(() => process.exit(1), 250);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('[FATAL] unhandledRejection:', reason);
-  console.error('[FATAL] Promise:', promise);
+  console.error(`[FATAL][${BOOT_ID}] unhandledRejection:`, reason);
+  console.error(`[FATAL][${BOOT_ID}] Promise:`, promise);
   setTimeout(() => process.exit(1), 250);
 });
 
@@ -133,7 +137,7 @@ const storage = multer.diskStorage({
 
     try {
       fs.ensureDirSync(userDir);
-      console.log('[UPLOAD] Directory ensured');
+      console.log(`[UPLOAD][${BOOT_ID}] Directory ensured`);
       cb(null, userDir);
     } catch (err: any) {
       console.error('[UPLOAD] ❌ Failed to create directory:', err);
@@ -820,24 +824,26 @@ app.get('*', (req, res, next) => {
 // ================= START SERVER =================
 async function startServer() {
   try {
+    console.log(`[BOOT][${BOOT_ID}] Starting server initialization...`);
+    
     // Initialize DB schema with explicit error handling
     try {
       await initSchema();
-      console.log('[SERVER] Database schema initialized successfully');
+      console.log(`[SERVER][${BOOT_ID}] Database schema initialized successfully`);
     } catch (dbErr: any) {
-      console.warn('[SERVER] Database schema initialization failed (this is OK if using filesystem mode):', dbErr.message);
-      console.warn('[SERVER] Stack:', dbErr.stack);
+      console.warn(`[SERVER][${BOOT_ID}] Database schema initialization failed (this is OK if using filesystem mode):`, dbErr.message);
+      console.warn(`[SERVER][${BOOT_ID}] Stack:`, dbErr.stack);
       // Continue startup even if DB init fails (filesystem mode)
     }
 
     // Start HTTP server
     app.listen(config.PORT, () => {
-      console.log(`[BACKEND] Running on port ${config.PORT}`);
-      console.log(`[BACKEND] Data storage: ${config.DATA_DIR}`);
+      console.log(`[BACKEND][${BOOT_ID}] Running on port ${config.PORT}`);
+      console.log(`[BACKEND][${BOOT_ID}] Data storage: ${config.DATA_DIR}`);
     });
   } catch (err: any) {
-    console.error('[BOOT FATAL] Startup failed:', err);
-    console.error('[BOOT FATAL] Stack:', err.stack);
+    console.error(`[BOOT FATAL][${BOOT_ID}] Startup failed:`, err);
+    console.error(`[BOOT FATAL][${BOOT_ID}] Stack:`, err.stack);
     process.exit(1);
   }
 }

@@ -32,28 +32,47 @@ import { config } from '../config';
 const STORAGE_BACKEND = config.STORAGE_BACKEND;
 
 // Initialize repositories based on storage backend
-let fileRepositoryInstance: FileRepository;
-let userRepositoryInstance: UserRepository;
+let fileRepositoryInstance: FileRepository | undefined;
+let userRepositoryInstance: UserRepository | undefined;
+let repositoriesInitialized = false;
 
-if (STORAGE_BACKEND === 'fs') {
-  // Filesystem backend (local development, no database required)
-  fileRepositoryInstance = new FileRepositoryFS();
-  userRepositoryInstance = new UserRepositoryFS();
+// Singleton initialization guard
+function initRepositoriesOnce() {
+  if (repositoriesInitialized) {
+    return; // Already initialized - do not re-init
+  }
   
-  // Note: Folder and share repositories still use database via routes
-  // These will be migrated to filesystem in a future update if needed
-  // For now, folder/share routes continue to use db.execute() directly
+  repositoriesInitialized = true;
   
-} else if (STORAGE_BACKEND === 'db') {
-  // Database backend (OCI deployment) - NOT IMPLEMENTED YET
-  throw new Error('Database backend not enabled yet. Set STORAGE_BACKEND=fs for filesystem mode.');
-  // When ready for OCI:
-  // fileRepositoryInstance = new FileRepositoryDB();
-  // userRepositoryInstance = new UserRepositoryDB();
-} else {
-  throw new Error(`Invalid STORAGE_BACKEND: ${STORAGE_BACKEND}. Must be 'fs' or 'db'.`);
+  if (STORAGE_BACKEND === 'fs') {
+    // Filesystem backend (local development, no database required)
+    fileRepositoryInstance = new FileRepositoryFS();
+    userRepositoryInstance = new UserRepositoryFS();
+    
+    // Note: Folder and share repositories still use database via routes
+    // These will be migrated to filesystem in a future update if needed
+    // For now, folder/share routes continue to use db.execute() directly
+    
+  } else if (STORAGE_BACKEND === 'db') {
+    // Database backend (OCI deployment)
+    const FileRepositoryDB = require('./db/FileRepositoryDB').FileRepositoryDB;
+    const UserRepositoryDB = require('./db/UserRepositoryDB').UserRepositoryDB;
+    fileRepositoryInstance = new FileRepositoryDB();
+    userRepositoryInstance = new UserRepositoryDB();
+    console.log(`[BACKEND] Database Repository Initialized Successfully (DB Mode)`);
+  } else {
+    throw new Error(`Invalid STORAGE_BACKEND: ${STORAGE_BACKEND}. Must be 'fs' or 'db'.`);
+  }
 }
 
-// Export repositories
-export const fileRepository: FileRepository = fileRepositoryInstance;
-export const userRepository: UserRepository = userRepositoryInstance;
+// Initialize once at module load
+initRepositoriesOnce();
+
+// Ensure instances are initialized (TypeScript guard)
+if (!fileRepositoryInstance || !userRepositoryInstance) {
+  throw new Error('Repository initialization failed');
+}
+
+// Export repositories (TypeScript assertion - we've verified they're initialized above)
+export const fileRepository: FileRepository = fileRepositoryInstance as FileRepository;
+export const userRepository: UserRepository = userRepositoryInstance as UserRepository;

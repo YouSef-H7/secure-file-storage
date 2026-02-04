@@ -6,8 +6,13 @@ dotenv.config();
 
 export const config = {
   PORT: process.env.PORT || 3000,
-  // Fix: Use path.resolve() instead of process.cwd() to resolve type issues with the process global
-  DATA_DIR: process.env.DATA_DIR || path.join(path.resolve(), 'data'),
+  // Storage root - MUST be outside project directory to avoid PM2 watch triggers
+  // Default to /var/lib/securestore (Linux) or system temp (Windows)
+  DATA_DIR: process.env.DATA_DIR || process.env.STORAGE_ROOT || (
+    process.platform === 'win32' 
+      ? path.join(process.env.TEMP || process.env.TMP || 'C:\\temp', 'securestore')
+      : '/var/lib/securestore'
+  ),
   JWT_SECRET: process.env.JWT_SECRET || 'dev_secret_only',
   MAX_FILE_MB: parseInt(process.env.MAX_FILE_MB || '25'),
   ALLOWED_MIME: (process.env.ALLOWED_MIME || 'image/png,image/jpeg,application/pdf').split(','),
