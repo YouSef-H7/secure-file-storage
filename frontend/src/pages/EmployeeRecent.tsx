@@ -11,6 +11,7 @@ const EmployeeRecent = () => {
 
     useEffect(() => {
         const fetchFiles = async () => {
+            setFiles([]); // Clear stale state
             setLoading(true);
             try {
                 const data = await api.request('/api/files', { method: 'GET' });
@@ -84,7 +85,7 @@ const EmployeeRecent = () => {
                 <div className="flex justify-center py-20"><Loader2 className="animate-spin text-brand" size={32} /></div>
             ) : error ? (
                 <div className="text-center py-20 text-error">{error}</div>
-            ) : files.length === 0 ? (
+            ) : !loading && files.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20">
                     <FileText size={48} className="text-slate-300 mb-4 opacity-50" />
                     <p className="text-text-secondary">No recent files found.</p>

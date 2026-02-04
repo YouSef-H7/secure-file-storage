@@ -25,6 +25,7 @@ const PublicLinks = () => {
   }, []);
 
   const fetchLinks = async () => {
+    setLinks([]); // Clear stale state
     setLoading(true);
     setError(null);
     try {
@@ -85,7 +86,7 @@ const PublicLinks = () => {
         <h1 className="text-3xl font-bold text-slate-900">Public Links</h1>
       </div>
 
-      {links.length === 0 ? (
+      {!loading && links.length === 0 ? (
         <div className="bg-white rounded-xl shadow-lg p-8 text-center">
           <LinkIcon size={48} className="text-slate-400 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-slate-900 mb-2">No Public Links</h2>

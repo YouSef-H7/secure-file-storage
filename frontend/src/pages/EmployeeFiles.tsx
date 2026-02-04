@@ -42,12 +42,21 @@ const EmployeeFiles = () => {
   }, [currentFolderId, setSearchParams]);
 
   useEffect(() => {
-    setCurrentFolderId(searchParams.get('folderId') || null);
-  }, [searchParams]);
+    const folderId = searchParams.get('folderId') || null;
+    if (folderId !== currentFolderId) {
+      // Clear state when folder changes
+      setFiles([]);
+      setFolders([]);
+      setCurrentFolderId(folderId);
+    }
+  }, [searchParams, currentFolderId]);
 
   const fetchContent = useCallback(async () => {
-    setLoading(true);
+    // Clear stale state FIRST
+    setFiles([]);
+    setFolders([]);
     setError(null);
+    setLoading(true);
     try {
       const endpoint = currentFolderId ? `/api/folders/${currentFolderId}/items` : `/api/files`;
       const data = await api.request(endpoint);
@@ -292,7 +301,7 @@ const EmployeeFiles = () => {
             Retry Connection
           </button>
         </div>
-      ) : filteredFiles.length === 0 && filteredFolders.length === 0 ? (
+      ) : !loading && filteredFiles.length === 0 && filteredFolders.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 px-10 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50/50">
           <UploadCloud size={48} className="text-slate-400 mb-4 opacity-60" />
           <h3 className="text-lg font-semibold text-slate-900 mb-2">Empty Folder</h3>
