@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Search, UserPlus, Loader2, Check } from 'lucide-react';
+import { X, Search, UserPlus, Loader2, Check, Copy, Link as LinkIcon } from 'lucide-react';
 import { api } from '../lib/api';
 
 interface ShareModalProps {
@@ -14,6 +14,10 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
     const [loading, setLoading] = useState(false);
     const [status, setStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [errorMsg, setErrorMsg] = useState('');
+    const [shareLinkMode, setShareLinkMode] = useState<'user' | 'link'>('user');
+    const [shareLink, setShareLink] = useState<string | null>(null);
+    const [linkLoading, setLinkLoading] = useState(false);
+    const [linkCopied, setLinkCopied] = useState(false);
 
     if (!isOpen) return null;
 
@@ -78,6 +82,37 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
         }
     };
 
+    const handleGenerateLink = async () => {
+        if (!file.id || isFolder) return;
+        setLinkLoading(true);
+        setStatus('idle');
+        setErrorMsg('');
+        try {
+            const res = await api.request(`/api/files/${file.id}/share-link`, {
+                method: 'POST'
+            });
+            setShareLink(res.publicUrl);
+            setStatus('success');
+        } catch (err: any) {
+            setStatus('error');
+            setErrorMsg(err.message || 'Failed to generate share link');
+        } finally {
+            setLinkLoading(false);
+        }
+    };
+
+    const handleCopyLink = async () => {
+        if (shareLink) {
+            try {
+                await navigator.clipboard.writeText(shareLink);
+                setLinkCopied(true);
+                setTimeout(() => setLinkCopied(false), 2000);
+            } catch (err) {
+                setErrorMsg('Failed to copy link');
+            }
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
             <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
@@ -89,23 +124,110 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
                 </div>
 
                 <div className="p-6">
-                    <div className="mb-4">
-                        <label className="block text-sm font-medium text-slate-700 mb-2">
-                            Add people
-                        </label>
-                        <div className="flex gap-2">
-                            <div className="relative flex-1">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                                <input
-                                    type="email"
-                                    placeholder="Enter colleague's email..."
-                                    value={email}
-                                    onChange={(e) => { setEmail(e.target.value); setStatus('idle'); }}
-                                    className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all"
-                                />
+                    {/* Mode Toggle */}
+                    {!isFolder && (
+                        <div className="mb-4 flex gap-2 border-b border-slate-200">
+                            <button
+                                onClick={() => { setShareLinkMode('user'); setStatus('idle'); setErrorMsg(''); }}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                    shareLinkMode === 'user'
+                                        ? 'text-brand border-b-2 border-brand'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                            >
+                                Share with people
+                            </button>
+                            <button
+                                onClick={() => { setShareLinkMode('link'); setStatus('idle'); setErrorMsg(''); }}
+                                className={`px-4 py-2 text-sm font-medium transition-colors ${
+                                    shareLinkMode === 'link'
+                                        ? 'text-brand border-b-2 border-brand'
+                                        : 'text-slate-600 hover:text-slate-900'
+                                }`}
+                            >
+                                Get link
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Share with People Mode */}
+                    {shareLinkMode === 'user' && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Add people
+                            </label>
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                    <input
+                                        type="email"
+                                        placeholder="Enter colleague's email..."
+                                        value={email}
+                                        onChange={(e) => { setEmail(e.target.value); setStatus('idle'); }}
+                                        className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all"
+                                    />
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    )}
+
+                    {/* Get Link Mode */}
+                    {shareLinkMode === 'link' && !isFolder && (
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Generate shareable link
+                            </label>
+                            {!shareLink ? (
+                                <button
+                                    onClick={handleGenerateLink}
+                                    disabled={linkLoading}
+                                    className="w-full px-4 py-2.5 bg-brand text-white rounded-lg font-medium hover:bg-brand-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                >
+                                    {linkLoading ? (
+                                        <>
+                                            <Loader2 size={16} className="animate-spin" />
+                                            Generating...
+                                        </>
+                                    ) : (
+                                        <>
+                                            <LinkIcon size={16} />
+                                            Generate Link
+                                        </>
+                                    )}
+                                </button>
+                            ) : (
+                                <div className="space-y-3">
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="text"
+                                            value={shareLink}
+                                            readOnly
+                                            className="flex-1 px-4 py-2.5 border border-slate-200 rounded-lg bg-slate-50 text-sm"
+                                        />
+                                        <button
+                                            onClick={handleCopyLink}
+                                            className="px-4 py-2.5 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-2"
+                                        >
+                                            {linkCopied ? (
+                                                <>
+                                                    <Check size={16} />
+                                                    Copied!
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Copy size={16} />
+                                                    Copy
+                                                </>
+                                            )}
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-slate-500">
+                                        Anyone with this link can view and download the file.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {status === 'error' && (
                         <div className="mb-4 p-3 bg-red-50 text-red-600 text-sm rounded-lg border border-red-100">
@@ -120,22 +242,34 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
                         </div>
                     )}
 
-                    <div className="flex items-center justify-end gap-3 mt-6">
-                        <button
-                            onClick={onClose}
-                            className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg text-sm font-medium transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            onClick={handleShare}
-                            disabled={!email || loading || status === 'success'}
-                            className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-                        >
-                            {loading ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
-                            Share
-                        </button>
-                    </div>
+                    {shareLinkMode === 'user' && (
+                        <div className="flex items-center justify-end gap-3 mt-6">
+                            <button
+                                onClick={onClose}
+                                className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleShare}
+                                disabled={!email || loading || status === 'success'}
+                                className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                            >
+                                {loading ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
+                                Share
+                            </button>
+                        </div>
+                    )}
+                    {shareLinkMode === 'link' && (
+                        <div className="flex items-center justify-end gap-3 mt-6">
+                            <button
+                                onClick={onClose}
+                                className="px-4 py-2 text-slate-600 hover:bg-slate-50 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

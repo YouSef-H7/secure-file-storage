@@ -19,6 +19,7 @@ import EmployeeTrash from '../pages/EmployeeTrash';
 import EmployeeStorage from '../pages/EmployeeStorage';
 import MyFolders from '../pages/MyFolders';
 import SharedFolders from '../pages/SharedFolders';
+import PublicShare from '../pages/PublicShare';
 import ProtectedLayout from '../layouts/ProtectedLayout';
 
 const AdminGuard = () => {
@@ -96,6 +97,7 @@ export const AppRoutes = () => (
     <Route path="/login" element={<LoginPage />} />
     <Route path="/register" element={<RegisterPage />} />
     <Route path="/callback" element={<Callback />} />
+    <Route path="/public/share/:token" element={<PublicShare />} />
 
     <Route element={<ProtectedLayout />}>
       {/* Admin Routes */}

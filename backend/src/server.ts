@@ -258,6 +258,81 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
 // Public mounts: both legacy '/auth/*' and '/api/auth/*' entrypoints
 app.use('/auth', oidcRouter);
 app.use('/api/auth', oidcRouter);
+
+// ================= PUBLIC SHARE ROUTES (NO AUTH) =================
+app.get('/api/public/share/:token', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    // Look up share link
+    const [links] = await db.execute<RowDataPacket[]>(
+      `SELECT sl.file_id, sl.created_by, sl.tenant_id, sl.expires_at,
+              f.filename, f.size, f.created_at, f.mime_type, f.storage_path
+       FROM shared_links sl
+       JOIN files f ON sl.file_id = f.id
+       WHERE sl.share_token = ? AND (f.is_deleted = 0 OR f.is_deleted IS NULL)`,
+      [token]
+    );
+
+    if (!links || links.length === 0) {
+      return res.status(404).json({ error: 'Share link not found or expired' });
+    }
+
+    const link = links[0];
+
+    // Check expiration if set
+    if (link.expires_at && new Date(link.expires_at) < new Date()) {
+      return res.status(410).json({ error: 'Share link has expired' });
+    }
+
+    // Return file metadata
+    res.json({
+      id: link.file_id,
+      filename: link.filename,
+      size: link.size,
+      created_at: link.created_at,
+      mime_type: link.mime_type
+    });
+  } catch (err) {
+    console.error('[PUBLIC SHARE] Error:', err);
+    res.status(500).json({ error: 'Failed to access shared file' });
+  }
+});
+
+app.get('/api/public/share/:token/download', async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    // Look up share link and file
+    const [links] = await db.execute<RowDataPacket[]>(
+      `SELECT sl.file_id, sl.expires_at,
+              f.filename, f.storage_path
+       FROM shared_links sl
+       JOIN files f ON sl.file_id = f.id
+       WHERE sl.share_token = ? AND (f.is_deleted = 0 OR f.is_deleted IS NULL)`,
+      [token]
+    );
+
+    if (!links || links.length === 0) {
+      return res.status(404).json({ error: 'Share link not found or expired' });
+    }
+
+    const link = links[0];
+
+    // Check expiration
+    if (link.expires_at && new Date(link.expires_at) < new Date()) {
+      return res.status(410).json({ error: 'Share link has expired' });
+    }
+
+    // Stream file
+    res.setHeader('Content-Disposition', `attachment; filename="${link.filename}"`);
+    res.sendFile(link.storage_path);
+  } catch (err) {
+    console.error('[PUBLIC SHARE DOWNLOAD] Error:', err);
+    res.status(500).json({ error: 'Failed to download file' });
+  }
+});
+
 app.use('/api/stats', authenticate, statsRouter);
 app.use('/api', authenticate, sharingRouter);
 app.use('/api/folders', authenticate, foldersRouter);
@@ -481,6 +556,56 @@ app.delete('/api/files/:id', authenticate, async (req: AuthRequest, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Deletion failed' });
+  }
+});
+
+// ---------- GENERATE SHARE LINK ----------
+app.post('/api/files/:id/share-link', authenticate, async (req: AuthRequest, res) => {
+  try {
+    if (!req.user?.tenantId || !req.user?.userId) {
+      return res.status(401).json({ error: 'Missing user context' });
+    }
+
+    const fileId = req.params.id;
+    
+    // Verify file ownership using repository
+    const file = await fileRepository.getFileById({
+      fileId,
+      tenantId: req.user.tenantId,
+      userId: req.user.userId
+    });
+
+    if (!file) {
+      return res.status(404).json({ error: 'File not found or access denied' });
+    }
+
+    // Generate secure token (UUID v4)
+    const shareToken = uuidv4();
+    const linkId = uuidv4();
+
+    // Insert into existing shared_links table
+    await db.execute<ResultSetHeader>(
+      `INSERT INTO shared_links (id, file_id, share_token, created_by, tenant_id, created_at)
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [linkId, fileId, shareToken, req.user.userId, req.user.tenantId]
+    );
+
+    // Construct public URL using frontend base URL
+    const baseUrl = config.FRONTEND_BASE_URL.replace(/\/$/, '');
+    const publicUrl = `${baseUrl}/public/share/${shareToken}`;
+
+    res.json({
+      shareToken,
+      publicUrl,
+      fileId: file.id,
+      filename: file.filename
+    });
+  } catch (err: any) {
+    console.error('[SHARE LINK] Error:', err);
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'Share link already exists for this file' });
+    }
+    res.status(500).json({ error: 'Failed to generate share link' });
   }
 });
 
