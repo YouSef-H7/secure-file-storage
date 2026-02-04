@@ -1,7 +1,98 @@
-import React from 'react';
-import { HardDrive, TrendingUp } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { HardDrive, TrendingUp, Loader2 } from 'lucide-react';
+import { api } from '../lib/api';
+
+const formatSize = (bytes: number): string => {
+  if (bytes === 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  let val = bytes;
+  let unitIdx = 0;
+  while (val >= 1024 && unitIdx < units.length - 1) {
+    val /= 1024;
+    unitIdx++;
+  }
+  return `${val.toFixed(1)} ${units[unitIdx]}`;
+};
 
 const StoragePage = () => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState({ totalStorage: 0, totalFiles: 0 });
+  const [topUsers, setTopUsers] = useState<Array<{ email: string; usageBytes: number; fileCount: number }>>([]);
+  const [activity, setActivity] = useState<Array<{ date: string; size: number }>>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const [summaryRes, matrixRes, activityRes] = await Promise.allSettled([
+          api.request('/api/stats/admin/summary'),
+          api.request('/api/stats/admin/matrix'),
+          api.request('/api/stats/admin/activity'),
+        ]);
+
+        if (summaryRes.status === 'fulfilled') {
+          setSummary(summaryRes.value);
+        }
+
+        if (matrixRes.status === 'fulfilled' && matrixRes.value?.topUsers) {
+          setTopUsers(matrixRes.value.topUsers || []);
+        }
+
+        if (activityRes.status === 'fulfilled' && Array.isArray(activityRes.value)) {
+          setActivity(activityRes.value);
+        }
+      } catch (err) {
+        setError('Failed to load storage data');
+        console.error('Storage data fetch failed:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Calculate storage percentage (assuming 10.8 TB total capacity)
+  const totalCapacity = 10.8 * 1024 * 1024 * 1024 * 1024; // 10.8 TB in bytes
+  const usagePercent = totalCapacity > 0 ? Math.min((summary.totalStorage / totalCapacity) * 100, 100) : 0;
+  const availableSpace = Math.max(0, totalCapacity - summary.totalStorage);
+
+  // Calculate daily growth from activity data (last 7 days average)
+  const dailyGrowth = activity.length > 0 
+    ? activity.reduce((sum, day) => sum + (day.size || 0), 0) / activity.length 
+    : 0;
+
+  if (loading) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary mb-1 tracking-tight">Storage & Usage</h1>
+          <p className="text-text-secondary text-sm">Monitor storage capacity and usage patterns</p>
+        </div>
+        <div className="flex h-96 items-center justify-center">
+          <Loader2 className="text-text-secondary animate-spin" size={32} />
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6 animate-in fade-in duration-500">
+        <div>
+          <h1 className="text-3xl font-bold text-text-primary mb-1 tracking-tight">Storage & Usage</h1>
+          <p className="text-text-secondary text-sm">Monitor storage capacity and usage patterns</p>
+        </div>
+        <div className="p-6 bg-red-50 text-red-600 rounded-xl border border-red-100">
+          <h3 className="font-semibold mb-2">Error</h3>
+          <p>{error}</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div>
@@ -16,14 +107,14 @@ const StoragePage = () => {
               <HardDrive className="text-brand" size={24} />
             </div>
             <div>
-              <div className="text-2xl font-bold text-text-primary">8.4 TB</div>
-              <div className="text-xs text-text-secondary uppercase font-semibold tracking-wide">of 10.8 TB Used</div>
+              <div className="text-2xl font-bold text-text-primary">{formatSize(summary.totalStorage)}</div>
+              <div className="text-xs text-text-secondary uppercase font-semibold tracking-wide">of {formatSize(totalCapacity)} Used</div>
             </div>
           </div>
           <div className="w-full bg-slate-100 rounded-full h-2">
-            <div className="bg-brand h-2 rounded-full" style={{ width: '78%' }}></div>
+            <div className="bg-brand h-2 rounded-full" style={{ width: `${usagePercent}%` }}></div>
           </div>
-          <div className="text-xs text-brand font-medium mt-2">78% Usage</div>
+          <div className="text-xs text-brand font-medium mt-2">{usagePercent.toFixed(1)}% Usage</div>
         </div>
 
         <div className="bg-surface rounded-xl shadow-sm border border-border p-6">
@@ -32,11 +123,11 @@ const StoragePage = () => {
               <TrendingUp className="text-brand" size={24} />
             </div>
             <div>
-              <div className="text-2xl font-bold text-text-primary">2.4 GB</div>
+              <div className="text-2xl font-bold text-text-primary">{formatSize(dailyGrowth)}</div>
               <div className="text-xs text-text-secondary uppercase font-semibold tracking-wide">Daily Growth</div>
             </div>
           </div>
-          <div className="text-xs text-brand-accent font-medium">+12% vs last week</div>
+          <div className="text-xs text-text-secondary">Average over last 7 days</div>
         </div>
 
         <div className="bg-surface rounded-xl shadow-sm border border-border p-6">
@@ -45,11 +136,13 @@ const StoragePage = () => {
               <HardDrive className="text-brand" size={24} />
             </div>
             <div>
-              <div className="text-2xl font-bold text-text-primary">2.4 TB</div>
+              <div className="text-2xl font-bold text-text-primary">{formatSize(availableSpace)}</div>
               <div className="text-xs text-text-secondary uppercase font-semibold tracking-wide">Available Space</div>
             </div>
           </div>
-          <div className="text-xs text-text-secondary">4-6 months runway</div>
+          <div className="text-xs text-text-secondary">
+            {availableSpace > 0 ? `${Math.round((availableSpace / dailyGrowth) / (24 * 60 * 60))} days runway` : 'No space available'}
+          </div>
         </div>
       </div>
 
@@ -110,20 +203,20 @@ const StoragePage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {[
-                { rank: 1, name: 'Emily Davis', usage: '12.1 GB', files: 203 },
-                { rank: 2, name: 'Lisa Anderson', usage: '9.7 GB', files: 178 },
-                { rank: 3, name: 'Sarah Johnson', usage: '8.4 GB', files: 142 },
-                { rank: 4, name: 'Jennifer Lee', usage: '7.9 GB', files: 156 },
-                { rank: 5, name: 'David Martinez', usage: '5.3 GB', files: 92 },
-              ].map((user) => (
-                <tr key={user.rank} className="hover:bg-slate-50 transition-colors">
-                  <td className="py-3 px-4 text-sm text-text-secondary">#{user.rank}</td>
-                  <td className="py-3 px-4 text-sm text-text-primary font-medium">{user.name}</td>
-                  <td className="py-3 px-4 text-sm text-text-primary font-mono">{user.usage}</td>
-                  <td className="py-3 px-4 text-sm text-text-secondary">{user.files}</td>
+              {topUsers.length > 0 ? topUsers.map((user, index) => (
+                <tr key={index} className="hover:bg-slate-50 transition-colors">
+                  <td className="py-3 px-4 text-sm text-text-secondary">#{index + 1}</td>
+                  <td className="py-3 px-4 text-sm text-text-primary font-medium">{user.email || 'Unknown'}</td>
+                  <td className="py-3 px-4 text-sm text-text-primary font-mono">{formatSize(user.usageBytes || 0)}</td>
+                  <td className="py-3 px-4 text-sm text-text-secondary">{user.fileCount || 0}</td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={4} className="py-8 px-4 text-center text-text-secondary text-sm">
+                    No user data available
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>

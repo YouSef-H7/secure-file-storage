@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { api } from '../lib/api';
-import { FileMetadata } from '../types/file';
 
 export interface AdminStats {
     summary: {
@@ -45,117 +44,75 @@ export const useAdminStats = () => {
             try {
                 setStats(prev => ({ ...prev, loading: true, error: null }));
 
-                // Parallel fetch for raw data
-                const [filesRes, usersRes, logsRes] = await Promise.allSettled([
-                    api.request('/api/files'),
-                    api.request('/api/users'),
-                    api.request('/api/logs'),
+                // Fetch from admin endpoints
+                const [summaryRes, activityRes, logsRes] = await Promise.allSettled([
+                    api.request('/api/stats/admin/summary'),
+                    api.request('/api/stats/admin/activity'),
+                    api.request('/api/stats/admin/logs'),
                 ]);
 
-                // Process Files
-                let files: FileMetadata[] = [];
-                if (filesRes.status === 'fulfilled' && Array.isArray(filesRes.value)) {
-                    files = filesRes.value;
+                // Process summary
+                let summary = { totalFiles: 0, totalStorage: 0, totalUsers: 0, activeUsers24h: 0 };
+                if (summaryRes.status === 'fulfilled') {
+                    summary = summaryRes.value;
                 }
 
-                const totalFiles = files.length;
-                const totalStorage = files.reduce((acc, file) => acc + (file.size || 0), 0);
-
-                // Activity (Last 7 Days)
-                const sevenDaysAgo = new Date();
-                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-
-                const activityMap = new Map<string, { count: number, size: number }>();
-
-                // Initialize last 7 days
-                for (let i = 0; i < 7; i++) {
-                    const d = new Date();
-                    d.setDate(d.getDate() - i);
-                    const dateStr = d.toISOString().split('T')[0];
-                    activityMap.set(dateStr, { count: 0, size: 0 });
-                }
-
-                files.forEach(file => {
-                    const createdAt = file.createdAt ?? (file as any).created_at;
-                    if (!createdAt) return;
-                    const fileDate = new Date(createdAt);
-                    if (fileDate >= sevenDaysAgo) {
-                        const dateStr = fileDate.toISOString().split('T')[0];
-                        if (activityMap.has(dateStr)) {
-                            const current = activityMap.get(dateStr)!;
+                // Process activity (ensure all 7 days are present)
+                let activity: { date: string; count: number; size: number }[] = [];
+                if (activityRes.status === 'fulfilled' && Array.isArray(activityRes.value)) {
+                    const activityMap = new Map<string, { count: number; size: number }>();
+                    
+                    // Initialize last 7 days
+                    for (let i = 0; i < 7; i++) {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        const dateStr = d.toISOString().split('T')[0];
+                        activityMap.set(dateStr, { count: 0, size: 0 });
+                    }
+                    
+                    // Fill in actual data
+                    activityRes.value.forEach((day: any) => {
+                        const dateStr = day.date ? day.date.split('T')[0] : day.date;
+                        if (dateStr) {
                             activityMap.set(dateStr, {
-                                count: current.count + 1,
-                                size: current.size + (file.size ?? 0)
+                                count: Number(day.count || 0),
+                                size: Number(day.size || 0)
                             });
                         }
-                    }
-                });
-
-                const activity = Array.from(activityMap.entries())
-                    .map(([date, data]) => ({ date, ...data }))
-                    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-                // Process Users
-                // If /api/users fails (e.g. 403 or 404), default to 0
-                let totalUsers = 0;
-                if (usersRes.status === 'fulfilled' && Array.isArray(usersRes.value)) {
-                    totalUsers = usersRes.value.length;
-                } else if (files.length > 0) {
-                    // Fallback: estimate users from file owners if supported, else 0
-                    // But client-side aggregation strictly from /api/users as per prompt.
-                    // If source /api/users fails, display 0 or partial.
-                    totalUsers = 0;
-                }
-
-                // Active Users 24h
-                // Prompt says: Source /api/files (uploads) or /api/logs
-                // We need user ID from files. If missing, we can try logs.
-                const oneDayAgo = new Date();
-                oneDayAgo.setHours(oneDayAgo.getHours() - 24);
-
-                const activeUserSet = new Set<string>();
-
-                // Check files for active users (if owner/userId exists)
-                files.forEach((file: any) => {
-                    const createdAt = file.createdAt ?? file.created_at;
-                    if (createdAt && new Date(createdAt) >= oneDayAgo && (file.userId || file.owner)) {
-                        activeUserSet.add(file.userId || file.owner);
-                    }
-                });
-
-                // Check logs for active users
-                let logs: any[] = [];
-                if (logsRes.status === 'fulfilled' && Array.isArray(logsRes.value)) {
-                    logs = logsRes.value;
-                    logs.forEach((log: any) => {
-                        if (new Date(log.timestamp || log.time) >= oneDayAgo && log.userId) {
-                            activeUserSet.add(log.userId);
-                        }
                     });
+                    
+                    activity = Array.from(activityMap.entries())
+                        .map(([date, data]) => ({ date, ...data }))
+                        .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
                 }
 
-                const activeUsers24h = activeUserSet.size;
-
-                // Recent Logs aggregation
-                const recentLogs = (logs ?? []).slice(0, 5).map((log: any) => ({
-                    id: log.id || Math.random().toString(),
-                    action: log.action || 'Unknown Event',
-                    user: log.userName || log.user || 'System',
-                    time: log.timestamp || log.time || new Date().toISOString(),
-                    type: toLogType(log.type)
-                }));
+                // Process logs
+                let recentLogs: any[] = [];
+                if (logsRes.status === 'fulfilled' && Array.isArray(logsRes.value)) {
+                    recentLogs = logsRes.value.slice(0, 5).map((log: any) => ({
+                        id: log.id || Math.random().toString(),
+                        action: log.action || 'Unknown Event',
+                        user: log.user || 'System',
+                        time: log.time || log.created_at || new Date().toISOString(),
+                        type: toLogType(log.type)
+                    }));
+                }
 
                 setStats({
-                    summary: { totalFiles, totalStorage, totalUsers, activeUsers24h },
-                    activity: Array.isArray(activity) ? activity : [],
-                    recentLogs: Array.isArray(recentLogs) ? recentLogs : [],
+                    summary,
+                    activity,
+                    recentLogs,
                     loading: false,
                     error: null,
                 });
 
             } catch (err) {
-                console.error("Dashboard stats aggregation failed", err);
-                setStats(prev => ({ ...prev, loading: false, error: "Failed to load live metrics" }));
+                console.error("Dashboard stats fetch failed", err);
+                setStats(prev => ({ 
+                    ...prev, 
+                    loading: false, 
+                    error: "Failed to load live metrics" 
+                }));
             }
         };
 

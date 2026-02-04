@@ -54,6 +54,15 @@ const requireAdmin = (req: AuthRequest, res: Response, next: any) => {
     next();
 };
 
+// Helper to map action to log type
+const mapActionToType = (action: string): 'upload' | 'delete' | 'login' | 'other' => {
+    const a = (action || '').toLowerCase();
+    if (a.includes('upload') || a.includes('file_upload')) return 'upload';
+    if (a.includes('delete') || a.includes('file_delete')) return 'delete';
+    if (a.includes('login')) return 'login';
+    return 'other';
+};
+
 /**
  * GET /api/stats/admin/summary
  * Returns global stats for the admin dashboard
@@ -173,6 +182,42 @@ router.get('/admin/matrix', requireAdmin, async (req: AuthRequest, res: Response
     } catch (error) {
         console.error('[STATS] Matrix stats failed:', error);
         res.status(500).json({ error: 'Failed to fetch matrix stats' });
+    }
+});
+
+/**
+ * GET /api/stats/admin/logs
+ * Returns recent activity logs for admin dashboard
+ */
+router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) => {
+    try {
+        const tenantId = req.user?.tenantId || 'default-tenant';
+        
+        // Fetch recent logs from logs table
+        const [rows] = await db.execute<RowDataPacket[]>(
+            `SELECT l.id, l.action, l.details, l.created_at, l.user_id,
+                    u.email as user_email
+             FROM logs l
+             LEFT JOIN users u ON l.user_id = u.id
+             WHERE l.tenant_id = ?
+             ORDER BY l.created_at DESC
+             LIMIT 20`,
+            [tenantId]
+        );
+        
+        // Transform to match frontend format
+        const logs = rows.map((row: any) => ({
+            id: row.id,
+            action: row.action || 'Unknown Event',
+            user: row.user_email || row.user_id || 'System',
+            time: row.created_at,
+            type: mapActionToType(row.action)
+        }));
+        
+        res.json(logs);
+    } catch (error) {
+        console.error('[STATS] Admin logs failed:', error);
+        res.status(500).json({ error: 'Failed to fetch logs' });
     }
 });
 
