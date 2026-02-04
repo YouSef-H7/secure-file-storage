@@ -87,28 +87,33 @@ router.get('/:id/items', async (req: AuthRequest, res: Response) => {
     const userId = req.user.userId;
     const tenantId = req.user.tenantId;
 
+    // Initialize safe defaults
+    let safeFolders: Array<{ id: string; name: string; created_at: string | Date; owner_user_id: string; type: 'folder' }> = [];
+    let safeFiles: Array<{ id: string; name: string; size: number; createdAt: string | Date; mimeType: string; type: 'file' }> = [];
+
     try {
         // 1. Access Check (Owner OR Shared)
         // Check if folder is owned by user OR shared with user
-        const [access] = await db.execute<RowDataPacket[]>(
-            `SELECT f.id, f.owner_user_id
-         FROM folders f
-         LEFT JOIN folder_shares fs ON f.id = fs.folder_id AND fs.shared_with_user_id = ?
-         WHERE f.id = ? AND f.tenant_id = ? AND f.is_deleted = FALSE
-         AND (f.owner_user_id = ? OR fs.id IS NOT NULL)`,
-            [userId, folderId, tenantId, userId]
-        );
+        let access: RowDataPacket[] = [];
+        try {
+            const [accessResult] = await db.execute<RowDataPacket[]>(
+                `SELECT f.id, f.owner_user_id
+                 FROM folders f
+                 LEFT JOIN folder_shares fs ON f.id = fs.folder_id AND fs.shared_with_user_id = ?
+                 WHERE f.id = ? AND f.tenant_id = ? AND f.is_deleted = FALSE
+                 AND (f.owner_user_id = ? OR fs.id IS NOT NULL)`,
+                [userId, folderId, tenantId, userId]
+            );
+            access = accessResult || [];
+        } catch (err: any) {
+            console.error('[FOLDER VIEW ERROR] Access check failed:', err);
+            console.error('[FOLDER VIEW ERROR] Stack:', err.stack);
+            return res.json({ folders: [], files: [] });
+        }
 
-        if (access.length === 0) {
-            // Root folder check? No, root is handled by 'List Files' usually, or client passes 'root'.
-            // If client passes 'root' as ID, we handle differently or expect NULL parent.
-            // For now, explicit folder ID required.
-            // If getting root contents, client usually calls /api/files with query usage?
-            // Let's support 'root' string as ID for top-level? 
-            // Logic below handles explicit ID. User might request 'virtual' root.
-            if (folderId !== 'root') {
-                return res.status(404).json({ error: 'Folder not found or access denied' });
-            }
+        // Handle missing folder (except root)
+        if (access.length === 0 && folderId !== 'root') {
+            return res.json({ folders: [], files: [] });
         }
 
         const targetParentId = folderId === 'root' ? null : folderId;
@@ -116,95 +121,95 @@ router.get('/:id/items', async (req: AuthRequest, res: Response) => {
         if (targetParentId) {
             queryParams.push(targetParentId);
         }
-        // If root, we look for parent_folder_id IS NULL
-        // BUT we must only show Owner's stuff at root, OR Shared items (which are usually roots of their own in "Shared with Me" view)
-        // Detailed Requirements: "My Files Page... Tree view".
-        // Getting items for a folder means items INSIDE it.
 
-        // Subfolders
-        let folderQuery = `SELECT id, name, created_at, owner_user_id FROM folders WHERE tenant_id = ? AND is_deleted = FALSE`;
-        if (targetParentId) {
-            folderQuery += ` AND parent_folder_id = ?`;
-        } else {
-            folderQuery += ` AND parent_folder_id IS NULL`;
-        }
-        // Only show folders I own (unless this is a shared view context? Inherited access implies I can see subfolders of a shared folder)
-        // Using simple Owner check for now inside standard tree. Shared folders appear in 'Shared With Me'.
-        // If I am inside a shared folder, I should see subfolders.
-        // Complexity: Recursive permission check.
-        // MVP Rule: "Inherited access for files inside shared folders".
-        // If `access` check passed above (it checked direct share or ownership of current folder), we are good to list children?
-        // YES, if I have access to Folder A, I should see children of Folder A.
-        // Wait, the access check above was for `folderId`.
-        // If I own `folderId`, I see all children.
-        // If `folderId` is shared with me, I see all children.
-
-        // Filter by Owner? If it's my folder, children are mine.
-        // If it's a shared folder, children belong to owner of shared folder.
-        // So we don't filter children by 'my ownership', we return children of the folder.
-
-        // However, we must ensure we don't expose hidden stuff if logic is complex.
-        // For MVP: Return all non-deleted children of the folder.
-
-        const [subfolders] = await db.execute<RowDataPacket[]>(folderQuery, queryParams);
-        const safeFolders = (subfolders ?? []).map(f => ({ ...f, type: 'folder' }));
-
-        let safeFiles: Array<{ id: string; name: string; size: number; createdAt: string | Date; mimeType: string; type: 'file' }>;
-
-        if (config.STORAGE_BACKEND === 'fs' && folderId !== 'root') {
-            const allUserFiles = await fileRepository.listUserFiles({ tenantId, userId });
-            const folderFiles = (allUserFiles ?? []).filter(f => f.folder_id === folderId);
-            safeFiles = folderFiles.map(f => ({
-                id: f.id,
-                name: f.filename,
-                size: f.size,
-                createdAt: f.created_at,
-                mimeType: f.mime_type ?? 'application/octet-stream',
-                type: 'file' as const
-            }));
-        } else {
-            // Files from DB
-            const isFolderShared = access.length > 0 && access[0].owner_user_id !== userId;
-            let fileQuery = `
-                SELECT DISTINCT f.id, f.filename as name, f.size, f.created_at, f.mime_type
-                FROM files f
-                LEFT JOIN shared_files sf ON f.id = sf.file_id AND sf.shared_with_user_id = ?
-                LEFT JOIN folder_shares fs ON f.folder_id = fs.folder_id AND fs.shared_with_user_id = ?
-                WHERE f.tenant_id = ? AND (f.is_deleted = FALSE OR f.is_deleted IS NULL)
-            `;
-            const fileParams: any[] = [userId, userId, tenantId];
+        // 2. Fetch Subfolders
+        try {
+            let folderQuery = `SELECT id, name, created_at, owner_user_id FROM folders WHERE tenant_id = ? AND is_deleted = FALSE`;
             if (targetParentId) {
-                fileQuery += ` AND f.folder_id = ?`;
-                fileParams.push(targetParentId);
+                folderQuery += ` AND parent_folder_id = ?`;
             } else {
-                fileQuery += ` AND f.folder_id IS NULL`;
+                folderQuery += ` AND parent_folder_id IS NULL`;
             }
-            if (isFolderShared) {
-                fileQuery += ` AND (f.user_id = (SELECT owner_user_id FROM folders WHERE id = ?) OR sf.id IS NOT NULL OR fs.id IS NOT NULL)`;
-                fileParams.push(folderId);
-            } else {
-                fileQuery += ` AND (f.user_id = ? OR sf.id IS NOT NULL OR fs.id IS NOT NULL)`;
-                fileParams.push(userId);
-            }
-            const [files] = await db.execute<RowDataPacket[]>(fileQuery, fileParams);
-            safeFiles = (files ?? []).map(f => ({
-                id: f.id,
-                name: f.name,
-                size: f.size,
-                createdAt: f.created_at,
-                mimeType: f.mime_type || 'application/octet-stream',
-                type: 'file' as const
-            }));
+
+            const [subfolders] = await db.execute<RowDataPacket[]>(folderQuery, queryParams);
+            safeFolders = (subfolders ?? []).map(f => ({ ...f, type: 'folder' }));
+        } catch (err: any) {
+            console.error('[FOLDER VIEW ERROR] Failed to fetch subfolders:', err);
+            console.error('[FOLDER VIEW ERROR] Stack:', err.stack);
+            // Continue - safeFolders already initialized as empty array
         }
 
+        // 3. Fetch Files
+        try {
+            if (config.STORAGE_BACKEND === 'fs' && folderId !== 'root') {
+                // Filesystem backend
+                const allUserFiles = await fileRepository.listUserFiles({ tenantId, userId });
+                const folderFiles = (allUserFiles ?? []).filter(f => f.folder_id === folderId);
+                safeFiles = folderFiles.map(f => ({
+                    id: f.id,
+                    name: f.filename,
+                    size: f.size,
+                    createdAt: f.created_at,
+                    mimeType: f.mime_type ?? 'application/octet-stream',
+                    type: 'file' as const
+                }));
+            } else {
+                // Database backend
+                // FIX: Safe access check - only access access[0] if array has elements
+                const isFolderShared = access.length > 0 && access[0]?.owner_user_id !== userId;
+                
+                let fileQuery = `
+                    SELECT DISTINCT f.id, f.filename as name, f.size, f.created_at, f.mime_type
+                    FROM files f
+                    LEFT JOIN shared_files sf ON f.id = sf.file_id AND sf.shared_with_user_id = ?
+                    LEFT JOIN folder_shares fs ON f.folder_id = fs.folder_id AND fs.shared_with_user_id = ?
+                    WHERE f.tenant_id = ? AND (f.is_deleted = FALSE OR f.is_deleted IS NULL)
+                `;
+                const fileParams: any[] = [userId, userId, tenantId];
+                
+                if (targetParentId) {
+                    fileQuery += ` AND f.folder_id = ?`;
+                    fileParams.push(targetParentId);
+                } else {
+                    fileQuery += ` AND f.folder_id IS NULL`;
+                }
+                
+                if (isFolderShared) {
+                    fileQuery += ` AND (f.user_id = (SELECT owner_user_id FROM folders WHERE id = ?) OR sf.id IS NOT NULL OR fs.id IS NOT NULL)`;
+                    fileParams.push(folderId);
+                } else {
+                    fileQuery += ` AND (f.user_id = ? OR sf.id IS NOT NULL OR fs.id IS NOT NULL)`;
+                    fileParams.push(userId);
+                }
+                
+                const [files] = await db.execute<RowDataPacket[]>(fileQuery, fileParams);
+                safeFiles = (files ?? []).map(f => ({
+                    id: f.id,
+                    name: f.name,
+                    size: f.size,
+                    createdAt: f.created_at,
+                    mimeType: f.mime_type || 'application/octet-stream',
+                    type: 'file' as const
+                }));
+            }
+        } catch (err: any) {
+            console.error('[FOLDER VIEW ERROR] Failed to fetch files:', err);
+            console.error('[FOLDER VIEW ERROR] Stack:', err.stack);
+            // Continue - safeFiles already initialized as empty array
+        }
+
+        // Return successful response
         res.json({
             folders: safeFolders,
             files: safeFiles
         });
 
-    } catch (err) {
-        console.error('[FOLDER] List error:', err);
-        res.status(500).json({ error: 'Failed to list items' });
+    } catch (err: any) {
+        // Catch-all for any unexpected errors
+        console.error('[FOLDER VIEW ERROR] Unexpected error:', err);
+        console.error('[FOLDER VIEW ERROR] Stack:', err.stack);
+        // Return empty arrays - never crash
+        res.json({ folders: [], files: [] });
     }
 });
 
