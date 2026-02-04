@@ -35,7 +35,7 @@ const EmployeeFiles = () => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const isFetchingRef = useRef<boolean>(false);
   const currentFolderIdRef = useRef<string | null>(searchParams.get('folderId') || null);
-  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isInitialMountRef = useRef<boolean>(true);
 
   // Sync currentFolderId from URL searchParams (single source of truth)
