@@ -19,22 +19,19 @@ const normUser = (v: unknown): string => {
 export class FileRepositoryDB implements FileRepository {
   async listUserFiles(input: { tenantId: string; userId: string }): Promise<FileMeta[]> {
     try {
-      // Get all files for tenant, then filter by normalized user_id in application code
-      // MySQL doesn't have a direct way to do case-insensitive #ext# normalization
+      // Filter user_id in SQL using case-insensitive comparison
       const [rows] = await db.execute<RowDataPacket[]>(
         `SELECT id, filename, size, created_at, storage_path, folder_id, tenant_id, user_id, mime_type, is_deleted
          FROM files
-         WHERE tenant_id = ? AND is_deleted = 0
+         WHERE tenant_id = ? 
+           AND LOWER(TRIM(user_id)) = LOWER(TRIM(?))
+           AND is_deleted = 0
          ORDER BY created_at DESC`,
-        [input.tenantId]
+        [input.tenantId, input.userId]
       );
 
-      // Filter by case-insensitive user_id match
-      const userFiles = (rows || []).filter(row => {
-        return row.user_id.toLowerCase().trim() === input.userId.toLowerCase().trim();
-      });
-
-      return userFiles.map(row => ({
+      // Map results - no Node.js filtering needed, SQL already filtered
+      return (rows || []).map(row => ({
         id: row.id,
         filename: row.filename,
         size: row.size ?? 0,
@@ -54,24 +51,19 @@ export class FileRepositoryDB implements FileRepository {
 
   async listUserTrashFiles(input: { tenantId: string; userId: string }): Promise<FileMeta[]> {
     try {
+      // Filter user_id in SQL using case-insensitive comparison
       const [rows] = await db.execute<RowDataPacket[]>(
         `SELECT id, filename, size, created_at, storage_path, folder_id, tenant_id, user_id, mime_type, is_deleted
          FROM files
-         WHERE tenant_id = ? AND is_deleted = 1
+         WHERE tenant_id = ? 
+           AND LOWER(TRIM(user_id)) = LOWER(TRIM(?))
+           AND is_deleted = 1
          ORDER BY created_at DESC`,
-        [input.tenantId]
+        [input.tenantId, input.userId]
       );
 
-      console.log('[TRASH QUERY] Returned rows:', rows.length);
-
-      // Filter by case-insensitive user_id match
-      const trashFiles = (rows || []).filter(row => {
-        return row.user_id.toLowerCase().trim() === input.userId.toLowerCase().trim();
-      });
-
-      console.log('[TRASH QUERY] After user filter:', trashFiles.length);
-
-      return trashFiles.map(row => ({
+      // Map results - no Node.js filtering needed, SQL already filtered
+      return (rows || []).map(row => ({
         id: row.id,
         filename: row.filename,
         size: row.size ?? 0,

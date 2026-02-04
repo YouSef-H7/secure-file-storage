@@ -91,7 +91,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || config.SESSION_SECRET || 'secure-secret',
   resave: false,              // Changed: don't resave unchanged sessions
   saveUninitialized: false,   // Only save initialized sessions
-  rolling: true,               // Refresh expiration on activity
+  rolling: false,             // Do not refresh cookie on every request (prevents session store writes)
   proxy: true,                 // Required behind nginx / reverse proxy
   store: sessionStore,         // MySQL session store (required, no fallback)
   cookie: {
@@ -110,11 +110,11 @@ app.use(cors({
 
 // ================= DIRECTORIES =================
 const UPLOADS_DIR = path.join(config.DATA_DIR, 'uploads');
-fs.ensureDirSync(UPLOADS_DIR);
+// Directory creation moved to startServer() to use async FS
 
 // ================= MULTER =================
 const storage = multer.diskStorage({
-  destination: (req: any, file, cb) => {
+  destination: async (req: any, file, cb) => {
     console.log('[UPLOAD] Storage: Processing upload request');
     try {
       console.log('[UPLOAD] Req User:', JSON.stringify(req.user));
@@ -136,7 +136,8 @@ const storage = multer.diskStorage({
     console.log(`[UPLOAD] Target directory: ${userDir}`);
 
     try {
-      fs.ensureDirSync(userDir);
+      // Use async FS to prevent event loop blocking
+      await fs.promises.mkdir(userDir, { recursive: true });
       console.log(`[UPLOAD][${BOOT_ID}] Directory ensured`);
       cb(null, userDir);
     } catch (err: any) {
@@ -516,7 +517,6 @@ app.get('/api/files', authenticate, async (req: AuthRequest, res) => {
     if (!req.user?.tenantId || !req.user?.userId) {
       return res.status(401).json({ error: 'Missing user context' });
     }
-    console.log('[SESSION DEBUG] UserID:', req.user.userId, '| SessionID:', req.sessionID, '| TenantID:', req.user.tenantId);
     const rawFiles = await fileRepository.listUserFiles({
       tenantId: req.user.tenantId,
       userId: req.user.userId
@@ -547,8 +547,6 @@ app.get('/api/files/trash', authenticate, async (req: AuthRequest, res) => {
     if (!req.user?.tenantId || !req.user?.userId) {
       return res.status(401).json({ error: 'Missing user context' });
     }
-    console.log('[SESSION DEBUG] UserID:', req.user.userId, '| SessionID:', req.sessionID, '| TenantID:', req.user.tenantId);
-    console.log('[TRASH ROUTE] Using repository:', fileRepository.constructor.name);
     const rawFiles = await fileRepository.listUserTrashFiles({
       tenantId: req.user.tenantId,
       userId: req.user.userId
@@ -563,9 +561,12 @@ app.get('/api/files/trash', authenticate, async (req: AuthRequest, res) => {
       mimeType: f.mime_type ?? 'application/octet-stream'
     }));
     res.json(mappedFiles);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to fetch trash' });
+  } catch (err: any) {
+    console.error('[TRASH ENDPOINT ERROR]', err);
+    console.error('[TRASH ENDPOINT ERROR] Stack:', err.stack);
+    console.error('[TRASH ENDPOINT ERROR] User:', req.user?.userId, 'Tenant:', req.user?.tenantId);
+    // Return empty array - never crash
+    return res.json([]);
   }
 });
 
@@ -825,6 +826,15 @@ app.get('*', (req, res, next) => {
 async function startServer() {
   try {
     console.log(`[BOOT][${BOOT_ID}] Starting server initialization...`);
+    
+    // Ensure uploads directory exists (async FS)
+    try {
+      await fs.promises.mkdir(UPLOADS_DIR, { recursive: true });
+      console.log(`[BOOT][${BOOT_ID}] Uploads directory ensured: ${UPLOADS_DIR}`);
+    } catch (dirErr: any) {
+      console.error(`[BOOT][${BOOT_ID}] Failed to create uploads directory:`, dirErr.message);
+      // Continue startup - directory might already exist
+    }
     
     // Initialize DB schema with explicit error handling
     try {
