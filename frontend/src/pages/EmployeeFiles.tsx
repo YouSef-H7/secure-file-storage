@@ -33,15 +33,12 @@ const EmployeeFiles = () => {
   const [selectedFileForShare, setSelectedFileForShare] = useState<FileMetadata | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const isFetchingRef = useRef<boolean>(false);
+  const currentFolderIdRef = useRef<string | null>(searchParams.get('folderId') || null);
+  const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitialMountRef = useRef<boolean>(true);
 
-  useEffect(() => {
-    if (currentFolderId) {
-      setSearchParams({ folderId: currentFolderId });
-    } else {
-      setSearchParams({});
-    }
-  }, [currentFolderId, setSearchParams]);
-
+  // Sync currentFolderId from URL searchParams (single source of truth)
   useEffect(() => {
     const folderId = searchParams.get('folderId') || null;
     if (folderId !== currentFolderId) {
@@ -49,10 +46,16 @@ const EmployeeFiles = () => {
       setFiles([]);
       setFolders([]);
       setCurrentFolderId(folderId);
+      currentFolderIdRef.current = folderId;
     }
-  }, [searchParams, currentFolderId]);
+  }, [searchParams]); // Only depend on searchParams, not currentFolderId
 
   const fetchContent = useCallback(async () => {
+    // Guard: Prevent concurrent requests
+    if (isFetchingRef.current) {
+      return;
+    }
+    
     // Cancel previous request if exists
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -62,6 +65,12 @@ const EmployeeFiles = () => {
     const abortController = new AbortController();
     abortControllerRef.current = abortController;
     
+    // Mark as fetching
+    isFetchingRef.current = true;
+    
+    // Read currentFolderId from ref (stable reference)
+    const folderId = currentFolderIdRef.current;
+    
     // Clear stale state FIRST
     setFiles([]);
     setFolders([]);
@@ -69,12 +78,12 @@ const EmployeeFiles = () => {
     setLoading(true);
     
     try {
-      const endpoint = currentFolderId ? `/api/folders/${currentFolderId}/items` : `/api/files`;
+      const endpoint = folderId ? `/api/folders/${folderId}/items` : `/api/files`;
       const data = await api.request(endpoint, {
         signal: abortController.signal
       });
       
-      // Check if request was aborted
+      // Check if request was aborted BEFORE any state updates
       if (abortController.signal.aborted) {
         return;
       }
@@ -100,23 +109,51 @@ const EmployeeFiles = () => {
         setFolders([]);
       }
     } catch (err: any) {
-      // Ignore abort errors
-      if (err.name === 'AbortError') {
-        return;
+      // Check if aborted BEFORE any state updates
+      if (abortController.signal.aborted || err.name === 'AbortError') {
+        return; // Early return - no state updates
       }
+      // Only update state if NOT aborted
       setError("Failed to retrieve content.");
       setFiles([]);
       setFolders([]);
     } finally {
+      // Only update loading state if NOT aborted
       if (!abortController.signal.aborted) {
         setLoading(false);
       }
+      isFetchingRef.current = false;
     }
-  }, [currentFolderId]);
+  }, []); // No dependencies - reads from ref
 
+  // Debounced fetch effect - triggers fetch when currentFolderId changes
   useEffect(() => {
-    fetchContent();
-  }, [fetchContent]);
+    // Update ref immediately
+    currentFolderIdRef.current = currentFolderId;
+    
+    // Clear any pending debounce
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current);
+    }
+    
+    // On initial mount, fetch immediately (no debounce)
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      fetchContent();
+      return;
+    }
+    
+    // For subsequent changes, debounce the fetch
+    debounceTimeoutRef.current = setTimeout(() => {
+      fetchContent();
+    }, 150);
+    
+    return () => {
+      if (debounceTimeoutRef.current) {
+        clearTimeout(debounceTimeoutRef.current);
+      }
+    };
+  }, [currentFolderId, fetchContent]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -252,7 +289,7 @@ const EmployeeFiles = () => {
       <div className="flex items-center gap-4">
         {currentFolderId && (
           <button 
-            onClick={() => setCurrentFolderId(null)} 
+            onClick={() => setSearchParams({})} 
             className="p-2 hover:bg-slate-100 rounded-lg transition-colors text-slate-600"
           >
             <ChevronLeft size={24} />
@@ -353,7 +390,7 @@ const EmployeeFiles = () => {
           {filteredFolders.map((folder) => (
             <div 
               key={folder.id}
-              onClick={() => setCurrentFolderId(folder.id)}
+              onClick={() => setSearchParams({ folderId: folder.id })}
               className="bg-white rounded-2xl shadow-md shadow-slate-200/50 border border-slate-200 p-4 hover:shadow-lg hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer flex items-center gap-3"
             >
               <div className="p-2 bg-blue-100 text-blue-600 rounded-xl shadow-sm">
@@ -413,7 +450,7 @@ const EmployeeFiles = () => {
                 {filteredFolders.map((folder) => (
                   <tr 
                     key={folder.id} 
-                    onClick={() => setCurrentFolderId(folder.id)} 
+                    onClick={() => setSearchParams({ folderId: folder.id })} 
                     className="hover:bg-slate-50/80 transition-colors duration-150 group cursor-pointer"
                   >
                     <td className="py-4 px-6">
