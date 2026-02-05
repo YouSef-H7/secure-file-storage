@@ -99,9 +99,15 @@ router.get('/admin/summary', requireAdmin, async (req: AuthRequest, res: Respons
             []
         );
 
-        // 2. Total Users (NO tenant_id filter - users table doesn't have it)
+        // 2. Total Users - Global Active Identity Count (from files/logs UNION)
+        // Reflects real AD identities that have actually used the system
         const [usersResult] = await db.execute<RowDataPacket[]>(
-            'SELECT COUNT(*) as count FROM users',
+            `SELECT COUNT(DISTINCT user_id) as count 
+             FROM (
+                SELECT user_id FROM files 
+                UNION 
+                SELECT user_id FROM logs
+             ) as active_identities`,
             []
         );
 
@@ -142,13 +148,17 @@ router.get('/admin/summary', requireAdmin, async (req: AuthRequest, res: Respons
 router.get('/admin/activity', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         // Last 7 days activity (global, exclude soft-deleted)
+        // COALESCE ensures size is always a number (never NULL) for stable growth calculations
         const [rows] = await db.execute<RowDataPacket[]>(
-            `SELECT DATE(created_at) as date, COUNT(*) as count, SUM(size) as size
-       FROM files
-       WHERE (is_deleted = FALSE OR is_deleted IS NULL)
-       AND created_at >= NOW() - INTERVAL 7 DAY
-       GROUP BY DATE(created_at)
-       ORDER BY date ASC`,
+            `SELECT 
+                DATE(created_at) as date, 
+                COUNT(*) as count, 
+                COALESCE(SUM(size), 0) as size
+             FROM files
+             WHERE (is_deleted = FALSE OR is_deleted IS NULL)
+             AND created_at >= NOW() - INTERVAL 7 DAY
+             GROUP BY DATE(created_at)
+             ORDER BY date ASC`,
             []
         );
 
