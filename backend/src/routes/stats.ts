@@ -229,9 +229,9 @@ router.get('/admin/matrix', requireAdmin, async (req: AuthRequest, res: Response
  */
 router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        // Ensure values are strictly converted to numbers
-        const safeLimit = parseInt(req.query.limit as string) || 20;
-        const safeOffset = parseInt(req.query.offset as string) || 0;
+        // Force strict numeric values with Math.max to ensure minimums
+        const safeLimit = Math.max(1, parseInt(req.query.limit as string) || 20);
+        const safeOffset = Math.max(0, parseInt(req.query.offset as string) || 0);
         
         // Safety check: ensure all parameters are valid
         if (isNaN(safeLimit) || isNaN(safeOffset) || safeLimit < 0 || safeOffset < 0) {
@@ -239,8 +239,9 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
         }
         
         // Fetch recent logs from logs table (global, no tenant filter)
-        // Uses placeholders for LIMIT/OFFSET and column aliases for frontend compatibility
-        const [rows] = await db.execute<RowDataPacket[]>(
+        // Uses db.query (direct SQL) instead of db.execute (prepared statements)
+        // LIMIT/OFFSET injected directly as safe numeric values (no placeholders)
+        const [rows] = await db.query<RowDataPacket[]>(
             `SELECT 
                 id, 
                 user_id, 
@@ -249,8 +250,8 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
                 created_at as time
              FROM logs
              ORDER BY created_at DESC
-             LIMIT ? OFFSET ?`,
-            [safeLimit, safeOffset]
+             LIMIT ${safeLimit} OFFSET ${safeOffset}`,
+            [] // empty params array - no placeholders needed
         );
         
         // Get total count for pagination (global)
