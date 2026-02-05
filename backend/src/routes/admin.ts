@@ -11,12 +11,19 @@ import { AuthRequest } from '../middleware/auth';
  * Required Tables:
  * - users (columns: id, email, role, created_at)
  * - logs (columns: id, user_id, action, created_at, tenant_id)
+ * - files (columns: id, user_id, fileName, size, is_deleted, tenant_id, created_at)
  * 
  * Required Columns:
  * - users.email: Used as identity key for AD authentication (contains email, not numeric ID)
  * - logs.user_id: Contains email (not numeric ID) - must match users.email
+ * - files.user_id: Contains email (not numeric ID) - must match users.email
  * - logs.action: Contains action strings like '%login%' or '%callback%' for AD authentication
  * - logs.tenant_id: May be NULL for some entries (null-safe queries required)
+ * 
+ * Join Logic:
+ * - All joins use email-based matching: identities.email = users.email, identities.email = logs.user_id
+ * - Never join on users.id - email is the only identity key
+ * - UNION query collects identities from users, logs, and files to ensure all AD users are included
  * 
  * If any of these elements are missing, queries will fail with clear error messages.
  */
@@ -54,21 +61,34 @@ router.get('/users', requireAdmin, async (req: AuthRequest, res: Response) => {
         const safeLimit = Math.max(0, Number(limit) || 0);
         const safeOffset = Math.max(0, Number(offset) || 0);
 
-        let query = `
-            SELECT u.id, u.email, u.role, u.created_at,
-                   (SELECT MAX(l.created_at) FROM logs l WHERE l.user_id = u.email AND (l.action LIKE '%login%' OR l.action LIKE '%callback%')) as last_login
-            FROM users u
-            WHERE 1=1
-        `;
+        // Global Users List query - collects identities from users, logs, and files tables
+        // Uses UNION to ensure all AD identities are included, even if missing from users table
         const params: any[] = [];
-
         if (search) {
-            query += ` AND LOWER(u.email) LIKE LOWER(?)`;
             params.push(`%${search}%`);
         }
 
-        // LIMIT/OFFSET injected directly as numbers (not placeholders)
-        query += ` ORDER BY u.created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
+        const query = `
+            SELECT 
+                COALESCE(u.id, identities.email) as id,
+                identities.email,
+                COALESCE(u.role, 'user') as role,
+                COALESCE(u.created_at, MIN(l.created_at)) as created_at,
+                MAX(l.created_at) as last_login
+            FROM (
+                SELECT email FROM users
+                UNION
+                SELECT DISTINCT user_id as email FROM logs
+                UNION
+                SELECT DISTINCT user_id as email FROM files
+            ) AS identities
+            LEFT JOIN users u ON identities.email = u.email
+            LEFT JOIN logs l ON identities.email = l.user_id
+            WHERE 1=1 ${search ? 'AND LOWER(identities.email) LIKE LOWER(?)' : ''}
+            GROUP BY identities.email, u.id, u.role, u.created_at
+            ORDER BY last_login DESC
+            LIMIT ${safeLimit} OFFSET ${safeOffset}
+        `;
 
         // Debug check: ensure no undefined/null/NaN values in params array
         if (params.some(p => p === undefined || p === null || (typeof p === 'number' && isNaN(p)))) {
@@ -81,13 +101,23 @@ router.get('/users', requireAdmin, async (req: AuthRequest, res: Response) => {
 
         const [rows] = await db.execute<RowDataPacket[]>(query, params);
 
-        // Get total count for pagination (NO tenant_id - users table doesn't have it)
-        let countQuery = `SELECT COUNT(*) as total FROM users WHERE 1=1`;
+        // Get total count for pagination - counts distinct identities from all sources
         const countParams: any[] = [];
         if (search) {
-            countQuery += ` AND LOWER(email) LIKE LOWER(?)`;
             countParams.push(`%${search}%`);
         }
+
+        const countQuery = `
+            SELECT COUNT(DISTINCT email) as total 
+            FROM (
+                SELECT email FROM users
+                UNION
+                SELECT user_id as email FROM logs
+                UNION
+                SELECT user_id as email FROM files
+            ) as all_emails
+            WHERE 1=1 ${search ? 'AND LOWER(email) LIKE LOWER(?)' : ''}
+        `;
 
         // Debug check for count query
         if (countParams.some(p => p === undefined || p === null)) {
@@ -104,7 +134,7 @@ router.get('/users', requireAdmin, async (req: AuthRequest, res: Response) => {
             users: rows.map((row: any) => ({
                 id: row.id,
                 email: row.email,
-                role: row.role || 'employee',
+                role: row.role || 'user',
                 createdAt: row.created_at,
                 lastLogin: row.last_login || null
             })),
