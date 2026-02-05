@@ -54,11 +54,6 @@ const StoragePage = () => {
     fetchData();
   }, []);
 
-  // Calculate storage percentage (assuming 10.8 TB total capacity)
-  const totalCapacity = 10.8 * 1024 * 1024 * 1024 * 1024; // 10.8 TB in bytes
-  const usagePercent = totalCapacity > 0 ? Math.min((summary.totalStorage / totalCapacity) * 100, 100) : 0;
-  const availableSpace = Math.max(0, totalCapacity - summary.totalStorage);
-
   // Calculate daily growth from activity data (last 7 days average)
   const dailyGrowth = activity.length > 0 
     ? activity.reduce((sum, day) => sum + (day.size || 0), 0) / activity.length 
@@ -100,7 +95,7 @@ const StoragePage = () => {
         <p className="text-text-secondary text-sm">Monitor storage capacity and usage patterns</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-surface rounded-xl shadow-sm border border-border p-6">
           <div className="flex items-center gap-3 mb-4">
             <div className="p-3 bg-brand/5 rounded-lg">
@@ -108,13 +103,10 @@ const StoragePage = () => {
             </div>
             <div>
               <div className="text-2xl font-bold text-text-primary">{formatSize(summary.totalStorage)}</div>
-              <div className="text-xs text-text-secondary uppercase font-semibold tracking-wide">of {formatSize(totalCapacity)} Used</div>
+              <div className="text-xs text-text-secondary uppercase font-semibold tracking-wide">Total Storage Used</div>
             </div>
           </div>
-          <div className="w-full bg-slate-100 rounded-full h-2">
-            <div className="bg-brand h-2 rounded-full" style={{ width: `${usagePercent}%` }}></div>
-          </div>
-          <div className="text-xs text-brand font-medium mt-2">{usagePercent.toFixed(1)}% Usage</div>
+          <div className="text-xs text-text-secondary">Across {summary.totalFiles.toLocaleString()} files</div>
         </div>
 
         <div className="bg-surface rounded-xl shadow-sm border border-border p-6">
@@ -129,60 +121,17 @@ const StoragePage = () => {
           </div>
           <div className="text-xs text-text-secondary">Average over last 7 days</div>
         </div>
-
-        <div className="bg-surface rounded-xl shadow-sm border border-border p-6">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 bg-brand/5 rounded-lg">
-              <HardDrive className="text-brand" size={24} />
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-text-primary">{formatSize(availableSpace)}</div>
-              <div className="text-xs text-text-secondary uppercase font-semibold tracking-wide">Available Space</div>
-            </div>
-          </div>
-          <div className="text-xs text-text-secondary">
-            {availableSpace > 0 ? `${Math.round((availableSpace / dailyGrowth) / (24 * 60 * 60))} days runway` : 'No space available'}
-          </div>
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-surface rounded-xl shadow-sm border border-border p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-text-primary mb-1">Storage by Type</h3>
-            <p className="text-sm text-text-secondary">File category distribution</p>
-          </div>
-          <div className="h-64 flex items-center justify-center border-t border-dotted border-border mt-4">
-            <div className="text-center text-text-secondary text-sm">
-              <HardDrive size={48} className="mx-auto mb-2 opacity-20" />
-              <p>Visualization Placeholder</p>
-            </div>
-          </div>
+      <div className="bg-surface rounded-xl shadow-sm border border-border p-6">
+        <div className="mb-4">
+          <h3 className="text-lg font-semibold text-text-primary mb-1">File Types</h3>
+          <p className="text-sm text-text-secondary">Storage by file extension</p>
         </div>
-
-        <div className="bg-surface rounded-xl shadow-sm border border-border p-6">
-          <div className="mb-4">
-            <h3 className="text-lg font-semibold text-text-primary mb-1">Department Usage</h3>
-            <p className="text-sm text-text-secondary">Storage allocation</p>
-          </div>
-          <div className="space-y-5">
-            {[
-              { name: 'Engineering', used: 2.8, total: 5, percent: 56 },
-              { name: 'Marketing', used: 1.2, total: 2, percent: 60 },
-              { name: 'Sales', used: 0.98, total: 1.5, percent: 65 },
-              { name: 'HR', used: 0.42, total: 1, percent: 42 },
-              { name: 'Finance', used: 1.6, total: 2, percent: 80 },
-            ].map((dept, idx) => (
-              <div key={idx}>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm font-medium text-text-primary">{dept.name}</span>
-                  <span className="text-xs text-text-secondary">{dept.used} / {dept.total} TB</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div className="bg-brand h-2 rounded-full opacity-90" style={{ width: `${dept.percent}%` }}></div>
-                </div>
-              </div>
-            ))}
+        <div className="h-64 flex items-center justify-center border-t border-dotted border-border mt-4">
+          <div className="text-center text-text-secondary text-sm">
+            <HardDrive size={48} className="mx-auto mb-2 opacity-20" />
+            <p>File type breakdown available via /api/stats/admin/matrix</p>
           </div>
         </div>
       </div>

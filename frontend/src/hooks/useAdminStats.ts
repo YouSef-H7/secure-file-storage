@@ -88,8 +88,11 @@ export const useAdminStats = () => {
 
                 // Process logs
                 let recentLogs: any[] = [];
-                if (logsRes.status === 'fulfilled' && Array.isArray(logsRes.value)) {
-                    recentLogs = logsRes.value.slice(0, 5).map((log: any) => ({
+                if (logsRes.status === 'fulfilled') {
+                    // Handle both old format (array) and new format (object with logs array)
+                    const logsData = logsRes.value;
+                    const logsArray = Array.isArray(logsData) ? logsData : (logsData?.logs || []);
+                    recentLogs = logsArray.slice(0, 5).map((log: any) => ({
                         id: log.id || Math.random().toString(),
                         action: log.action || 'Unknown Event',
                         user: log.user || 'System',

@@ -40,25 +40,28 @@ const LogsPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await api.request('/api/stats/admin/logs');
-        if (Array.isArray(data)) {
-          setLogs(data);
-        }
-      } catch (err) {
-        setError('Failed to load logs');
-        console.error('Logs fetch failed:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    useEffect(() => {
+        const fetchLogs = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+                const data = await api.request('/api/stats/admin/logs');
+                // Handle both old format (array) and new format (object with logs array)
+                if (Array.isArray(data)) {
+                    setLogs(data);
+                } else if (data && Array.isArray(data.logs)) {
+                    setLogs(data.logs);
+                }
+            } catch (err) {
+                setError('Failed to load logs');
+                console.error('Logs fetch failed:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    fetchLogs();
-  }, []);
+        fetchLogs();
+    }, []);
 
   const filteredLogs = logs.filter(log => {
     if (!searchQuery) return true;

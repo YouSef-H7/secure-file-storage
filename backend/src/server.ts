@@ -35,6 +35,7 @@ import oidcRouter from './routes/oidc';
 import statsRouter from './routes/stats';
 import sharingRouter from './routes/sharing';
 import foldersRouter from './routes/folders';
+import adminRouter from './routes/admin';
 import { fileRepository } from './repositories';
 import { FileMeta } from './repositories/FileRepository';
 import initSchema from './services/db_init';
@@ -467,6 +468,7 @@ app.get('/api/public/share/:token/download', async (req, res) => {
 });
 
 app.use('/api/stats', authenticate, statsRouter);
+app.use('/api/admin', authenticate, adminRouter);
 app.use('/api', authenticate, sharingRouter);
 app.use('/api/folders', authenticate, foldersRouter);
 

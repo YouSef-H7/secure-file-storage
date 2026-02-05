@@ -77,10 +77,10 @@ router.get('/admin/summary', requireAdmin, async (req: AuthRequest, res: Respons
             [tenantId]
         );
 
-        // 2. Total Users
+        // 2. Total Users (NO tenant_id filter - users table doesn't have it)
         const [usersResult] = await db.execute<RowDataPacket[]>(
-            'SELECT COUNT(*) as count FROM users WHERE tenant_id = ?',
-            [tenantId]
+            'SELECT COUNT(*) as count FROM users',
+            []
         );
 
         // 3. Active Users (uploaded/modified files in last 24h, exclude soft-deleted)
@@ -144,33 +144,28 @@ router.get('/admin/matrix', requireAdmin, async (req: AuthRequest, res: Response
     try {
         const tenantId = req.user?.tenantId || 'default-tenant';
 
-        // Files by extension/type (derived from filename for simplicity as mimetype might vary)
-        // Using simple SUBSTRING_INDEX for extension
-        // Note: This is an approximation. Ideally store mime_type in DB.
+        // Files by extension/type - use fileName (camelCase, capital N)
         const [typeRows] = await db.execute<RowDataPacket[]>(
             `SELECT 
-            SUBSTRING_INDEX(filename, '.', -1) as ext, 
-            COUNT(*) as count 
-         FROM files 
-         WHERE tenant_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)
-         GROUP BY ext 
-         ORDER BY count DESC 
-         LIMIT 6`,
+                SUBSTRING_INDEX(fileName, '.', -1) as ext, 
+                COUNT(*) as count 
+             FROM files 
+             WHERE tenant_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)
+             GROUP BY ext 
+             ORDER BY count DESC 
+             LIMIT 6`,
             [tenantId]
         );
 
-        // Top storage consumers
-        // Need to join with users table if we want names, but users table might not be fully sync'd if using OIDC JIT
-        // We'll return user_ids or email if available in files table (schema check needed)
-        // Wait, files table has user_id. Users table has id, email.
+        // Top storage consumers - join on email, not id (files.user_id contains email)
         const [userRows] = await db.execute<RowDataPacket[]>(
             `SELECT u.email, SUM(f.size) as usageBytes, COUNT(f.id) as fileCount
-         FROM files f
-         JOIN users u ON f.user_id = u.id
-         WHERE f.tenant_id = ? AND (f.is_deleted = FALSE OR f.is_deleted IS NULL)
-         GROUP BY u.email
-         ORDER BY usageBytes DESC
-         LIMIT 5`,
+             FROM files f
+             JOIN users u ON f.user_id = u.email
+             WHERE f.tenant_id = ? AND (f.is_deleted = FALSE OR f.is_deleted IS NULL)
+             GROUP BY u.email
+             ORDER BY usageBytes DESC
+             LIMIT 5`,
             [tenantId]
         );
 
@@ -188,20 +183,29 @@ router.get('/admin/matrix', requireAdmin, async (req: AuthRequest, res: Response
 /**
  * GET /api/stats/admin/logs
  * Returns recent activity logs for admin dashboard
+ * Supports pagination via query parameters: limit, offset
  */
 router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const tenantId = req.user?.tenantId || 'default-tenant';
+        const limit = parseInt(req.query.limit as string) || 20;
+        const offset = parseInt(req.query.offset as string) || 0;
         
-        // Fetch recent logs from logs table
+        // Fetch recent logs from logs table with pagination - join on email, not id
         const [rows] = await db.execute<RowDataPacket[]>(
             `SELECT l.id, l.action, l.details, l.created_at, l.user_id,
                     u.email as user_email
              FROM logs l
-             LEFT JOIN users u ON l.user_id = u.id
+             LEFT JOIN users u ON l.user_id = u.email
              WHERE l.tenant_id = ?
              ORDER BY l.created_at DESC
-             LIMIT 20`,
+             LIMIT ? OFFSET ?`,
+            [tenantId, limit, offset]
+        );
+        
+        // Get total count for pagination
+        const [countResult] = await db.execute<RowDataPacket[]>(
+            `SELECT COUNT(*) as total FROM logs WHERE tenant_id = ?`,
             [tenantId]
         );
         
@@ -211,10 +215,16 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
             action: row.action || 'Unknown Event',
             user: row.user_email || row.user_id || 'System',
             time: row.created_at,
-            type: mapActionToType(row.action)
+            type: mapActionToType(row.action),
+            details: row.details || null
         }));
         
-        res.json(logs);
+        res.json({
+            logs,
+            total: countResult[0]?.total || 0,
+            limit,
+            offset
+        });
     } catch (error) {
         console.error('[STATS] Admin logs failed:', error);
         res.status(500).json({ error: 'Failed to fetch logs' });
