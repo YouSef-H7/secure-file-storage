@@ -5,6 +5,7 @@ import { config } from '../config';
 import { fileRepository } from '../repositories';
 import { AuthRequest } from '../middleware/auth';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { addLog } from '../utils/logs';
 
 const router = Router();
 
@@ -66,10 +67,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         );
 
         // Audit
-        await db.execute(
-            'INSERT INTO logs (id, tenant_id, user_id, action, details, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-            [uuidv4(), tenantId, ownerId, 'FOLDER_CREATED', `Created folder ${name}`,]
-        ).catch(console.error);
+        await addLog(ownerId, 'FOLDER_CREATED', `Created folder ${name}`);
 
         res.status(201).json({ id: folderId, name, parentFolderId });
     } catch (err) {
@@ -252,10 +250,7 @@ router.post('/:id/share', async (req: AuthRequest, res: Response) => {
             [uuidv4(), folderId, targetUserId, tenantId]
         );
 
-        await db.execute(
-            'INSERT INTO logs (id, tenant_id, user_id, action, details, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-            [uuidv4(), tenantId, ownerId, 'FOLDER_SHARED', `Shared folder ${folder[0].name}`,]
-        ).catch(console.error);
+        await addLog(ownerId, 'FOLDER_SHARED', `Shared folder ${folder[0].name}`);
 
         res.status(201).json({ message: 'Folder shared' });
 
@@ -291,10 +286,7 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
             [name.trim(), folderId, tenantId]
         );
 
-        await db.execute(
-            'INSERT INTO logs (id, tenant_id, user_id, action, details, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-            [uuidv4(), tenantId, ownerId, 'FOLDER_RENAMED', `Renamed folder to ${name.trim()}`]
-        ).catch(console.error);
+        await addLog(ownerId, 'FOLDER_RENAMED', `Renamed folder to ${name.trim()}`);
 
         res.json({ message: 'Folder renamed', id: folderId, name: name.trim() });
     } catch (err) {
@@ -324,10 +316,7 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
             [folderId, tenantId]
         );
 
-        await db.execute(
-            'INSERT INTO logs (id, tenant_id, user_id, action, details, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-            [uuidv4(), tenantId, ownerId, 'FOLDER_DELETED', `Deleted folder ${folder[0].name}`]
-        ).catch(console.error);
+        await addLog(ownerId, 'FOLDER_DELETED', `Deleted folder ${folder[0].name}`);
 
         res.json({ message: 'Folder deleted' });
     } catch (err) {

@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from 'uuid';
 import db from '../db';
 import { AuthRequest } from '../middleware/auth';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { addLog } from '../utils/logs';
 
 const router = Router();
 
@@ -69,24 +70,8 @@ router.post('/files/:fileId/share', async (req: AuthRequest, res: Response) => {
             [shareId, fileId, ownerId, targetUserId, tenantId]
         );
 
-        // 5. Audit Log (Constructing log entry manually if logs table doesn't have an API)
-        // Assuming 'logs' table exists as per prompts.
-        // If no direct API for logs, we insert directly or just log to console if table schema unknown.
-        // Prompt says: "Audit log events to add: FILE_SHARED". 
-        // server.ts doesn't show logs insert. We'll assume a table 'audit_logs' or similar exists OR just log to console for MVP if DB schema is hidden.
-        // Re-reading: "DB already exists for: files, users, logs".
-        // I'll try to insert into 'audit_logs' or 'logs'.
-        // Let's assume 'logs' based on 'DB already exists for... logs'.
-        // Columns usually: id, tenant_id, user_id, action, details, created_at.
-        try {
-            await db.execute(
-                'INSERT INTO logs (id, tenant_id, user_id, action, details, created_at) VALUES (?, ?, ?, ?, ?, NOW())',
-                [uuidv4(), tenantId, ownerId, 'FILE_SHARED', `Shared ${file.filename} with ${users[0].email}`,]
-            );
-        } catch (e) {
-            console.error('[AUDIT] Failed to write log:', e);
-            // Non-blocking
-        }
+        // 5. Audit Log
+        await addLog(ownerId, 'FILE_SHARED', `Shared ${file.filename} with ${users[0].email}`);
 
         res.status(201).json({ message: 'File shared successfully', shareId });
 

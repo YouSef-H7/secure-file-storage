@@ -148,12 +148,12 @@ router.get('/admin/summary', requireAdmin, async (req: AuthRequest, res: Respons
 router.get('/admin/activity', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         // Last 7 days activity (global, exclude soft-deleted)
-        // COALESCE ensures size is always a number (never NULL) for stable growth calculations
+        // IFNULL ensures size is always a number (never NULL) for stable growth calculations
         const [rows] = await db.execute<RowDataPacket[]>(
             `SELECT 
                 DATE(created_at) as date, 
                 COUNT(*) as count, 
-                COALESCE(SUM(size), 0) as size
+                IFNULL(SUM(size), 0) as size
              FROM files
              WHERE (is_deleted = FALSE OR is_deleted IS NULL)
              AND created_at >= NOW() - INTERVAL 7 DAY

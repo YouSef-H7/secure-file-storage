@@ -37,6 +37,7 @@ import sharingRouter from './routes/sharing';
 import foldersRouter from './routes/folders';
 import adminRouter from './routes/admin';
 import { fileRepository } from './repositories';
+import { addLog } from './utils/logs';
 import { FileMeta } from './repositories/FileRepository';
 import initSchema from './services/db_init';
 
@@ -281,6 +282,13 @@ app.post(
         is_deleted: isDeleted,
         created_at: new Date().toISOString()
       });
+
+      // Log file upload
+      await addLog(
+        req.user.userId,
+        'FILE_UPLOAD',
+        `Uploaded file: ${uploadedFile.originalname}`
+      );
 
       res.status(201).json({
         id: fileId,
