@@ -71,7 +71,7 @@ router.post('/files/:fileId/share', async (req: AuthRequest, res: Response) => {
         );
 
         // 5. Audit Log
-        await addLog(ownerId, 'FILE_SHARED', `Shared ${file.filename} with ${users[0].email}`);
+        await addLog(ownerId!, 'FILE_SHARED', `Shared ${file.filename} with ${users[0].email}`);
 
         res.status(201).json({ message: 'File shared successfully', shareId });
 

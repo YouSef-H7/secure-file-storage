@@ -67,7 +67,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
         );
 
         // Audit
-        await addLog(ownerId, 'FOLDER_CREATED', `Created folder ${name}`);
+        await addLog(ownerId!, 'FOLDER_CREATED', `Created folder ${name}`);
 
         res.status(201).json({ id: folderId, name, parentFolderId });
     } catch (err) {
@@ -250,7 +250,7 @@ router.post('/:id/share', async (req: AuthRequest, res: Response) => {
             [uuidv4(), folderId, targetUserId, tenantId]
         );
 
-        await addLog(ownerId, 'FOLDER_SHARED', `Shared folder ${folder[0].name}`);
+        await addLog(ownerId!, 'FOLDER_SHARED', `Shared folder ${folder[0].name}`);
 
         res.status(201).json({ message: 'Folder shared' });
 
@@ -286,7 +286,7 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
             [name.trim(), folderId, tenantId]
         );
 
-        await addLog(ownerId, 'FOLDER_RENAMED', `Renamed folder to ${name.trim()}`);
+        await addLog(ownerId!, 'FOLDER_RENAMED', `Renamed folder to ${name.trim()}`);
 
         res.json({ message: 'Folder renamed', id: folderId, name: name.trim() });
     } catch (err) {
@@ -316,7 +316,7 @@ router.delete('/:id', async (req: AuthRequest, res: Response) => {
             [folderId, tenantId]
         );
 
-        await addLog(ownerId, 'FOLDER_DELETED', `Deleted folder ${folder[0].name}`);
+        await addLog(ownerId!, 'FOLDER_DELETED', `Deleted folder ${folder[0].name}`);
 
         res.json({ message: 'Folder deleted' });
     } catch (err) {
