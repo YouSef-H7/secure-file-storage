@@ -4,6 +4,30 @@ import db from '../db';
 import { fileRepository } from '../repositories';
 import { AuthRequest } from '../middleware/auth';
 
+/**
+ * SCHEMA VERIFICATION - Required Database Elements
+ * 
+ * Admin stats endpoints require the following database schema:
+ * 
+ * Required Tables:
+ * - users (columns: id, email, role, created_at)
+ * - files (columns: id, user_id, fileName, size, is_deleted, tenant_id, created_at)
+ * - logs (columns: id, user_id, action, details, created_at, tenant_id)
+ * 
+ * Required Columns:
+ * - users.email: Used as identity key for AD authentication (contains email, not numeric ID)
+ * - files.user_id: Contains email (not numeric ID) - must match users.email for joins
+ * - files.fileName: camelCase field name (capital N) - used for extension extraction
+ * - logs.user_id: Contains email (not numeric ID) - must match users.email for joins
+ * - logs.tenant_id: May be NULL for some entries (null-safe queries required)
+ * 
+ * Join Logic:
+ * - All joins use email-based matching: files.user_id = users.email, logs.user_id = users.email
+ * - Never join on users.id (numeric ID) - AD uses email as identity
+ * 
+ * If any of these elements are missing, queries will fail with clear error messages.
+ */
+
 const router = Router();
 
 /**
@@ -103,8 +127,13 @@ router.get('/admin/summary', requireAdmin, async (req: AuthRequest, res: Respons
             totalUsers: usersStats.count || 0,
             activeUsers24h: activeStats.count || 0,
         });
-    } catch (error) {
-        console.error('[STATS] Admin summary failed:', error);
+    } catch (error: any) {
+        console.error('[ADMIN QUERY ERROR]', {
+            endpoint: '/api/stats/admin/summary',
+            error: error.message,
+            stack: error.stack,
+            query: 'SELECT admin summary stats'
+        });
         res.status(500).json({ error: 'Failed to fetch admin stats' });
     }
 });
@@ -130,8 +159,13 @@ router.get('/admin/activity', requireAdmin, async (req: AuthRequest, res: Respon
         );
 
         res.json(rows);
-    } catch (error) {
-        console.error('[STATS] Activity stats failed:', error);
+    } catch (error: any) {
+        console.error('[ADMIN QUERY ERROR]', {
+            endpoint: '/api/stats/admin/activity',
+            error: error.message,
+            stack: error.stack,
+            query: 'SELECT activity stats'
+        });
         res.status(500).json({ error: 'Failed to fetch activity stats' });
     }
 });
@@ -145,9 +179,10 @@ router.get('/admin/matrix', requireAdmin, async (req: AuthRequest, res: Response
         const tenantId = req.user?.tenantId || 'default-tenant';
 
         // Files by extension/type - use fileName (camelCase, capital N)
+        // Use LOWER() for case-insensitive extension grouping
         const [typeRows] = await db.execute<RowDataPacket[]>(
             `SELECT 
-                SUBSTRING_INDEX(fileName, '.', -1) as ext, 
+                LOWER(SUBSTRING_INDEX(fileName, '.', -1)) as ext, 
                 COUNT(*) as count 
              FROM files 
              WHERE tenant_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)
@@ -174,8 +209,13 @@ router.get('/admin/matrix', requireAdmin, async (req: AuthRequest, res: Response
             topUsers: userRows
         });
 
-    } catch (error) {
-        console.error('[STATS] Matrix stats failed:', error);
+    } catch (error: any) {
+        console.error('[ADMIN QUERY ERROR]', {
+            endpoint: '/api/stats/admin/matrix',
+            error: error.message,
+            stack: error.stack,
+            query: 'SELECT storage matrix stats'
+        });
         res.status(500).json({ error: 'Failed to fetch matrix stats' });
     }
 });
@@ -192,28 +232,30 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
         const offset = parseInt(req.query.offset as string) || 0;
         
         // Fetch recent logs from logs table with pagination - join on email, not id
+        // Handle NULL tenant_id for AD users who may not have tenant_id set
         const [rows] = await db.execute<RowDataPacket[]>(
             `SELECT l.id, l.action, l.details, l.created_at, l.user_id,
-                    u.email as user_email
+                    COALESCE(u.email, l.user_id) AS user_email
              FROM logs l
              LEFT JOIN users u ON l.user_id = u.email
-             WHERE l.tenant_id = ?
+             WHERE (l.tenant_id = ? OR l.tenant_id IS NULL)
              ORDER BY l.created_at DESC
              LIMIT ? OFFSET ?`,
             [tenantId, limit, offset]
         );
         
-        // Get total count for pagination
+        // Get total count for pagination (handle NULL tenant_id)
         const [countResult] = await db.execute<RowDataPacket[]>(
-            `SELECT COUNT(*) as total FROM logs WHERE tenant_id = ?`,
+            `SELECT COUNT(*) as total FROM logs WHERE (tenant_id = ? OR tenant_id IS NULL)`,
             [tenantId]
         );
         
         // Transform to match frontend format
+        // user_email already uses COALESCE in SQL, so it will always have a value
         const logs = rows.map((row: any) => ({
             id: row.id,
             action: row.action || 'Unknown Event',
-            user: row.user_email || row.user_id || 'System',
+            user: row.user_email || 'System',
             time: row.created_at,
             type: mapActionToType(row.action),
             details: row.details || null
@@ -225,8 +267,13 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
             limit,
             offset
         });
-    } catch (error) {
-        console.error('[STATS] Admin logs failed:', error);
+    } catch (error: any) {
+        console.error('[ADMIN QUERY ERROR]', {
+            endpoint: '/api/stats/admin/logs',
+            error: error.message,
+            stack: error.stack,
+            query: 'SELECT logs with user email join'
+        });
         res.status(500).json({ error: 'Failed to fetch logs' });
     }
 });

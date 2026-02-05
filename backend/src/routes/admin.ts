@@ -3,6 +3,24 @@ import { RowDataPacket } from 'mysql2';
 import db from '../db';
 import { AuthRequest } from '../middleware/auth';
 
+/**
+ * SCHEMA VERIFICATION - Required Database Elements
+ * 
+ * This endpoint requires the following database schema:
+ * 
+ * Required Tables:
+ * - users (columns: id, email, role, created_at)
+ * - logs (columns: id, user_id, action, created_at, tenant_id)
+ * 
+ * Required Columns:
+ * - users.email: Used as identity key for AD authentication (contains email, not numeric ID)
+ * - logs.user_id: Contains email (not numeric ID) - must match users.email
+ * - logs.action: Contains action strings like '%login%' or '%callback%' for AD authentication
+ * - logs.tenant_id: May be NULL for some entries (null-safe queries required)
+ * 
+ * If any of these elements are missing, queries will fail with clear error messages.
+ */
+
 const router = Router();
 
 // Helper to check for admin role
@@ -29,7 +47,7 @@ router.get('/users', requireAdmin, async (req: AuthRequest, res: Response) => {
 
         let query = `
             SELECT u.id, u.email, u.role, u.created_at,
-                   (SELECT MAX(l.created_at) FROM logs l WHERE l.user_id = u.email AND l.action LIKE '%login%') as last_login
+                   (SELECT MAX(l.created_at) FROM logs l WHERE l.user_id = u.email AND (l.action LIKE '%login%' OR l.action LIKE '%callback%')) as last_login
             FROM users u
             WHERE 1=1
         `;
@@ -68,8 +86,13 @@ router.get('/users', requireAdmin, async (req: AuthRequest, res: Response) => {
             limit,
             totalPages: Math.ceil(total / limit)
         });
-    } catch (error) {
-        console.error('[ADMIN] Users endpoint failed:', error);
+    } catch (error: any) {
+        console.error('[ADMIN QUERY ERROR]', {
+            endpoint: '/api/admin/users',
+            error: error.message,
+            stack: error.stack,
+            query: 'SELECT users with last_login'
+        });
         res.status(500).json({ error: 'Failed to fetch users' });
     }
 });
