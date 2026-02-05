@@ -36,6 +36,7 @@ import statsRouter from './routes/stats';
 import sharingRouter from './routes/sharing';
 import foldersRouter from './routes/folders';
 import adminRouter from './routes/admin';
+import filesRouter from './routes/files';
 import { fileRepository } from './repositories';
 import { addLog } from './utils/logs';
 import { FileMeta } from './repositories/FileRepository';
@@ -479,6 +480,7 @@ app.use('/api/stats', authenticate, statsRouter);
 app.use('/api/admin', authenticate, adminRouter);
 app.use('/api', authenticate, sharingRouter);
 app.use('/api/folders', authenticate, foldersRouter);
+app.use('/api', authenticate, filesRouter);
 
 // ================= HEALTH =================
 app.get('/api/health', (req, res) => {

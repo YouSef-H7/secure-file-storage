@@ -94,8 +94,9 @@ const mapActionToType = (action: string): 'upload' | 'delete' | 'login' | 'other
 router.get('/admin/summary', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         // 1. Total Files & Storage (global, exclude soft-deleted)
+        // IFNULL ensures totalSize is never NULL, preventing NULL arithmetic in growth calculations
         const [filesResult] = await db.execute<RowDataPacket[]>(
-            'SELECT COUNT(*) as count, SUM(size) as totalSize FROM files WHERE (is_deleted = FALSE OR is_deleted IS NULL)',
+            'SELECT COUNT(*) as count, IFNULL(SUM(size), 0) as totalSize FROM files WHERE (is_deleted = FALSE OR is_deleted IS NULL)',
             []
         );
 
@@ -162,7 +163,43 @@ router.get('/admin/activity', requireAdmin, async (req: AuthRequest, res: Respon
             []
         );
 
-        res.json(rows);
+        // Build complete 7-day array with zero-filled missing days
+        const today = new Date();
+        const sevenDaysData: Array<{ date: string; count: number; size: number }> = [];
+        const dataMap = new Map<string, { count: number; size: number }>();
+
+        // Map existing data
+        rows.forEach((row: any) => {
+            const dateStr = row.date ? row.date.toString().split('T')[0] : null;
+            if (dateStr) {
+                dataMap.set(dateStr, {
+                    count: Number(row.count || 0),
+                    size: Number(row.size || 0)
+                });
+            }
+        });
+
+        // Fill all 7 days (oldest to newest)
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(date.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            
+            if (dataMap.has(dateStr)) {
+                sevenDaysData.push({
+                    date: dateStr,
+                    ...dataMap.get(dateStr)!
+                });
+            } else {
+                sevenDaysData.push({
+                    date: dateStr,
+                    count: 0,
+                    size: 0
+                });
+            }
+        }
+
+        res.json(sevenDaysData);
     } catch (error: any) {
         console.error('[ADMIN QUERY ERROR]', {
             endpoint: '/api/stats/admin/activity',
