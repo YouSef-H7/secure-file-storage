@@ -93,12 +93,10 @@ const mapActionToType = (action: string): 'upload' | 'delete' | 'login' | 'other
  */
 router.get('/admin/summary', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const tenantId = req.user?.tenantId || 'default-tenant';
-
-        // 1. Total Files & Storage (exclude soft-deleted)
+        // 1. Total Files & Storage (global, exclude soft-deleted)
         const [filesResult] = await db.execute<RowDataPacket[]>(
-            'SELECT COUNT(*) as count, SUM(size) as totalSize FROM files WHERE tenant_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)',
-            [tenantId]
+            'SELECT COUNT(*) as count, SUM(size) as totalSize FROM files WHERE (is_deleted = FALSE OR is_deleted IS NULL)',
+            []
         );
 
         // 2. Total Users (NO tenant_id filter - users table doesn't have it)
@@ -107,14 +105,13 @@ router.get('/admin/summary', requireAdmin, async (req: AuthRequest, res: Respons
             []
         );
 
-        // 3. Active Users (uploaded/modified files in last 24h, exclude soft-deleted)
+        // 3. Active Users (global, uploaded/modified files in last 24h, exclude soft-deleted)
         const [activeUsersResult] = await db.execute<RowDataPacket[]>(
             `SELECT COUNT(DISTINCT user_id) as count 
        FROM files 
-       WHERE tenant_id = ? 
-       AND (is_deleted = FALSE OR is_deleted IS NULL)
+       WHERE (is_deleted = FALSE OR is_deleted IS NULL)
        AND created_at >= NOW() - INTERVAL 24 HOUR`,
-            [tenantId]
+            []
         );
 
         const filesStats = filesResult[0];
@@ -144,18 +141,15 @@ router.get('/admin/summary', requireAdmin, async (req: AuthRequest, res: Respons
  */
 router.get('/admin/activity', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const tenantId = req.user?.tenantId || 'default-tenant';
-
-        // Last 7 days activity (exclude soft-deleted)
+        // Last 7 days activity (global, exclude soft-deleted)
         const [rows] = await db.execute<RowDataPacket[]>(
             `SELECT DATE(created_at) as date, COUNT(*) as count, SUM(size) as size
        FROM files
-       WHERE tenant_id = ?
-       AND (is_deleted = FALSE OR is_deleted IS NULL)
+       WHERE (is_deleted = FALSE OR is_deleted IS NULL)
        AND created_at >= NOW() - INTERVAL 7 DAY
        GROUP BY DATE(created_at)
        ORDER BY date ASC`,
-            [tenantId]
+            []
         );
 
         res.json(rows);
@@ -176,32 +170,30 @@ router.get('/admin/activity', requireAdmin, async (req: AuthRequest, res: Respon
  */
 router.get('/admin/matrix', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const tenantId = req.user?.tenantId || 'default-tenant';
-
-        // Files by extension/type - use fileName (camelCase, capital N)
+        // Files by extension/type (global) - use fileName (camelCase, capital N)
         // Use LOWER() for case-insensitive extension grouping
         const [typeRows] = await db.execute<RowDataPacket[]>(
             `SELECT 
                 LOWER(SUBSTRING_INDEX(fileName, '.', -1)) as ext, 
                 COUNT(*) as count 
              FROM files 
-             WHERE tenant_id = ? AND (is_deleted = FALSE OR is_deleted IS NULL)
+             WHERE (is_deleted = FALSE OR is_deleted IS NULL)
              GROUP BY ext 
              ORDER BY count DESC 
              LIMIT 6`,
-            [tenantId]
+            []
         );
 
-        // Top storage consumers - join on email, not id (files.user_id contains email)
+        // Top storage consumers (global) - join on email, not id (files.user_id contains email)
         const [userRows] = await db.execute<RowDataPacket[]>(
             `SELECT u.email, SUM(f.size) as usageBytes, COUNT(f.id) as fileCount
              FROM files f
              JOIN users u ON f.user_id = u.email
-             WHERE f.tenant_id = ? AND (f.is_deleted = FALSE OR f.is_deleted IS NULL)
+             WHERE (f.is_deleted = FALSE OR f.is_deleted IS NULL)
              GROUP BY u.email
              ORDER BY usageBytes DESC
              LIMIT 5`,
-            [tenantId]
+            []
         );
 
         res.json({
@@ -227,7 +219,6 @@ router.get('/admin/matrix', requireAdmin, async (req: AuthRequest, res: Response
  */
 router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const tenantId = req.user?.tenantId || 'default-tenant';
         const limit = Number(parseInt(req.query.limit as string) || 20);
         const offset = Number(parseInt(req.query.offset as string) || 0);
         
@@ -236,55 +227,36 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
             return res.status(400).json({ error: 'Invalid pagination parameters' });
         }
         
-        // Safety check: ensure tenantId is defined
-        if (!tenantId || typeof tenantId !== 'string') {
-            return res.status(400).json({ error: 'Missing tenant ID' });
-        }
-        
         // Validate and sanitize pagination values (for direct SQL injection)
         const safeLimit = Math.max(0, Number(limit) || 0);
         const safeOffset = Math.max(0, Number(offset) || 0);
         
-        // Only real data values in params array (no LIMIT/OFFSET placeholders)
-        const params = [tenantId, tenantId];
-        
-        // Debug check: ensure no undefined/null/NaN values
-        if (params.some(p => p === undefined || p === null || (typeof p === 'number' && isNaN(p)))) {
-            console.error('[SQL PARAM ERROR] Invalid parameters:', params);
-            return res.status(500).json({ error: 'Invalid query parameters' });
-        }
+        // No params array needed (global query, no tenant filtering)
+        const params: any[] = [];
         
         // Debug logging before DB execution
         console.log('[SQL DEBUG] /api/stats/admin/logs - Parameters:', params, `LIMIT ${safeLimit} OFFSET ${safeOffset}`);
         
-        // Fetch recent logs from logs table with pagination - join on email, not id
-        // Handle NULL tenant_id for AD users who may not have tenant_id set
-        // Use COALESCE pattern: COALESCE(l.tenant_id, ?) = ? requires 2 params for tenantId
+        // Fetch recent logs from logs table (global, no tenant filter)
+        // COALESCE for user email mapping: shows u.email if user exists, otherwise l.user_id (for external AD users)
         // LIMIT/OFFSET injected directly as numbers (not placeholders)
         const [rows] = await db.execute<RowDataPacket[]>(
             `SELECT l.id, l.action, l.details, l.created_at, l.user_id,
                     COALESCE(u.email, l.user_id) AS user_email
              FROM logs l
              LEFT JOIN users u ON l.user_id = u.email
-             WHERE COALESCE(l.tenant_id, ?) = ?
              ORDER BY l.created_at DESC
              LIMIT ${safeLimit} OFFSET ${safeOffset}`,
             params
         );
         
-        // Get total count for pagination (handle NULL tenant_id using COALESCE)
-        const countParams = [tenantId, tenantId];
-        
-        // Debug check for count query
-        if (countParams.some(p => p === undefined || p === null)) {
-            console.error('[SQL PARAM ERROR] Invalid count parameters:', countParams);
-            return res.status(500).json({ error: 'Invalid query parameters' });
-        }
+        // Get total count for pagination (global)
+        const countParams: any[] = [];
         
         console.log('[SQL DEBUG] /api/stats/admin/logs (count) - Parameters:', countParams);
         
         const [countResult] = await db.execute<RowDataPacket[]>(
-            `SELECT COUNT(*) as total FROM logs WHERE COALESCE(tenant_id, ?) = ?`,
+            `SELECT COUNT(*) as total FROM logs`,
             countParams
         );
         
