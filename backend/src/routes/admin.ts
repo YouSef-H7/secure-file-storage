@@ -41,8 +41,8 @@ const requireAdmin = (req: AuthRequest, res: Response, next: any) => {
 router.get('/users', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const page = parseInt(req.query.page as string) || 1;
-        const limit = parseInt(req.query.limit as string) || 50;
-        const offset = (page - 1) * limit;
+        const limit = Number(parseInt(req.query.limit as string) || 50);
+        const offset = Number((page - 1) * limit);
         const search = (req.query.search as string) || '';
 
         let query = `

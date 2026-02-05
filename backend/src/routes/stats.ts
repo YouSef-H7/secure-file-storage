@@ -228,26 +228,27 @@ router.get('/admin/matrix', requireAdmin, async (req: AuthRequest, res: Response
 router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
         const tenantId = req.user?.tenantId || 'default-tenant';
-        const limit = parseInt(req.query.limit as string) || 20;
-        const offset = parseInt(req.query.offset as string) || 0;
+        const limit = Number(parseInt(req.query.limit as string) || 20);
+        const offset = Number(parseInt(req.query.offset as string) || 0);
         
         // Fetch recent logs from logs table with pagination - join on email, not id
         // Handle NULL tenant_id for AD users who may not have tenant_id set
+        // Use COALESCE pattern: COALESCE(l.tenant_id, ?) = ? requires 2 params for tenantId
         const [rows] = await db.execute<RowDataPacket[]>(
             `SELECT l.id, l.action, l.details, l.created_at, l.user_id,
                     COALESCE(u.email, l.user_id) AS user_email
              FROM logs l
              LEFT JOIN users u ON l.user_id = u.email
-             WHERE (l.tenant_id = ? OR l.tenant_id IS NULL)
+             WHERE COALESCE(l.tenant_id, ?) = ?
              ORDER BY l.created_at DESC
              LIMIT ? OFFSET ?`,
-            [tenantId, limit, offset]
+            [tenantId, tenantId, limit, offset]
         );
         
-        // Get total count for pagination (handle NULL tenant_id)
+        // Get total count for pagination (handle NULL tenant_id using COALESCE)
         const [countResult] = await db.execute<RowDataPacket[]>(
-            `SELECT COUNT(*) as total FROM logs WHERE (tenant_id = ? OR tenant_id IS NULL)`,
-            [tenantId]
+            `SELECT COUNT(*) as total FROM logs WHERE COALESCE(tenant_id, ?) = ?`,
+            [tenantId, tenantId]
         );
         
         // Transform to match frontend format
