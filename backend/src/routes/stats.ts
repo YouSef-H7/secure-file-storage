@@ -237,47 +237,39 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
             return res.status(400).json({ error: 'Invalid pagination parameters' });
         }
         
-        // Validate and sanitize pagination values (for direct SQL injection)
-        const safeLimit = Math.max(0, Number(limit) || 0);
-        const safeOffset = Math.max(0, Number(offset) || 0);
-        
-        // No params array needed (global query, no tenant filtering)
-        const params: any[] = [];
-        
-        // Debug logging before DB execution
-        console.log('[SQL DEBUG] /api/stats/admin/logs - Parameters:', params, `LIMIT ${safeLimit} OFFSET ${safeOffset}`);
+        // Validate and sanitize pagination values
+        const safeLimit = Number(limit) || 0;
+        const safeOffset = Number(offset) || 0;
         
         // Fetch recent logs from logs table (global, no tenant filter)
-        // COALESCE for user email mapping: shows u.email if user exists, otherwise l.user_id (for external AD users)
-        // LIMIT/OFFSET injected directly as numbers (not placeholders)
+        // Uses placeholders for LIMIT/OFFSET and column aliases for frontend compatibility
         const [rows] = await db.execute<RowDataPacket[]>(
-            `SELECT l.id, l.action, l.details, l.created_at, l.user_id,
-                    COALESCE(u.email, l.user_id) AS user_email
-             FROM logs l
-             LEFT JOIN users u ON l.user_id = u.email
-             ORDER BY l.created_at DESC
-             LIMIT ${safeLimit} OFFSET ${safeOffset}`,
-            params
+            `SELECT 
+                id, 
+                user_id, 
+                action as event, 
+                details, 
+                created_at as time
+             FROM logs
+             ORDER BY created_at DESC
+             LIMIT ? OFFSET ?`,
+            [safeLimit, safeOffset]
         );
         
         // Get total count for pagination (global)
-        const countParams: any[] = [];
-        
-        console.log('[SQL DEBUG] /api/stats/admin/logs (count) - Parameters:', countParams);
-        
         const [countResult] = await db.execute<RowDataPacket[]>(
             `SELECT COUNT(*) as total FROM logs`,
-            countParams
+            []
         );
         
         // Transform to match frontend format
-        // user_email already uses COALESCE in SQL, so it will always have a value
+        // Uses aliased columns: event (from action), time (from created_at)
         const logs = rows.map((row: any) => ({
             id: row.id,
-            action: row.action || 'Unknown Event',
-            user: row.user_email || 'System',
-            time: row.created_at,
-            type: mapActionToType(row.action),
+            action: row.event || 'Unknown Event',  // Use aliased 'event' column
+            user: row.user_id || 'System',  // Use user_id directly (no JOIN)
+            time: row.time,  // Use aliased 'time' column
+            type: mapActionToType(row.event),  // Use aliased 'event' for type mapping
             details: row.details || null
         }));
         
@@ -292,7 +284,7 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
             endpoint: '/api/stats/admin/logs',
             error: error.message,
             stack: error.stack,
-            query: 'SELECT logs with user email join'
+            query: 'SELECT logs (global, ordered DESC)'
         });
         res.status(500).json({ error: 'Failed to fetch logs' });
     }
