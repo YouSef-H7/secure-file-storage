@@ -28,6 +28,9 @@ interface MatrixStats {
 const Dashboard = () => {
   const { summary, activity, recentLogs, loading, error } = useAdminStats();
 
+  // Debug: Log activity data structure
+  console.log("Chart Data (Activity):", activity);
+
   // Matrix stats (File Types & Top Users) 
   // Since we are moving to aggregation, we'll calculate basic types here or skip/keep placeholder if complex.
   // The user prompt emphasizes: "Required Admin Metrics ... Total Users, Total Files, Total Storage, Active Users, Upload Activity, Recent Events".
@@ -149,7 +152,10 @@ const Dashboard = () => {
               if (normalizedActivity.length > 0) {
                 const maxCount = Math.max(...normalizedActivity.map(a => a.count), 1);
                 return normalizedActivity.map((day, idx) => {
-                  const height = Math.max((day.count / maxCount) * 100, 4); // min 4% height
+                  // Ensure minimum height of 4% even for zero values, or hide if truly empty
+                  const height = maxCount > 0 
+                    ? Math.max((day.count / maxCount) * 100, 4) 
+                    : 4; // Show 4% even if all zeros
                   return (
                     <div key={idx} className="flex-1 flex flex-col items-center group">
                       <div className="relative w-full flex items-end justify-center">

@@ -44,9 +44,16 @@ const StoragePage = () => {
           const byTypeData = matrixRes.value.byType || [];
           const chartData = byTypeData.map((item: any) => ({
             name: (item.ext || item.extension || 'OTHER').toUpperCase(),
-            value: Number(item.total_size ?? item.count ?? 0) // Use total_size if available, fallback to count
+            value: Number(item.count ?? 0) // Backend returns 'count', not 'total_size'
           }));
           setFileTypes(chartData);
+          
+          // Debug: Log matrix data structure
+          console.log("Chart Data (Matrix):", {
+            raw: matrixRes.value,
+            byType: matrixRes.value?.byType,
+            chartData: chartData
+          });
         }
 
         if (activityRes.status === 'fulfilled' && Array.isArray(activityRes.value)) {
@@ -156,7 +163,10 @@ const StoragePage = () => {
           <h3 className="text-lg font-semibold text-text-primary mb-1">File Types</h3>
           <p className="text-sm text-text-secondary">Storage by file extension</p>
         </div>
-        {fileTypes.length > 0 ? (
+        {(() => {
+          // Debug: Log file types before rendering
+          console.log("File Types Chart Data:", fileTypes);
+          return fileTypes.length > 0 ? (
           <div className="h-64 flex items-end gap-2 mt-4">
             {fileTypes.map((type, idx) => {
               const maxValue = Math.max(...fileTypes.map(t => t.value), 1);
@@ -169,7 +179,7 @@ const StoragePage = () => {
                       className="w-full max-w-[50px] bg-brand rounded-t-sm group-hover:bg-brand-light transition-all duration-300 relative"
                     >
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-brand-dark text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-lg">
-                        {type.name}: {formatSize(type.value)}
+                        {type.name}: {type.value} files
                       </div>
                     </div>
                   </div>
@@ -187,7 +197,8 @@ const StoragePage = () => {
               <p>No file type data available</p>
             </div>
           </div>
-        )}
+          );
+        })()}
       </div>
 
       <div className="bg-surface rounded-xl shadow-sm border border-border p-6">
