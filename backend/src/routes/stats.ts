@@ -241,8 +241,12 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
             return res.status(400).json({ error: 'Missing tenant ID' });
         }
         
-        // Prepare parameters array
-        const params = [tenantId, tenantId, limit, offset];
+        // Validate and sanitize pagination values (for direct SQL injection)
+        const safeLimit = Math.max(0, Number(limit) || 0);
+        const safeOffset = Math.max(0, Number(offset) || 0);
+        
+        // Only real data values in params array (no LIMIT/OFFSET placeholders)
+        const params = [tenantId, tenantId];
         
         // Debug check: ensure no undefined/null/NaN values
         if (params.some(p => p === undefined || p === null || (typeof p === 'number' && isNaN(p)))) {
@@ -251,11 +255,12 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
         }
         
         // Debug logging before DB execution
-        console.log('[SQL DEBUG] /api/stats/admin/logs - Parameters:', params);
+        console.log('[SQL DEBUG] /api/stats/admin/logs - Parameters:', params, `LIMIT ${safeLimit} OFFSET ${safeOffset}`);
         
         // Fetch recent logs from logs table with pagination - join on email, not id
         // Handle NULL tenant_id for AD users who may not have tenant_id set
         // Use COALESCE pattern: COALESCE(l.tenant_id, ?) = ? requires 2 params for tenantId
+        // LIMIT/OFFSET injected directly as numbers (not placeholders)
         const [rows] = await db.execute<RowDataPacket[]>(
             `SELECT l.id, l.action, l.details, l.created_at, l.user_id,
                     COALESCE(u.email, l.user_id) AS user_email
@@ -263,7 +268,7 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
              LEFT JOIN users u ON l.user_id = u.email
              WHERE COALESCE(l.tenant_id, ?) = ?
              ORDER BY l.created_at DESC
-             LIMIT ? OFFSET ?`,
+             LIMIT ${safeLimit} OFFSET ${safeOffset}`,
             params
         );
         

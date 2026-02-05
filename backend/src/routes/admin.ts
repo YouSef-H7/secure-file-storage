@@ -50,6 +50,10 @@ router.get('/users', requireAdmin, async (req: AuthRequest, res: Response) => {
             return res.status(400).json({ error: 'Invalid pagination parameters' });
         }
 
+        // Validate and sanitize pagination values (for direct SQL injection)
+        const safeLimit = Math.max(0, Number(limit) || 0);
+        const safeOffset = Math.max(0, Number(offset) || 0);
+
         let query = `
             SELECT u.id, u.email, u.role, u.created_at,
                    (SELECT MAX(l.created_at) FROM logs l WHERE l.user_id = u.email AND (l.action LIKE '%login%' OR l.action LIKE '%callback%')) as last_login
@@ -63,17 +67,17 @@ router.get('/users', requireAdmin, async (req: AuthRequest, res: Response) => {
             params.push(`%${search}%`);
         }
 
-        query += ` ORDER BY u.created_at DESC LIMIT ? OFFSET ?`;
-        params.push(limit, offset);
+        // LIMIT/OFFSET injected directly as numbers (not placeholders)
+        query += ` ORDER BY u.created_at DESC LIMIT ${safeLimit} OFFSET ${safeOffset}`;
 
-        // Debug check: ensure no undefined/null/NaN values
+        // Debug check: ensure no undefined/null/NaN values in params array
         if (params.some(p => p === undefined || p === null || (typeof p === 'number' && isNaN(p)))) {
             console.error('[SQL PARAM ERROR] Invalid parameters:', { query, params });
             return res.status(500).json({ error: 'Invalid query parameters' });
         }
 
         // Debug logging before DB execution
-        console.log('[SQL DEBUG] /api/admin/users - Parameters:', params);
+        console.log('[SQL DEBUG] /api/admin/users - Parameters:', params, `LIMIT ${safeLimit} OFFSET ${safeOffset}`);
 
         const [rows] = await db.execute<RowDataPacket[]>(query, params);
 
