@@ -46,15 +46,24 @@ const LogsPage = () => {
                 setLoading(true);
                 setError(null);
                 const data = await api.request('/api/stats/admin/logs');
+                
                 // Handle both old format (array) and new format (object with logs array)
-                if (Array.isArray(data)) {
-                    setLogs(data);
-                } else if (data && Array.isArray(data.logs)) {
-                    setLogs(data.logs);
+                const logsArray = Array.isArray(data) ? data : (data?.logs ?? []);
+                
+                if (logsArray.length === 0 && data && !Array.isArray(data) && !data.logs) {
+                    // Unexpected response shape - log for debugging
+                    console.log('[LOGS RAW RESPONSE]', data);
                 }
-            } catch (err) {
+                
+                setLogs(logsArray);
+            } catch (err: any) {
                 setError('Failed to load logs');
                 console.error('Logs fetch failed:', err);
+                // Only log raw response on failure for debugging
+                if (err.message?.includes('NOT_JSON')) {
+                    console.log('[LOGS RAW RESPONSE] Failed - NOT_JSON error');
+                }
+                setLogs([]); // Ensure logs array is empty on error
             } finally {
                 setLoading(false);
             }

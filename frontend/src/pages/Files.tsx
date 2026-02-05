@@ -27,14 +27,15 @@ const FileManager = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await api.request('/api/files', { method: 'GET' });
+      const data = await api.request('/api/admin/files', { method: 'GET' });
       if (Array.isArray(data)) {
         const normalizeFile = (item: any) => ({
           ...item,
           id: item.id,
           name: item.name ?? item.filename ?? '',
-          mimeType: item.mimeType ?? 'application/octet-stream',
-          createdAt: item.createdAt ?? item.created_at,
+          mimeType: item.mimeType ?? item.mime_type ?? 'application/octet-stream',
+          createdAt: item.createdAt ?? item.created_at ?? null,
+          created_at: item.created_at ?? item.createdAt ?? null, // Keep both for compatibility
           size: item.size ?? 0
         });
         setFiles(data.map(normalizeFile));

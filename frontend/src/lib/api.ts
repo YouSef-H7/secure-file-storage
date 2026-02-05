@@ -16,8 +16,26 @@ const handleResponse = async (res: Response) => {
     }
     throw new Error('Unauthorized');
   }
+  
+  // Check content-type before parsing JSON
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
+    console.error('[API ERROR] NOT_JSON response:', {
+      url: res.url,
+      status: res.status,
+      contentType,
+      body: text.slice(0, 200)
+    });
+    throw new Error(`NOT_JSON: Expected JSON but got ${contentType}`);
+  }
+  
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || 'Request failed');
+  }
+  
   const data = await res.json();
-  if (!res.ok) throw new Error(data.error || 'Request failed');
   return data;
 };
 
@@ -66,10 +84,29 @@ export const api = {
       signal: options.signal // Support AbortController
     })
       .then(async (res) => {
-        const contentType = res.headers.get('content-type');
-        if (!res.ok || !contentType || !contentType.includes('application/json')) {
-          throw new Error('NOT_JSON');
+        const contentType = res.headers.get('content-type') || '';
+        if (!res.ok) {
+          // Try to get error message from JSON if possible
+          if (contentType.includes('application/json')) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.error || `Request failed: ${res.status}`);
+          } else {
+            const text = await res.text();
+            throw new Error(`Request failed: ${res.status} - ${text.slice(0, 100)}`);
+          }
         }
+        
+        if (!contentType.includes('application/json')) {
+          const text = await res.text();
+          console.error('[API ERROR] NOT_JSON response:', {
+            url: res.url,
+            status: res.status,
+            contentType,
+            body: text.slice(0, 200)
+          });
+          throw new Error(`NOT_JSON: Expected JSON but got ${contentType}`);
+        }
+        
         return await res.json();
       });
 

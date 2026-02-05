@@ -139,7 +139,24 @@ const Dashboard = () => {
                     </div>
                   </div>
                   <div className="mt-3 text-xs font-medium text-text-secondary truncate w-full text-center">
-                    {new Date(day.date).toLocaleDateString(undefined, { weekday: 'short' })}
+                    {(() => {
+                      try {
+                        const date = new Date(day.date);
+                        if (isNaN(date.getTime())) {
+                          // Fallback: try parsing as YYYY-MM-DD string
+                          const dateStr = String(day.date || '').split('T')[0];
+                          const fallbackDate = new Date(dateStr);
+                          if (!isNaN(fallbackDate.getTime())) {
+                            return fallbackDate.toLocaleDateString(undefined, { weekday: 'short' });
+                          }
+                          return dateStr || 'N/A';
+                        }
+                        return date.toLocaleDateString(undefined, { weekday: 'short' });
+                      } catch (e) {
+                        console.error('[CHART] Date parsing failed:', day.date, e);
+                        return String(day.date || '').split('T')[0] || 'N/A';
+                      }
+                    })()}
                   </div>
                 </div>
               );
