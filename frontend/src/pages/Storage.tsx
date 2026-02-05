@@ -20,6 +20,7 @@ const StoragePage = () => {
   const [summary, setSummary] = useState({ totalStorage: 0, totalFiles: 0 });
   const [topUsers, setTopUsers] = useState<Array<{ email: string; usageBytes: number; fileCount: number }>>([]);
   const [activity, setActivity] = useState<Array<{ date: string; size: number }>>([]);
+  const [fileTypes, setFileTypes] = useState<Array<{ name: string; value: number }>>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -36,8 +37,16 @@ const StoragePage = () => {
           setSummary(summaryRes.value);
         }
 
-        if (matrixRes.status === 'fulfilled' && matrixRes.value?.topUsers) {
+        if (matrixRes.status === 'fulfilled' && matrixRes.value) {
           setTopUsers(matrixRes.value.topUsers || []);
+          
+          // Extract and map byType array
+          const byTypeData = matrixRes.value.byType || [];
+          const chartData = byTypeData.map((item: any) => ({
+            name: (item.ext || item.extension || 'OTHER').toUpperCase(),
+            value: Number(item.total_size ?? item.count ?? 0) // Use total_size if available, fallback to count
+          }));
+          setFileTypes(chartData);
         }
 
         if (activityRes.status === 'fulfilled' && Array.isArray(activityRes.value)) {
@@ -115,11 +124,15 @@ const StoragePage = () => {
               <TrendingUp className="text-brand" size={24} />
             </div>
             <div>
-              <div className="text-2xl font-bold text-text-primary">{formatSize(dailyGrowth)}</div>
+              <div className="text-2xl font-bold text-text-primary">
+                {dailyGrowthPercent === 0 && activity.length < 2 
+                  ? 'Initial' 
+                  : `${dailyGrowthPercent >= 0 ? '+' : ''}${dailyGrowthPercent.toFixed(1)}%`}
+              </div>
               <div className="text-xs text-text-secondary uppercase font-semibold tracking-wide">Daily Growth</div>
             </div>
           </div>
-          <div className="text-xs text-text-secondary">Average over last 7 days</div>
+          <div className="text-xs text-text-secondary">Change from previous day</div>
         </div>
       </div>
 
@@ -128,12 +141,38 @@ const StoragePage = () => {
           <h3 className="text-lg font-semibold text-text-primary mb-1">File Types</h3>
           <p className="text-sm text-text-secondary">Storage by file extension</p>
         </div>
-        <div className="h-64 flex items-center justify-center border-t border-dotted border-border mt-4">
-          <div className="text-center text-text-secondary text-sm">
-            <HardDrive size={48} className="mx-auto mb-2 opacity-20" />
-            <p>File type breakdown available via /api/stats/admin/matrix</p>
+        {fileTypes.length > 0 ? (
+          <div className="h-64 flex items-end gap-2 mt-4">
+            {fileTypes.map((type, idx) => {
+              const maxValue = Math.max(...fileTypes.map(t => t.value), 1);
+              const height = Math.max((type.value / maxValue) * 100, 4);
+              return (
+                <div key={idx} className="flex-1 flex flex-col items-center group">
+                  <div className="relative w-full flex items-end justify-center">
+                    <div
+                      style={{ height: `${height}%` }}
+                      className="w-full max-w-[50px] bg-brand rounded-t-sm group-hover:bg-brand-light transition-all duration-300 relative"
+                    >
+                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-brand-dark text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-lg">
+                        {type.name}: {formatSize(type.value)}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 text-xs font-medium text-text-secondary truncate w-full text-center">
+                    {type.name}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-        </div>
+        ) : (
+          <div className="h-64 flex items-center justify-center border-t border-dotted border-border mt-4">
+            <div className="text-center text-text-secondary text-sm">
+              <HardDrive size={48} className="mx-auto mb-2 opacity-20" />
+              <p>No file type data available</p>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="bg-surface rounded-xl shadow-sm border border-border p-6">

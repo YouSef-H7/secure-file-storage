@@ -122,49 +122,60 @@ const Dashboard = () => {
           </div>
 
           <div className="h-64 flex items-end gap-2 sm:gap-4 mt-8">
-            {(activity ?? []).length > 0 ? (activity ?? []).map((day, idx) => {
-              const safeActivity = activity ?? [];
-              const maxCount = Math.max(...safeActivity.map(a => a.count ?? 0), 1);
-              const height = Math.max(((day.count ?? 0) / maxCount) * 100, 4); // min 4% height
-              return (
-                <div key={idx} className="flex-1 flex flex-col items-center group">
-                  <div className="relative w-full flex items-end justify-center">
-                    <div
-                      style={{ height: `${height}%` }}
-                      className="w-full max-w-[40px] bg-brand rounded-t-sm group-hover:bg-brand-light transition-all duration-300 relative"
-                    >
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-brand-dark text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-lg">
-                        {day.count} files ({formatSize(day.size)})
+            {(() => {
+              // Normalize activity data to ensure count is always a number
+              const normalizedActivity = (activity ?? []).map((day: any) => ({
+                ...day,
+                count: Number(day.count ?? 0), // Ensure count is always a number
+                size: Number(day.size ?? 0),
+                dateLabel: (() => {
+                  try {
+                    const date = new Date(day.date);
+                    if (isNaN(date.getTime())) {
+                      const dateStr = String(day.date || '').split('T')[0];
+                      const fallbackDate = new Date(dateStr);
+                      if (!isNaN(fallbackDate.getTime())) {
+                        return fallbackDate.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                      }
+                      return dateStr || 'N/A';
+                    }
+                    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                  } catch (e) {
+                    return String(day.date || '').split('T')[0] || 'N/A';
+                  }
+                })()
+              }));
+
+              if (normalizedActivity.length > 0) {
+                const maxCount = Math.max(...normalizedActivity.map(a => a.count), 1);
+                return normalizedActivity.map((day, idx) => {
+                  const height = Math.max((day.count / maxCount) * 100, 4); // min 4% height
+                  return (
+                    <div key={idx} className="flex-1 flex flex-col items-center group">
+                      <div className="relative w-full flex items-end justify-center">
+                        <div
+                          style={{ height: `${height}%` }}
+                          className="w-full max-w-[40px] bg-brand rounded-t-sm group-hover:bg-brand-light transition-all duration-300 relative"
+                        >
+                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-brand-dark text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-lg">
+                            {day.count} files ({formatSize(day.size)})
+                          </div>
+                        </div>
+                      </div>
+                      <div className="mt-3 text-xs font-medium text-text-secondary truncate w-full text-center">
+                        {day.dateLabel}
                       </div>
                     </div>
+                  );
+                });
+              } else {
+                return (
+                  <div className="w-full h-full flex items-center justify-center text-text-secondary text-sm">
+                    No activity recorded recently
                   </div>
-                  <div className="mt-3 text-xs font-medium text-text-secondary truncate w-full text-center">
-                    {(() => {
-                      try {
-                        const date = new Date(day.date);
-                        if (isNaN(date.getTime())) {
-                          // Fallback: try parsing as YYYY-MM-DD string
-                          const dateStr = String(day.date || '').split('T')[0];
-                          const fallbackDate = new Date(dateStr);
-                          if (!isNaN(fallbackDate.getTime())) {
-                            return fallbackDate.toLocaleDateString(undefined, { weekday: 'short' });
-                          }
-                          return dateStr || 'N/A';
-                        }
-                        return date.toLocaleDateString(undefined, { weekday: 'short' });
-                      } catch (e) {
-                        console.error('[CHART] Date parsing failed:', day.date, e);
-                        return String(day.date || '').split('T')[0] || 'N/A';
-                      }
-                    })()}
-                  </div>
-                </div>
-              );
-            }) : (
-              <div className="w-full h-full flex items-center justify-center text-text-secondary text-sm">
-                No activity recorded recently
-              </div>
-            )}
+                );
+              }
+            })()}
           </div>
         </div>
 
