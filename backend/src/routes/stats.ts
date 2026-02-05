@@ -229,17 +229,14 @@ router.get('/admin/matrix', requireAdmin, async (req: AuthRequest, res: Response
  */
 router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) => {
     try {
-        const limit = Number(parseInt(req.query.limit as string) || 20);
-        const offset = Number(parseInt(req.query.offset as string) || 0);
+        // Ensure values are strictly converted to numbers
+        const safeLimit = parseInt(req.query.limit as string) || 20;
+        const safeOffset = parseInt(req.query.offset as string) || 0;
         
         // Safety check: ensure all parameters are valid
-        if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+        if (isNaN(safeLimit) || isNaN(safeOffset) || safeLimit < 0 || safeOffset < 0) {
             return res.status(400).json({ error: 'Invalid pagination parameters' });
         }
-        
-        // Validate and sanitize pagination values
-        const safeLimit = Number(limit) || 0;
-        const safeOffset = Number(offset) || 0;
         
         // Fetch recent logs from logs table (global, no tenant filter)
         // Uses placeholders for LIMIT/OFFSET and column aliases for frontend compatibility
@@ -276,8 +273,8 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
         res.json({
             logs,
             total: countResult[0]?.total || 0,
-            limit,
-            offset
+            limit: safeLimit,
+            offset: safeOffset
         });
     } catch (error: any) {
         console.error('[ADMIN QUERY ERROR]', {
