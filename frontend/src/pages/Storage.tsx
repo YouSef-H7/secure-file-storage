@@ -63,11 +63,6 @@ const StoragePage = () => {
     fetchData();
   }, []);
 
-  // Calculate daily growth from activity data (last 7 days average)
-  const dailyGrowth = activity.length > 0 
-    ? activity.reduce((sum, day) => sum + (day.size || 0), 0) / activity.length 
-    : 0;
-
   if (loading) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
@@ -96,6 +91,26 @@ const StoragePage = () => {
       </div>
     );
   }
+
+  // Calculate daily growth as percentage change
+  const dailyGrowthPercent = (() => {
+    if (activity.length >= 2) {
+      // Compare last day to previous day
+      const today = activity[activity.length - 1];
+      const yesterday = activity[activity.length - 2];
+      const todaySize = Number(today?.size ?? 0);
+      const yesterdaySize = Number(yesterday?.size ?? 0);
+      
+      if (yesterdaySize > 0) {
+        const percent = ((todaySize - yesterdaySize) / yesterdaySize) * 100;
+        // Sanitize: ensure finite, reasonable percentage
+        if (isFinite(percent) && !isNaN(percent) && Math.abs(percent) <= 1000) {
+          return percent;
+        }
+      }
+    }
+    return 0;
+  })();
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
