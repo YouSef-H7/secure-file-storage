@@ -152,15 +152,16 @@ const Dashboard = () => {
               if (normalizedActivity.length > 0) {
                 const maxCount = Math.max(...normalizedActivity.map(a => a.count), 1);
                 return normalizedActivity.map((day, idx) => {
-                  // Ensure minimum height of 4% even for zero values, or hide if truly empty
-                  const height = maxCount > 0 
-                    ? Math.max((day.count / maxCount) * 100, 4) 
-                    : 4; // Show 4% even if all zeros
+                  // Force minimum height: use 8px or 5% whichever is larger for visibility
+                  const calculatedHeight = maxCount > 0 
+                    ? (day.count / maxCount) * 100 
+                    : 0;
+                  const height = Math.max(calculatedHeight, 5); // Increased from 4% to 5% minimum
                   return (
                     <div key={idx} className="flex-1 flex flex-col items-center group">
                       <div className="relative w-full flex items-end justify-center">
                         <div
-                          style={{ height: `${height}%` }}
+                          style={{ height: `${height}%`, minHeight: '8px' }} // Force 8px minimum
                           className="w-full max-w-[40px] bg-brand rounded-t-sm group-hover:bg-brand-light transition-all duration-300 relative"
                         >
                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-brand-dark text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-lg">

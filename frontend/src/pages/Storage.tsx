@@ -20,7 +20,7 @@ const StoragePage = () => {
   const [summary, setSummary] = useState({ totalStorage: 0, totalFiles: 0 });
   const [topUsers, setTopUsers] = useState<Array<{ email: string; usageBytes: number; fileCount: number }>>([]);
   const [activity, setActivity] = useState<Array<{ date: string; size: number }>>([]);
-  const [fileTypes, setFileTypes] = useState<Array<{ name: string; value: number }>>([]);
+  const [fileTypes, setFileTypes] = useState<Array<{ ext: string; count: number }>>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,11 +40,11 @@ const StoragePage = () => {
         if (matrixRes.status === 'fulfilled' && matrixRes.value) {
           setTopUsers(matrixRes.value.topUsers || []);
           
-          // Extract and map byType array
+          // Extract and map byType array - preserve backend field names
           const byTypeData = matrixRes.value.byType || [];
           const chartData = byTypeData.map((item: any) => ({
-            name: (item.ext || item.extension || 'OTHER').toUpperCase(),
-            value: Number(item.count ?? 0) // Backend returns 'count', not 'total_size'
+            ext: (item.ext || item.extension || 'OTHER').toUpperCase(), // Keep 'ext' field name
+            count: Number(item.count ?? 0) // Keep 'count' field name - backend returns 'count'
           }));
           setFileTypes(chartData);
           
@@ -169,22 +169,23 @@ const StoragePage = () => {
           return fileTypes.length > 0 ? (
           <div className="h-64 flex items-end gap-2 mt-4">
             {fileTypes.map((type, idx) => {
-              const maxValue = Math.max(...fileTypes.map(t => t.value), 1);
-              const height = Math.max((type.value / maxValue) * 100, 4);
+              const maxCount = Math.max(...fileTypes.map(t => t.count), 1); // Use 'count' directly
+              const calculatedHeight = (type.count / maxCount) * 100;
+              const height = Math.max(calculatedHeight, 5); // 5% minimum
               return (
                 <div key={idx} className="flex-1 flex flex-col items-center group">
                   <div className="relative w-full flex items-end justify-center">
                     <div
-                      style={{ height: `${height}%` }}
+                      style={{ height: `${height}%`, minHeight: '8px' }} // Force 8px minimum
                       className="w-full max-w-[50px] bg-brand rounded-t-sm group-hover:bg-brand-light transition-all duration-300 relative"
                     >
                       <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-brand-dark text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-lg">
-                        {type.name}: {type.value} files
+                        {type.ext}: {type.count} files
                       </div>
                     </div>
                   </div>
                   <div className="mt-2 text-xs font-medium text-text-secondary truncate w-full text-center">
-                    {type.name}
+                    {type.ext}
                   </div>
                 </div>
               );
