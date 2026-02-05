@@ -45,6 +45,11 @@ router.get('/users', requireAdmin, async (req: AuthRequest, res: Response) => {
         const offset = Number((page - 1) * limit);
         const search = (req.query.search as string) || '';
 
+        // Safety check: ensure pagination values are valid
+        if (isNaN(page) || isNaN(limit) || isNaN(offset) || page < 1 || limit < 1 || offset < 0) {
+            return res.status(400).json({ error: 'Invalid pagination parameters' });
+        }
+
         let query = `
             SELECT u.id, u.email, u.role, u.created_at,
                    (SELECT MAX(l.created_at) FROM logs l WHERE l.user_id = u.email AND (l.action LIKE '%login%' OR l.action LIKE '%callback%')) as last_login
@@ -61,6 +66,15 @@ router.get('/users', requireAdmin, async (req: AuthRequest, res: Response) => {
         query += ` ORDER BY u.created_at DESC LIMIT ? OFFSET ?`;
         params.push(limit, offset);
 
+        // Debug check: ensure no undefined/null/NaN values
+        if (params.some(p => p === undefined || p === null || (typeof p === 'number' && isNaN(p)))) {
+            console.error('[SQL PARAM ERROR] Invalid parameters:', { query, params });
+            return res.status(500).json({ error: 'Invalid query parameters' });
+        }
+
+        // Debug logging before DB execution
+        console.log('[SQL DEBUG] /api/admin/users - Parameters:', params);
+
         const [rows] = await db.execute<RowDataPacket[]>(query, params);
 
         // Get total count for pagination (NO tenant_id - users table doesn't have it)
@@ -70,6 +84,15 @@ router.get('/users', requireAdmin, async (req: AuthRequest, res: Response) => {
             countQuery += ` AND LOWER(email) LIKE LOWER(?)`;
             countParams.push(`%${search}%`);
         }
+
+        // Debug check for count query
+        if (countParams.some(p => p === undefined || p === null)) {
+            console.error('[SQL PARAM ERROR] Invalid count parameters:', countParams);
+            return res.status(500).json({ error: 'Invalid query parameters' });
+        }
+
+        console.log('[SQL DEBUG] /api/admin/users (count) - Parameters:', countParams);
+
         const [countResult] = await db.execute<RowDataPacket[]>(countQuery, countParams);
         const total = countResult[0]?.total || 0;
 

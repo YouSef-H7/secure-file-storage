@@ -231,6 +231,28 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
         const limit = Number(parseInt(req.query.limit as string) || 20);
         const offset = Number(parseInt(req.query.offset as string) || 0);
         
+        // Safety check: ensure all parameters are valid
+        if (isNaN(limit) || isNaN(offset) || limit < 0 || offset < 0) {
+            return res.status(400).json({ error: 'Invalid pagination parameters' });
+        }
+        
+        // Safety check: ensure tenantId is defined
+        if (!tenantId || typeof tenantId !== 'string') {
+            return res.status(400).json({ error: 'Missing tenant ID' });
+        }
+        
+        // Prepare parameters array
+        const params = [tenantId, tenantId, limit, offset];
+        
+        // Debug check: ensure no undefined/null/NaN values
+        if (params.some(p => p === undefined || p === null || (typeof p === 'number' && isNaN(p)))) {
+            console.error('[SQL PARAM ERROR] Invalid parameters:', params);
+            return res.status(500).json({ error: 'Invalid query parameters' });
+        }
+        
+        // Debug logging before DB execution
+        console.log('[SQL DEBUG] /api/stats/admin/logs - Parameters:', params);
+        
         // Fetch recent logs from logs table with pagination - join on email, not id
         // Handle NULL tenant_id for AD users who may not have tenant_id set
         // Use COALESCE pattern: COALESCE(l.tenant_id, ?) = ? requires 2 params for tenantId
@@ -242,13 +264,23 @@ router.get('/admin/logs', requireAdmin, async (req: AuthRequest, res: Response) 
              WHERE COALESCE(l.tenant_id, ?) = ?
              ORDER BY l.created_at DESC
              LIMIT ? OFFSET ?`,
-            [tenantId, tenantId, limit, offset]
+            params
         );
         
         // Get total count for pagination (handle NULL tenant_id using COALESCE)
+        const countParams = [tenantId, tenantId];
+        
+        // Debug check for count query
+        if (countParams.some(p => p === undefined || p === null)) {
+            console.error('[SQL PARAM ERROR] Invalid count parameters:', countParams);
+            return res.status(500).json({ error: 'Invalid query parameters' });
+        }
+        
+        console.log('[SQL DEBUG] /api/stats/admin/logs (count) - Parameters:', countParams);
+        
         const [countResult] = await db.execute<RowDataPacket[]>(
             `SELECT COUNT(*) as total FROM logs WHERE COALESCE(tenant_id, ?) = ?`,
-            [tenantId, tenantId]
+            countParams
         );
         
         // Transform to match frontend format
