@@ -56,7 +56,7 @@ const Dashboard = () => {
         {/* Skeleton cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 animate-pulse">
+            <div key={i} className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 animate-pulse">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-10 h-10 bg-slate-100 rounded-lg" />
               </div>
@@ -67,12 +67,12 @@ const Dashboard = () => {
         </div>
         {/* Skeleton chart + events */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-card border border-slate-200/80 p-5 animate-pulse">
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 animate-pulse">
             <div className="h-5 bg-slate-100 rounded w-32 mb-2" />
             <div className="h-4 bg-slate-50 rounded w-48 mb-6" />
             <div className="h-64 bg-slate-50 rounded" />
           </div>
-          <div className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 animate-pulse">
+          <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 animate-pulse">
             <div className="h-5 bg-slate-100 rounded w-28 mb-2" />
             <div className="h-4 bg-slate-50 rounded w-36 mb-6" />
             <div className="space-y-4">
@@ -134,7 +134,7 @@ const Dashboard = () => {
     <div className="space-y-8 animate-in">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Admin Dashboard</h1>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-heading">Admin Dashboard</h1>
         <p className="text-slate-400 mt-1.5 text-sm">Real-time system overview and analytics.</p>
       </div>
 
@@ -173,7 +173,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Activity Chart — recharts BarChart */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-card border border-slate-200/80 p-5 hover:shadow-card-hover transition-shadow duration-300">
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-shadow duration-300">
           <div className="mb-5">
             <h3 className="text-base font-semibold text-slate-900">Upload Activity</h3>
             <p className="text-sm text-slate-400">Files uploaded over the last 7 days</p>
@@ -184,8 +184,8 @@ const Dashboard = () => {
               <BarChart data={chartData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="barFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0B3B2E" stopOpacity={0.9} />
-                    <stop offset="100%" stopColor="#0B3B2E" stopOpacity={0.6} />
+                    <stop offset="0%" stopColor="#0d4d2e" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#10854a" stopOpacity={0.6} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" stroke="#e2e8f0" vertical={false} />
@@ -231,7 +231,7 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Events */}
-        <div className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 flex flex-col hover:shadow-card-hover transition-shadow duration-300">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 flex flex-col hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-shadow duration-300">
           <div className="mb-4">
             <h3 className="text-base font-semibold text-slate-900">Recent Events</h3>
             <p className="text-sm text-slate-400">Latest system activities</p>
@@ -239,7 +239,7 @@ const Dashboard = () => {
 
           <div className="flex-1 overflow-y-auto max-h-[400px] space-y-3 pr-1">
             {(recentLogs ?? []).length > 0 ? (recentLogs ?? []).map((log) => (
-              <div key={log.id} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/80 border border-slate-100 hover:bg-slate-100 hover:shadow-sm transition-all duration-200">
+              <div key={log.id} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/80 border border-slate-100 hover:bg-[#f0f9f4] hover:shadow-sm transition-all duration-200">
                 <div className="mt-0.5 p-1.5 rounded-md bg-white shadow-sm border border-slate-100">
                   {log.type === 'upload' && <FileText size={14} className="text-emerald-600" />}
                   {log.type === 'delete' && <Server size={14} className="text-red-600" />}
@@ -272,17 +272,17 @@ const Dashboard = () => {
 const StatsCard = ({ title, value, icon, subValue, trend, color }: any) => {
   // Enterprise palette mapping
   const bgColors: Record<string, string> = {
-    blue: 'bg-blue-50 text-blue-600',
-    purple: 'bg-purple-50 text-purple-600',
-    emerald: 'bg-emerald-50 text-emerald-600',
-    orange: 'bg-orange-50 text-orange-600',
-    brand: 'bg-brand/10 text-brand',
+    blue: 'bg-brand-lighter text-brand border-2 border-brand',
+    purple: 'bg-brand-lighter text-brand border-2 border-brand',
+    emerald: 'bg-brand-lighter text-brand border-2 border-brand',
+    orange: 'bg-brand-lighter text-brand border-2 border-brand',
+    brand: 'bg-brand-lighter text-brand border-2 border-brand',
   };
 
   const trendColor = trend?.includes('+') ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50';
 
   return (
-    <div className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 hover:shadow-card-hover transition-all duration-300">
+    <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
         <div className={`p-2.5 rounded-lg ${bgColors[color] || 'bg-slate-100 text-slate-600'}`}>
           {icon}
@@ -301,7 +301,7 @@ const StatsCard = ({ title, value, icon, subValue, trend, color }: any) => {
         )}
       </div>
       <div>
-        <div className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-sans">{value}</div>
+        <div className="text-2xl font-extrabold text-brand mb-1 tracking-tight font-heading">{value}</div>
         <div className="text-sm font-medium text-slate-500">{title}</div>
         {subValue && <div className="text-xs text-slate-400 mt-1">{subValue}</div>}
       </div>

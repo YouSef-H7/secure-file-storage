@@ -158,7 +158,7 @@ const FileManager = () => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Global File Repository</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Global File Repository</h1>
           <p className="text-slate-500 text-sm">Enterprise-wide visibility for organization administrators</p>
         </div>
         <div>
@@ -200,7 +200,7 @@ const FileManager = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 size={32} className="text-brand-light animate-spin mb-4" />
@@ -229,19 +229,19 @@ const FileManager = () => {
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-50/80 border-b border-slate-200">
+                <thead className="bg-slate-50/80 border-b border-slate-200">
                 <tr>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">File Name</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Owner</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Size</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Upload Date</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                  <th className="text-right py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">File Name</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Owner</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Size</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Upload Date</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Status</th>
+                  <th className="text-right py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredFiles.map((file) => (
-                  <tr key={file.id} className="even:bg-slate-50/40 hover:bg-slate-50/80 transition-colors duration-150 group">
+                  <tr key={file.id} className="even:bg-slate-50/40 hover:bg-[#f0f9f4] transition-colors duration-150 group">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${getFileTypeColor(file.mimeType)}`}>

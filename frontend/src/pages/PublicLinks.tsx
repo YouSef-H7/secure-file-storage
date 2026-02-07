@@ -93,7 +93,7 @@ const PublicLinks = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb]">
+      <div className="min-h-screen flex items-center justify-center bg-[#f8faf9]">
         <Loader2 size={32} className="text-slate-400 animate-spin" />
       </div>
     );
@@ -101,8 +101,8 @@ const PublicLinks = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb]">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-8 max-w-md text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#f8faf9]">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-8 max-w-md text-center">
           <AlertCircle size={44} className="text-red-400 mx-auto mb-4" />
           <h2 className="text-lg font-semibold text-slate-900 mb-2">Error</h2>
           <p className="text-slate-500 text-sm">{error}</p>
@@ -114,32 +114,32 @@ const PublicLinks = () => {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Public Links</h1>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-heading">Public Links</h1>
       </div>
 
       {!loading && links.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-8 text-center">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-8 text-center">
           <LinkIcon size={44} className="text-slate-300 mx-auto mb-4" />
           <h2 className="text-lg font-semibold text-slate-900 mb-2">No Public Links</h2>
           <p className="text-slate-500 text-sm">Generate share links from files or folders to see them here.</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50/80 border-b border-slate-100">
                 <tr>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Type</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Size</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Created</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Link</th>
-                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-brand uppercase tracking-wider">Type</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-brand uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-brand uppercase tracking-wider">Size</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-brand uppercase tracking-wider">Created</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-brand uppercase tracking-wider">Link</th>
+                  <th className="px-6 py-3 text-left text-[11px] font-semibold text-brand uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {links.map((link) => (
-                  <tr key={link.id} className="even:bg-slate-50/40 hover:bg-slate-50">
+                  <tr key={link.id} className="even:bg-slate-50/40 hover:bg-[#f0f9f4]">
                     <td className="px-6 py-4 whitespace-nowrap">
                       {link.type === 'file' ? (
                         <FileText size={20} className="text-slate-500" />

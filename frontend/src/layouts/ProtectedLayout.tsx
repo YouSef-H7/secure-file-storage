@@ -20,7 +20,7 @@ export default function ProtectedLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fb]">
+    <div className="min-h-screen bg-[#f8faf9]">
       <Sidebar />
       <Header />
       <main className="pl-64 pt-16">

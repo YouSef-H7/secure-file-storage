@@ -51,7 +51,7 @@ const Header = () => {
       <div className="flex items-center gap-2 text-[13px] text-slate-500">
         <span className="text-slate-400">Segment</span>
         <ChevronRight size={14} className="text-slate-300" />
-        <span className="text-slate-800 font-medium capitalize">{pathName}</span>
+        <span className="text-brand font-semibold capitalize">{pathName}</span>
       </div>
       <div className="flex items-center gap-4 relative">
         <div className="text-right">

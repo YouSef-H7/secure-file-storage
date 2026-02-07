@@ -82,7 +82,7 @@ const EmployeeShared = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Shared with Me</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Shared with Me</h1>
         <p className="text-slate-400 text-sm">Files and folders shared by other users</p>
       </div>
 
@@ -136,7 +136,7 @@ const EmployeeShared = () => {
                 {filteredFolders.map((folder) => (
                   <div
                     key={folder.id}
-                    className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 hover:shadow-md transition-all duration-200"
+                    className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-4 hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
@@ -166,21 +166,21 @@ const EmployeeShared = () => {
                 <FileText size={20} className="text-blue-600" />
                 Shared Files
               </h2>
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-slate-50 border-b border-slate-200">
                       <tr>
-                        <th className="text-left py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">File Name</th>
-                        <th className="text-left py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Owner</th>
-                        <th className="text-left py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Size</th>
-                        <th className="text-left py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Shared</th>
-                        <th className="text-right py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
+                        <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">File Name</th>
+                        <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Owner</th>
+                        <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Size</th>
+                        <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Shared</th>
+                        <th className="text-right py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {filteredFiles.map((file: any) => (
-                        <tr key={file.id} className="even:bg-slate-50/40 hover:bg-slate-50 transition-colors group">
+                        <tr key={file.id} className="even:bg-slate-50/40 hover:bg-[#f0f9f4] transition-colors group">
                           <td className="py-4 px-6">
                             <div className="flex items-center gap-4">
                               <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${getFileTypeColor(file.mimeType || '')}`}>

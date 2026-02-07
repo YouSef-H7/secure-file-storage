@@ -62,11 +62,11 @@ const Sidebar = () => {
         key={item.name}
         to={item.path}
         className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 group ${isActive
-          ? 'bg-white/15 text-white shadow-md shadow-brand-dark/40'
-          : 'text-slate-300 hover:bg-white/[0.08] hover:text-white'
+          ? 'bg-[rgba(16,133,74,0.2)] text-white border-l-[3px] border-[#10854a]'
+          : 'text-slate-300 hover:bg-[rgba(16,133,74,0.2)] hover:text-white'
           }`}
       >
-        <item.icon size={18} className={`flex-shrink-0 transition-all duration-200 ${isActive ? 'text-brand-accent' : 'text-slate-400 group-hover:text-slate-200'}`} />
+        <item.icon size={18} className={`flex-shrink-0 transition-all duration-200 ${isActive ? 'text-[#10854a]' : 'text-slate-400 group-hover:text-slate-200'}`} />
         <span className="text-sm font-medium">{item.name}</span>
       </Link>
     );
@@ -75,7 +75,7 @@ const Sidebar = () => {
   return (
     <aside className="w-64 bg-brand border-r border-white/5 flex flex-col h-screen fixed z-30 shadow-xl">
       <div className="px-6 py-5 flex items-center gap-3 border-b border-white/10">
-        <div className="w-9 h-9 bg-white/15 rounded-lg flex items-center justify-center shadow-sm">
+        <div className="w-9 h-9 bg-gradient-to-br from-[#10854a] to-[#0d4d2e] rounded-lg flex items-center justify-center shadow-lg shadow-brand-dark/40">
           <span className="text-white text-lg font-bold">S</span>
         </div>
         <span className="font-semibold text-[17px] text-white tracking-tight">SecureStore</span>

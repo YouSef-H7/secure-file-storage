@@ -103,7 +103,7 @@ const EmployeeTrash = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Trash</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Trash</h1>
         <p className="text-slate-500 text-sm">Deleted files (30-day retention)</p>
       </div>
 
@@ -118,20 +118,20 @@ const EmployeeTrash = () => {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50/80 border-b border-slate-200">
                 <tr>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Name</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Size</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Deleted</th>
-                  <th className="text-right py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Name</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Size</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Deleted</th>
+                  <th className="text-right py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {items.map((file) => (
-                  <tr key={file.id} className="even:bg-slate-50/40 hover:bg-slate-50/80 transition-colors duration-150">
+                  <tr key={file.id} className="even:bg-slate-50/40 hover:bg-[#f0f9f4] transition-colors duration-150">
                     <td className="py-4 px-6 text-sm text-slate-900 font-medium">{file.name ?? file.id}</td>
                     <td className="py-4 px-6 text-sm text-slate-600 font-mono">{formatSize(file.size ?? 0)}</td>
                     <td className="py-4 px-6 text-sm text-slate-600">

@@ -47,7 +47,7 @@ const SharedFolders = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Shared Folders</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Shared Folders</h1>
         <p className="text-slate-400 text-sm">Folders shared with you by colleagues</p>
       </div>
 
@@ -94,7 +94,7 @@ const SharedFolders = () => {
           {filteredFolders.map((folder) => (
             <div
               key={folder.id}
-              className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 hover:shadow-card-hover transition-all"
+              className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-all"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg">

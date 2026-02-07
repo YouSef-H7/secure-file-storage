@@ -37,7 +37,7 @@ const LoginPage = () => {
           <p className="text-slate-500 text-sm tracking-wide">Enterprise File Management</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl shadow-slate-200/60 border border-slate-200/80 p-10">
+        <div className="bg-white rounded-2xl shadow-2xl shadow-slate-200/60 border-2 border-gray-200 p-10">
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-slate-900 mb-1.5">Welcome back</h2>
             <p className="text-sm text-slate-500 leading-relaxed">Please sign in to your account</p>

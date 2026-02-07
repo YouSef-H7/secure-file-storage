@@ -46,7 +46,7 @@ const PublicShare = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb]">
+      <div className="min-h-screen flex items-center justify-center bg-[#f8faf9]">
         <Loader2 size={32} className="text-slate-400 animate-spin" />
       </div>
     );
@@ -54,8 +54,8 @@ const PublicShare = () => {
 
   if (error || !file) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb]">
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-8 max-w-md text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#f8faf9]">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-8 max-w-md text-center">
           <AlertCircle size={44} className="text-red-400 mx-auto mb-4" />
           <h2 className="text-lg font-semibold text-slate-900 mb-2">Link Not Available</h2>
           <p className="text-slate-500 text-sm">{error || 'This share link is invalid or has expired.'}</p>
@@ -65,8 +65,8 @@ const PublicShare = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb] p-4">
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-8 max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-[#f8faf9] p-4">
+      <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-8 max-w-md w-full">
         {file.type === 'file' ? (
           <>
             <h2 className="text-xl font-semibold text-slate-900 mb-2 tracking-tight">Shared File</h2>

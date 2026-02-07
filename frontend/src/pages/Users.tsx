@@ -60,7 +60,7 @@ const UsersPage = () => {
         return (
             <div className="space-y-6 animate-in fade-in duration-500">
                 <div>
-                    <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Users</h1>
+                    <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Users</h1>
                     <p className="text-slate-500 text-sm">Manage user accounts and permissions</p>
                 </div>
                 <div className="flex h-96 items-center justify-center">
@@ -73,7 +73,7 @@ const UsersPage = () => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div>
-                <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Users</h1>
+                <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Users</h1>
                 <p className="text-slate-500 text-sm">Manage user accounts and permissions</p>
             </div>
 
@@ -109,20 +109,20 @@ const UsersPage = () => {
                 </div>
             ) : (
                 <>
-                    <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+                    <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden">
                         <div className="overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-slate-50/80 border-b border-slate-200">
                                     <tr>
-                                        <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Email</th>
-                                        <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Role</th>
-                                        <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Created</th>
-                                        <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Last Login</th>
+                                        <th className="text-left py-3 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Email</th>
+                                        <th className="text-left py-3 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Role</th>
+                                        <th className="text-left py-3 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Created</th>
+                                        <th className="text-left py-3 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Last Login</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-border">
                                     {users.map((user) => (
-                                        <tr key={user.id} className="even:bg-slate-50/40 hover:bg-slate-50 transition-colors">
+                                        <tr key={user.id} className="even:bg-slate-50/40 hover:bg-[#f0f9f4] transition-colors">
                                             <td className="py-4 px-6 text-sm text-slate-900 font-medium">{user.email}</td>
                                             <td className="py-4 px-6">
                                                 <span className={`px-2 py-1 rounded text-xs font-semibold ${

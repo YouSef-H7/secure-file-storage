@@ -36,8 +36,8 @@ const RegisterPage = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb] p-4">
-        <div className="w-full max-w-md bg-white rounded-2xl p-12 text-center shadow-2xl shadow-slate-200/60 border border-slate-200/80">
+      <div className="min-h-screen flex items-center justify-center bg-[#f8faf9] p-4">
+        <div className="w-full max-w-md bg-white rounded-2xl p-12 text-center shadow-2xl shadow-slate-200/60 border-2 border-gray-200">
           <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 size={28} />
           </div>
@@ -49,7 +49,7 @@ const RegisterPage = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb] relative overflow-hidden p-6">
+    <div className="min-h-screen flex items-center justify-center bg-[#f8faf9] relative overflow-hidden p-6">
       <div className="w-full max-w-md space-y-10">
         <div className="text-center">
           <div className="inline-flex items-center justify-center w-14 h-14 bg-brand rounded-2xl mb-4 shadow-xl shadow-brand/25">
@@ -59,7 +59,7 @@ const RegisterPage = () => {
           <p className="text-slate-400 text-sm">Enterprise File Storage Platform</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl shadow-slate-200/60 p-10 border border-slate-200/80">
+        <div className="bg-white rounded-2xl shadow-2xl shadow-slate-200/60 p-10 border-2 border-gray-200">
           <div className="mb-6">
             <h2 className="text-xl font-semibold text-slate-900 mb-1">Create your account</h2>
             <p className="text-sm text-slate-400">Sign up to get started</p>

@@ -9,17 +9,18 @@ const config: Config = {
     extend: {
       colors: {
         brand: {
-          DEFAULT: '#0B3B2E',
-          light: '#165a49',
-          dark: '#062b21',
+          DEFAULT: '#0d4d2e',
+          light: '#10854a',
+          dark: '#0a3d25',
           accent: '#10b981',
+          lighter: '#d4f1e3',
         },
-        background: '#f8fafc',
+        background: '#f8faf9',
         surface: '#ffffff',
-        border: '#e2e8f0',
+        border: '#e5e7eb',
         text: {
-          primary: '#0f172a',
-          secondary: '#64748b',
+          primary: '#1a1a1a',
+          secondary: '#6b7280',
         },
         error: '#ef4444',
         warning: '#f59e0b',
@@ -27,14 +28,15 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        heading: ['Outfit', 'Inter', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
-        'card': '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.03)',
-        'card-hover': '0 4px 12px 0 rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04)',
-        'dropdown': '0 10px 40px -4px rgb(0 0 0 / 0.08), 0 4px 12px -2px rgb(0 0 0 / 0.04)',
+        'card': '0 1px 3px rgba(0, 0, 0, 0.05)',
+        'card-hover': '0 12px 24px rgba(13, 77, 46, 0.15)',
+        'dropdown': '0 10px 15px rgba(0, 0, 0, 0.1)',
       },
       borderRadius: {
-        'card': '0.875rem',
+        'card': '1rem',
       },
       keyframes: {
         slideUp: {

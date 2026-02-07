@@ -119,7 +119,7 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-xl shadow-dropdown w-full max-w-md overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-dropdown border-2 border-gray-200 w-full max-w-md overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-100/80 flex items-center justify-between">
                     <h3 className="font-semibold text-slate-900 text-[15px]">Share "{file.name}"</h3>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-md hover:bg-slate-50">

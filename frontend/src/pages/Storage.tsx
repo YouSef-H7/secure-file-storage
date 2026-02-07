@@ -11,7 +11,7 @@ const ORG_STORAGE_LIMIT = 50 * 1024 * 1024 * 1024; // 50 GB
 const DEFAULT_USER_QUOTA = 5 * 1024 * 1024 * 1024;  // 5 GB
 
 // Donut chart color palette (brand-aligned)
-const PIE_COLORS = ['#0B3B2E', '#10b981', '#3b82f6', '#94a3b8', '#f59e0b', '#8b5cf6'];
+const PIE_COLORS = ['#0d4d2e', '#10854a', '#3b82f6', '#94a3b8', '#f59e0b', '#8b5cf6'];
 
 const formatSize = (bytes: number): string => {
   if (bytes === 0) return '0 B';
@@ -85,13 +85,13 @@ const StoragePage = () => {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Storage Overview</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Storage Overview</h1>
           <p className="text-slate-400 text-sm">Monitor and manage organization storage allocation</p>
         </div>
         {/* Skeleton cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 animate-pulse">
+            <div key={i} className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 animate-pulse">
               <div className="flex items-center justify-between mb-4">
                 <div className="w-10 h-10 bg-slate-100 rounded-lg" />
               </div>
@@ -102,11 +102,11 @@ const StoragePage = () => {
         </div>
         {/* Skeleton charts */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-          <div className="lg:col-span-3 bg-white rounded-xl shadow-card border border-slate-200/80 p-5 animate-pulse">
+          <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 animate-pulse">
             <div className="h-5 bg-slate-100 rounded w-32 mb-6" />
             <div className="h-[260px] bg-slate-50 rounded" />
           </div>
-          <div className="lg:col-span-2 bg-white rounded-xl shadow-card border border-slate-200/80 p-5 animate-pulse">
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 animate-pulse">
             <div className="h-5 bg-slate-100 rounded w-36 mb-6" />
             <div className="h-[200px] bg-slate-50 rounded-full w-[170px] mx-auto" />
           </div>
@@ -119,7 +119,7 @@ const StoragePage = () => {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Storage Overview</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Storage Overview</h1>
           <p className="text-slate-400 text-sm">Monitor and manage organization storage allocation</p>
         </div>
         <div className="p-6 bg-red-50 text-red-600 rounded-xl border border-red-100">
@@ -198,50 +198,50 @@ const StoragePage = () => {
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Page Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Storage Overview</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Storage Overview</h1>
         <p className="text-slate-400 text-sm">Monitor and manage organization storage allocation</p>
       </div>
 
       {/* ── 4 Summary Cards ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         {/* Total Storage */}
-        <div className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 hover:shadow-card-hover transition-all duration-300">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2.5 rounded-lg bg-teal-50 text-teal-600">
               <HardDrive size={20} />
             </div>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">{formatSize(ORG_STORAGE_LIMIT)}</div>
+          <div className="text-2xl font-extrabold text-brand mb-1 tracking-tight font-heading">{formatSize(ORG_STORAGE_LIMIT)}</div>
           <div className="text-sm font-medium text-slate-500">Total Storage</div>
           <div className="text-xs text-slate-400 mt-1">Organization limit</div>
         </div>
 
         {/* Used Storage */}
-        <div className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 hover:shadow-card-hover transition-all duration-300">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2.5 rounded-lg bg-brand/10 text-brand">
               <HardDrive size={20} />
             </div>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">{formatSize(summary.totalStorage)}</div>
+          <div className="text-2xl font-extrabold text-brand mb-1 tracking-tight font-heading">{formatSize(summary.totalStorage)}</div>
           <div className="text-sm font-medium text-slate-500">Used Storage</div>
           <div className="text-xs text-slate-400 mt-1">{usedPercent}% of total</div>
         </div>
 
         {/* Active Users */}
-        <div className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 hover:shadow-card-hover transition-all duration-300">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2.5 rounded-lg bg-amber-50 text-amber-600">
               <Users size={20} />
             </div>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">{summary.totalUsers}</div>
+          <div className="text-2xl font-extrabold text-brand mb-1 tracking-tight font-heading">{summary.totalUsers}</div>
           <div className="text-sm font-medium text-slate-500">Active Users</div>
           <div className="text-xs text-slate-400 mt-1">Using storage</div>
         </div>
 
         {/* Total Files */}
-        <div className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 hover:shadow-card-hover transition-all duration-300">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div className="p-2.5 rounded-lg bg-emerald-50 text-emerald-600">
               <FileText size={20} />
@@ -254,7 +254,7 @@ const StoragePage = () => {
               </span>
             )}
           </div>
-          <div className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">{summary.totalFiles.toLocaleString()}</div>
+          <div className="text-2xl font-extrabold text-brand mb-1 tracking-tight font-heading">{summary.totalFiles.toLocaleString()}</div>
           <div className="text-sm font-medium text-slate-500">Total Files</div>
         </div>
       </div>
@@ -262,7 +262,7 @@ const StoragePage = () => {
       {/* ── Charts Row: Storage Trend + File Types Donut ── */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
         {/* Storage Trend — AreaChart */}
-        <div className="lg:col-span-3 bg-white rounded-xl shadow-card border border-slate-200/80 p-5 hover:shadow-card-hover transition-shadow duration-300">
+        <div className="lg:col-span-3 bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-shadow duration-300">
           <div className="flex items-center gap-2 mb-5">
             <TrendingUp size={18} className="text-slate-500" />
             <h3 className="text-base font-semibold text-slate-900">Storage Trend</h3>
@@ -272,8 +272,8 @@ const StoragePage = () => {
               <AreaChart data={trendData} margin={{ top: 5, right: 10, left: -10, bottom: 0 }}>
                 <defs>
                   <linearGradient id="storageFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0B3B2E" stopOpacity={0.15} />
-                    <stop offset="95%" stopColor="#0B3B2E" stopOpacity={0.02} />
+                    <stop offset="5%" stopColor="#0d4d2e" stopOpacity={0.15} />
+                    <stop offset="95%" stopColor="#0d4d2e" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="4 4" stroke="#e2e8f0" vertical={false} />
@@ -302,11 +302,11 @@ const StoragePage = () => {
                 <Area
                   type="monotone"
                   dataKey="size"
-                  stroke="#0B3B2E"
+                  stroke="#0d4d2e"
                   strokeWidth={2}
                   fill="url(#storageFill)"
-                  dot={trendData.length <= 2 ? { r: 4, fill: '#0B3B2E', strokeWidth: 0 } : false}
-                  activeDot={{ r: 5, fill: '#0B3B2E', strokeWidth: 0 }}
+                  dot={trendData.length <= 2 ? { r: 4, fill: '#0d4d2e', strokeWidth: 0 } : false}
+                  activeDot={{ r: 5, fill: '#0d4d2e', strokeWidth: 0 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -321,7 +321,7 @@ const StoragePage = () => {
         </div>
 
         {/* Storage by File Type — Donut */}
-        <div className="lg:col-span-2 bg-white rounded-xl shadow-card border border-slate-200/80 p-5 hover:shadow-card-hover transition-shadow duration-300">
+        <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-shadow duration-300">
           <h3 className="text-base font-semibold text-slate-900 mb-5">Storage by File Type</h3>
           {pieData.length > 0 ? (
             <div className="flex flex-col items-center">
@@ -382,8 +382,8 @@ const StoragePage = () => {
       </div>
 
       {/* ── User Storage Allocation ── */}
-      <div className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5">
-        <h3 className="text-base font-semibold text-slate-900 mb-5">User Storage Allocation</h3>
+      <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5">
+        <h3 className="text-base font-semibold text-brand mb-5 font-heading">User Storage Allocation</h3>
         {topUsers.length > 0 ? (
           <div className="space-y-4">
             {topUsers.map((user, index) => {
@@ -399,8 +399,8 @@ const StoragePage = () => {
                   </div>
                   <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-brand rounded-full transition-all duration-500"
-                      style={{ width: `${usageRatio}%` }}
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${usageRatio}%`, background: 'linear-gradient(90deg, #0d4d2e, #10854a)' }}
                     />
                   </div>
                   <div className="text-right mt-1.5">

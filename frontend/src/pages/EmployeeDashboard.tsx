@@ -114,7 +114,7 @@ const EmployeeDashboard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">My Dashboard</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">My Dashboard</h1>
         <p className="text-slate-400 text-sm">Quick access to your files and storage</p>
       </div>
 
@@ -128,7 +128,7 @@ const EmployeeDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div
           onClick={() => !uploading && fileInputRef.current?.click()}
-          className={`bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 hover:shadow-md transition-all duration-200 cursor-pointer ${uploading ? 'opacity-70 pointer-events-none' : ''}`}
+          className={`bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-md transition-all duration-200 cursor-pointer ${uploading ? 'opacity-70 pointer-events-none' : ''}`}
         >
           <div className="flex flex-col items-center text-center">
             <div className="p-3.5 bg-brand rounded-xl mb-4">
@@ -139,35 +139,35 @@ const EmployeeDashboard = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2.5 bg-blue-50 rounded-lg">
-              <FileText className="text-blue-600" size={20} />
+            <div className="p-2.5 bg-brand-lighter rounded-lg border-2 border-brand">
+              <FileText className="text-brand" size={20} />
             </div>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mb-1">{stats?.totalFiles ?? 0}</div>
+          <div className="text-2xl font-extrabold text-brand mb-1 font-heading">{stats?.totalFiles ?? 0}</div>
           <div className="text-sm text-slate-400">Total Files</div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-2.5 bg-emerald-50 rounded-lg">
-              <TrendingUp className="text-emerald-600" size={20} />
+            <div className="p-2.5 bg-brand-lighter rounded-lg border-2 border-brand">
+              <TrendingUp className="text-brand" size={20} />
             </div>
           </div>
-          <div className="text-2xl font-bold text-slate-900 mb-1">{stats?.filesThisWeek ?? 0}</div>
+          <div className="text-2xl font-extrabold text-brand mb-1 font-heading">{stats?.filesThisWeek ?? 0}</div>
           <div className="text-sm text-slate-400">Files This Week</div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5">
+      <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5">
         <div className="mb-4">
           <h3 className="text-base font-semibold text-slate-900 mb-1">Storage Usage</h3>
           <p className="text-sm text-slate-400">Your personal storage allocation</p>
         </div>
         <div className="flex items-end justify-between mb-4">
           <div>
-            <div className="text-2xl font-bold text-slate-900 mb-1">{storageUsedGB} GB</div>
+            <div className="text-2xl font-extrabold text-brand mb-1 font-heading">{storageUsedGB} GB</div>
             <div className="text-sm text-slate-400">of {storageTotalGB} GB used</div>
           </div>
           <div className="text-right">
@@ -178,7 +178,7 @@ const EmployeeDashboard = () => {
           </div>
         </div>
         <div className="w-full bg-slate-100 rounded-full h-2.5">
-          <div className="bg-brand h-2.5 rounded-full transition-all duration-1000 ease-out" style={{ width: `${storagePercent}%` }}></div>
+          <div className="h-2.5 rounded-full transition-all duration-1000 ease-out" style={{ width: `${storagePercent}%`, background: 'linear-gradient(90deg, #0d4d2e, #10854a)' }}></div>
         </div>
         <div className="text-sm text-slate-400 mt-2">{(parseFloat(storageTotalGB) - parseFloat(storageUsedGB)).toFixed(1)} GB remaining</div>
       </div>

@@ -49,17 +49,17 @@ const EmployeeStorage = () => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div>
-                <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Storage Usage</h1>
+                <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Storage Usage</h1>
                 <p className="text-slate-400 text-sm">Manage your personal quota</p>
             </div>
 
-            <div className="bg-white rounded-xl shadow-card border border-slate-200/80 p-6">
+            <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-6">
                 <div className="flex items-center gap-4 mb-6">
                     <div className="p-3.5 bg-brand/10 rounded-xl">
                         <HardDrive className="text-brand" size={28} />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-slate-900">{formatSize(stats.used)}</h2>
+                        <h2 className="text-2xl font-extrabold text-brand font-heading">{formatSize(stats.used)}</h2>
                         <p className="text-slate-500 text-sm">of {formatSize(stats.total)} Used</p>
                     </div>
                 </div>
@@ -67,8 +67,8 @@ const EmployeeStorage = () => {
                 <div className="space-y-2 mb-8">
                     <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
                         <div
-                            className="h-full bg-brand transition-all duration-1000 ease-out"
-                            style={{ width: `${percent}%` }}
+                            className="h-full rounded-full transition-all duration-1000 ease-out"
+                            style={{ width: `${percent}%`, background: 'linear-gradient(90deg, #0d4d2e, #10854a)' }}
                         />
                     </div>
                     <div className="flex justify-between text-xs text-slate-400 font-medium">

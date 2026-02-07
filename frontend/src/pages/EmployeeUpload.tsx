@@ -46,12 +46,12 @@ const EmployeeUpload = () => {
     return (
         <div className="space-y-6 animate-in">
             <div>
-                <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Upload File</h1>
+                <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Upload File</h1>
                 <p className="text-slate-500 text-sm">Add new documents to your workspace</p>
             </div>
 
             <div
-                className="border-2 border-dashed border-slate-200 rounded-xl p-20 flex flex-col items-center justify-center text-center hover:border-brand/50 hover:bg-brand/[0.03] transition-all duration-300 cursor-pointer group bg-slate-50/30"
+                className="border-2 border-dashed border-gray-200 rounded-2xl p-20 flex flex-col items-center justify-center text-center hover:border-brand/50 hover:bg-brand/[0.03] transition-all duration-300 cursor-pointer group bg-slate-50/30"
                 onClick={() => !uploading && fileInputRef.current?.click()}
             >
                 <input

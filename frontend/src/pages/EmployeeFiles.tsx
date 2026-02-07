@@ -296,7 +296,7 @@ const EmployeeFiles = () => {
           </button>
         )}
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">
+          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">
             {currentFolderId ? 'Folder View' : 'My Files'}
           </h1>
           <p className="text-slate-400 text-sm">Manage your personal secure documents</p>
@@ -391,7 +391,7 @@ const EmployeeFiles = () => {
             <div 
               key={folder.id}
               onClick={() => setSearchParams({ folderId: folder.id })}
-              className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-pointer flex items-center gap-3"
+              className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-pointer flex items-center gap-3"
             >
               <div className="p-2 bg-blue-100 text-blue-600 rounded-xl shadow-sm">
                 <Folder size={24} fill="currentColor" className="text-blue-200" stroke="currentColor" />
@@ -404,7 +404,7 @@ const EmployeeFiles = () => {
           ))}
 
           {filteredFiles.map((file) => (
-            <div key={file.id} className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-default">
+            <div key={file.id} className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-default">
               <div className="flex justify-between items-start mb-3">
                 <div className={`${getFileTypeColor(file.mimeType)} px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wide`}>
                   {getFileTypeLabel(file.mimeType)}
@@ -435,15 +435,15 @@ const EmployeeFiles = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50/80 border-b border-slate-200">
                 <tr>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Name</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Size</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Modified</th>
-                  <th className="text-right py-4 px-6 text-xs font-semibold text-slate-600 uppercase tracking-wider">Actions</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Name</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Size</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Modified</th>
+                  <th className="text-right py-4 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -451,7 +451,7 @@ const EmployeeFiles = () => {
                   <tr 
                     key={folder.id} 
                     onClick={() => setSearchParams({ folderId: folder.id })} 
-                    className="even:bg-slate-50/40 hover:bg-slate-50/80 transition-colors duration-150 group cursor-pointer"
+                    className="even:bg-slate-50/40 hover:bg-[#f0f9f4] transition-colors duration-150 group cursor-pointer"
                   >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-4">
@@ -468,7 +468,7 @@ const EmployeeFiles = () => {
                 ))}
 
                 {filteredFiles.map((file) => (
-                  <tr key={file.id} className="even:bg-slate-50/40 hover:bg-slate-50/80 transition-colors duration-150 group">
+                  <tr key={file.id} className="even:bg-slate-50/40 hover:bg-[#f0f9f4] transition-colors duration-150 group">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-4">
                         <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${getFileTypeColor(file.mimeType)}`}>

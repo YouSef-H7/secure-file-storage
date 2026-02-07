@@ -86,7 +86,7 @@ const LogsPage = () => {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Activity Logs</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Activity Logs</h1>
           <p className="text-slate-500 text-sm">System activity and security audit trail</p>
         </div>
         <div className="flex h-96 items-center justify-center">
@@ -100,7 +100,7 @@ const LogsPage = () => {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Activity Logs</h1>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Activity Logs</h1>
           <p className="text-slate-500 text-sm">System activity and security audit trail</p>
         </div>
         <div className="p-6 bg-red-50 text-red-600 rounded-xl border border-red-100">
@@ -114,7 +114,7 @@ const LogsPage = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-1 tracking-tight">Activity Logs</h1>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Activity Logs</h1>
         <p className="text-slate-500 text-sm">System activity and security audit trail</p>
       </div>
 
@@ -135,14 +135,14 @@ const LogsPage = () => {
         </button>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50/80 border-b border-slate-200">
               <tr>
-                <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Event</th>
-                <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">User</th>
-                <th className="text-left py-3 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Time</th>
+                <th className="text-left py-3 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Event</th>
+                <th className="text-left py-3 px-6 text-xs font-semibold text-brand uppercase tracking-wider">User</th>
+                <th className="text-left py-3 px-6 text-xs font-semibold text-brand uppercase tracking-wider">Time</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -150,7 +150,7 @@ const LogsPage = () => {
                 const IconComponent = getLogIcon(log.type || 'other');
                 const logColor = getLogColor(log.type || 'other');
                 return (
-                  <tr key={log.id || index} className="even:bg-slate-50/40 hover:bg-slate-50 transition-colors group">
+                  <tr key={log.id || index} className="even:bg-slate-50/40 hover:bg-[#f0f9f4] transition-colors group">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div className={`p-2 rounded-lg ${logColor} bg-opacity-10`}>
