@@ -139,7 +139,7 @@ const PublicLinks = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {links.map((link) => (
-                  <tr key={link.id} className="hover:bg-slate-50">
+                  <tr key={link.id} className="even:bg-slate-50/40 hover:bg-slate-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       {link.type === 'file' ? (
                         <FileText size={20} className="text-slate-500" />

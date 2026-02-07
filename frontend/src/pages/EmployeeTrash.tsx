@@ -103,17 +103,17 @@ const EmployeeTrash = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Trash</h1>
-        <p className="text-text-secondary text-sm">Deleted files (30-day retention)</p>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Trash</h1>
+        <p className="text-slate-500 text-sm">Deleted files (30-day retention)</p>
       </div>
 
       {!loading && items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-32 bg-surface rounded-xl border border-border border-dashed">
+        <div className="flex flex-col items-center justify-center py-32 bg-white rounded-xl border border-slate-200 border-dashed">
           <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-6">
             <Trash2 size={32} className="text-slate-400" />
           </div>
-          <h2 className="text-xl font-semibold text-text-primary mb-2">Trash is empty</h2>
-          <p className="text-text-secondary text-center max-w-sm">
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">Trash is empty</h2>
+          <p className="text-slate-500 text-center max-w-sm">
             Items moved to trash will be permanently deleted after 30 days.
           </p>
         </div>
@@ -131,7 +131,7 @@ const EmployeeTrash = () => {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {items.map((file) => (
-                  <tr key={file.id} className="hover:bg-slate-50/80 transition-colors duration-150">
+                  <tr key={file.id} className="even:bg-slate-50/40 hover:bg-slate-50/80 transition-colors duration-150">
                     <td className="py-4 px-6 text-sm text-slate-900 font-medium">{file.name ?? file.id}</td>
                     <td className="py-4 px-6 text-sm text-slate-600 font-mono">{formatSize(file.size ?? 0)}</td>
                     <td className="py-4 px-6 text-sm text-slate-600">

@@ -46,8 +46,8 @@ const EmployeeUpload = () => {
     return (
         <div className="space-y-6 animate-in">
             <div>
-                <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Upload File</h1>
-                <p className="text-text-secondary text-sm">Add new documents to your workspace</p>
+                <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Upload File</h1>
+                <p className="text-slate-500 text-sm">Add new documents to your workspace</p>
             </div>
 
             <div
@@ -65,10 +65,10 @@ const EmployeeUpload = () => {
                     {uploading ? <Loader2 size={40} className="text-brand animate-spin" /> : <UploadCloud size={40} className="text-brand" />}
                 </div>
 
-                <h3 className="text-lg font-semibold text-text-primary mb-2">
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
                     {uploading ? 'Uploading...' : 'Click to Upload'}
                 </h3>
-                <p className="text-text-secondary max-w-sm mx-auto">
+                <p className="text-slate-500 max-w-sm mx-auto">
                     SVG, PNG, JPG or GIF (max. 25MB)
                 </p>
 

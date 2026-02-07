@@ -88,8 +88,28 @@ const StoragePage = () => {
           <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Storage Overview</h1>
           <p className="text-slate-400 text-sm">Monitor and manage organization storage allocation</p>
         </div>
-        <div className="flex h-96 items-center justify-center">
-          <Loader2 className="text-slate-400 animate-spin" size={32} />
+        {/* Skeleton cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 animate-pulse">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-10 h-10 bg-slate-100 rounded-lg" />
+              </div>
+              <div className="h-7 bg-slate-100 rounded w-20 mb-2" />
+              <div className="h-4 bg-slate-50 rounded w-24" />
+            </div>
+          ))}
+        </div>
+        {/* Skeleton charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-5">
+          <div className="lg:col-span-3 bg-white rounded-xl shadow-card border border-slate-200/80 p-5 animate-pulse">
+            <div className="h-5 bg-slate-100 rounded w-32 mb-6" />
+            <div className="h-[260px] bg-slate-50 rounded" />
+          </div>
+          <div className="lg:col-span-2 bg-white rounded-xl shadow-card border border-slate-200/80 p-5 animate-pulse">
+            <div className="h-5 bg-slate-100 rounded w-36 mb-6" />
+            <div className="h-[200px] bg-slate-50 rounded-full w-[170px] mx-auto" />
+          </div>
         </div>
       </div>
     );
@@ -285,6 +305,8 @@ const StoragePage = () => {
                   stroke="#0B3B2E"
                   strokeWidth={2}
                   fill="url(#storageFill)"
+                  dot={trendData.length <= 2 ? { r: 4, fill: '#0B3B2E', strokeWidth: 0 } : false}
+                  activeDot={{ r: 5, fill: '#0B3B2E', strokeWidth: 0 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -311,7 +333,7 @@ const StoragePage = () => {
                     cy="50%"
                     innerRadius={55}
                     outerRadius={85}
-                    paddingAngle={3}
+                    paddingAngle={pieData.length > 1 ? 3 : 0}
                     dataKey="value"
                     stroke="none"
                   >

@@ -158,8 +158,8 @@ const FileManager = () => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Global File Repository</h1>
-          <p className="text-text-secondary text-sm">Enterprise-wide visibility for organization administrators</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Global File Repository</h1>
+          <p className="text-slate-500 text-sm">Enterprise-wide visibility for organization administrators</p>
         </div>
         <div>
           <button className="flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-lg hover:bg-brand-dark transition-all shadow-sm hover:shadow-md active:scale-95 text-sm font-medium">
@@ -171,46 +171,46 @@ const FileManager = () => {
 
       <div className="flex items-center gap-3">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
           <input
             type="text"
             placeholder="Search repository..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-surface border border-border/80 rounded-lg pl-10 pr-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-transparent transition-all shadow-sm"
+            className="w-full bg-white border border-slate-200/80 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-transparent transition-all shadow-sm"
           />
         </div>
         <button
-          className="px-4 py-2.5 bg-surface border border-border/80 rounded-lg text-text-secondary hover:bg-slate-50 hover:text-text-primary transition-all flex items-center gap-2 font-medium text-sm shadow-sm hover:shadow-md active:scale-95"
+          className="px-4 py-2.5 bg-white border border-slate-200/80 rounded-lg text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition-all flex items-center gap-2 font-medium text-sm shadow-sm hover:shadow-md active:scale-95"
         >
           <Filter size={18} />
           <span className="hidden sm:inline">Filters</span>
         </button>
         <button
           onClick={() => setActiveTab('all')}
-          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'all' ? 'bg-brand/10 text-brand' : 'text-text-secondary hover:text-text-primary'}`}
+          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'all' ? 'bg-brand/10 text-brand' : 'text-slate-500 hover:text-slate-900'}`}
         >
           All
         </button>
         <button
           onClick={() => setActiveTab('docs')}
-          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'docs' ? 'bg-brand/10 text-brand' : 'text-text-secondary hover:text-text-primary'}`}
+          className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${activeTab === 'docs' ? 'bg-brand/10 text-brand' : 'text-slate-500 hover:text-slate-900'}`}
         >
           Documents
         </button>
       </div>
 
-      <div className="bg-surface rounded-xl shadow-sm border border-border/80 overflow-hidden">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 size={32} className="text-brand-light animate-spin mb-4" />
-            <p className="text-sm text-text-secondary">Loading global repository...</p>
+            <p className="text-sm text-slate-500">Loading global repository...</p>
           </div>
         ) : error ? (
           <div className="flex flex-col items-center justify-center py-20 px-10 bg-error/5 rounded-xl border border-error/10">
             <FileQuestion size={48} className="text-error/30 mb-4" />
-            <h3 className="text-lg font-semibold text-text-primary mb-2">Access Error</h3>
-            <p className="text-sm text-text-secondary text-center mb-4">{error}</p>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Access Error</h3>
+            <p className="text-sm text-slate-500 text-center mb-4">{error}</p>
             <button
               onClick={fetchFiles}
               className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-dark transition-colors"
@@ -221,8 +221,8 @@ const FileManager = () => {
         ) : filteredFiles.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 px-10">
             <Search size={48} className="text-slate-300 mb-4 opacity-50" />
-            <h3 className="text-lg font-semibold text-text-primary mb-2">No matching files</h3>
-            <p className="text-sm text-text-secondary text-center">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">No matching files</h3>
+            <p className="text-sm text-slate-500 text-center">
               Try adjusting your search criteria or filters.
             </p>
           </div>
@@ -231,26 +231,26 @@ const FileManager = () => {
             <table className="w-full">
               <thead className="bg-slate-50/80 border-b border-slate-200">
                 <tr>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-text-secondary uppercase tracking-wider">File Name</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-text-secondary uppercase tracking-wider">Owner</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-text-secondary uppercase tracking-wider">Size</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-text-secondary uppercase tracking-wider">Upload Date</th>
-                  <th className="text-left py-4 px-6 text-xs font-semibold text-text-secondary uppercase tracking-wider">Status</th>
-                  <th className="text-right py-4 px-6 text-xs font-semibold text-text-secondary uppercase tracking-wider">Actions</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">File Name</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Owner</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Size</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Upload Date</th>
+                  <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                  <th className="text-right py-4 px-6 text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredFiles.map((file) => (
-                  <tr key={file.id} className="hover:bg-slate-50/80 transition-colors duration-150 group">
+                  <tr key={file.id} className="even:bg-slate-50/40 hover:bg-slate-50/80 transition-colors duration-150 group">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
                         <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${getFileTypeColor(file.mimeType)}`}>
                           {getFileTypeLabel(file.mimeType)}
                         </div>
-                        <span className="text-sm text-text-primary font-medium">{file.name ?? file.filename ?? ''}</span>
+                        <span className="text-sm text-slate-900 font-medium">{file.name ?? file.filename ?? ''}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-sm text-text-primary">
+                    <td className="py-4 px-6 text-sm text-slate-900">
                       <div className="flex items-center gap-2">
                         <div className="w-6 h-6 rounded-full bg-brand/10 flex items-center justify-center text-[10px] font-bold text-brand">
                           A
@@ -258,8 +258,8 @@ const FileManager = () => {
                         <span>Admin User</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6 text-sm text-text-secondary font-mono">{formatSize(file.size ?? 0)}</td>
-                    <td className="py-4 px-6 text-sm text-text-secondary">
+                    <td className="py-4 px-6 text-sm text-slate-500 font-mono">{formatSize(file.size ?? 0)}</td>
+                    <td className="py-4 px-6 text-sm text-slate-500">
                       {new Date(file.createdAt ?? file.created_at ?? 0).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </td>
                     <td className="py-4 px-6">
@@ -268,7 +268,7 @@ const FileManager = () => {
                       </span>
                     </td>
                     <td className="py-4 px-6 text-right">
-                      <button className="p-2 hover:bg-slate-100 rounded-xl transition-all duration-200 text-text-secondary opacity-0 group-hover:opacity-100 group-hover:text-text-primary">
+                      <button className="p-2 hover:bg-slate-100 rounded-xl transition-all duration-200 text-slate-500 opacity-0 group-hover:opacity-100 group-hover:text-slate-900">
                         <MoreVertical size={18} />
                       </button>
                     </td>

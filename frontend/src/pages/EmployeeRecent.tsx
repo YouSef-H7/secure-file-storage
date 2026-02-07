@@ -60,21 +60,21 @@ const EmployeeRecent = () => {
     return (
         <div className="space-y-6 animate-in">
             <div>
-                <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Recent Files</h1>
-                <p className="text-text-secondary text-sm">Your most recently active documents</p>
+                <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Recent Files</h1>
+                <p className="text-slate-500 text-sm">Your most recently active documents</p>
             </div>
 
             <div className="flex items-center justify-end gap-2">
-                <div className="flex items-center gap-1 bg-surface border border-border/80 rounded-lg p-1 shadow-sm">
+                <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg p-1 shadow-sm">
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'grid' ? 'bg-brand text-white shadow-sm' : 'text-text-secondary hover:bg-slate-50'}`}
+                        className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'grid' ? 'bg-brand text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
                     >
                         <Grid3x3 size={16} />
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'list' ? 'bg-brand text-white shadow-sm' : 'text-text-secondary hover:bg-slate-50'}`}
+                        className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'list' ? 'bg-brand text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
                     >
                         <List size={18} />
                     </button>
@@ -88,33 +88,33 @@ const EmployeeRecent = () => {
             ) : !loading && files.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20">
                     <FileText size={48} className="text-slate-300 mb-4 opacity-50" />
-                    <p className="text-text-secondary">No recent files found.</p>
+                    <p className="text-slate-500">No recent files found.</p>
                 </div>
             ) : viewMode === 'list' ? (
-                <div className="bg-surface rounded-xl shadow-sm border border-border/80 overflow-hidden">
+                <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
                     <table className="w-full">
                         <thead className="bg-slate-50/80 border-b border-slate-200">
                             <tr>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-text-secondary uppercase">File Name</th>
-                                <th className="text-left py-4 px-6 text-xs font-semibold text-text-secondary uppercase">Modified</th>
-                                <th className="text-right py-4 px-6 text-xs font-semibold text-text-secondary uppercase">Size</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase">File Name</th>
+                                <th className="text-left py-4 px-6 text-xs font-semibold text-slate-500 uppercase">Modified</th>
+                                <th className="text-right py-4 px-6 text-xs font-semibold text-slate-500 uppercase">Size</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                             {files.map(file => (
-                                <tr key={file.id} className="hover:bg-slate-50/80 transition-colors duration-150">
+                                <tr key={file.id} className="even:bg-slate-50/40 hover:bg-slate-50/80 transition-colors duration-150">
                                     <td className="py-4 px-6">
                                         <div className="flex items-center gap-4">
                                             <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${getFileTypeColor(file.mimeType)}`}>
                                                 <FileText size={16} />
                                             </div>
-                                            <span className="text-sm font-medium text-text-primary">{file.name ?? file.filename}</span>
+                                            <span className="text-sm font-medium text-slate-900">{file.name ?? file.filename}</span>
                                         </div>
                                     </td>
-                                    <td className="py-4 px-6 text-sm text-text-secondary">
+                                    <td className="py-4 px-6 text-sm text-slate-500">
                                         {new Date(file.createdAt ?? file.created_at ?? 0).toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                                     </td>
-                                    <td className="py-4 px-6 text-right text-sm text-text-secondary font-mono">
+                                    <td className="py-4 px-6 text-right text-sm text-slate-500 font-mono">
                                         {formatSize(file.size ?? 0)}
                                     </td>
                                 </tr>
@@ -125,15 +125,15 @@ const EmployeeRecent = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {files.map(file => (
-                        <div key={file.id} className="bg-surface p-4 rounded-xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
+                        <div key={file.id} className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
                             <div className="flex items-start justify-between mb-3">
                                 <div className={`p-2 rounded ${getFileTypeColor(file.mimeType)}`}>
                                     <FileText size={20} />
                                 </div>
-                                <span className="text-xs text-text-secondary">{formatSize(file.size ?? 0)}</span>
+                                <span className="text-xs text-slate-500">{formatSize(file.size ?? 0)}</span>
                             </div>
-                            <h3 className="text-sm font-semibold text-text-primary truncate mb-1">{file.name ?? file.filename}</h3>
-                            <p className="text-xs text-text-secondary">
+                            <h3 className="text-sm font-semibold text-slate-900 truncate mb-1">{file.name ?? file.filename}</h3>
+                            <p className="text-xs text-slate-500">
                                 {new Date(file.createdAt ?? file.created_at ?? 0).toLocaleDateString()}
                             </p>
                         </div>

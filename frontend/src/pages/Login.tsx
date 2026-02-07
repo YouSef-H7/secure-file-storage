@@ -33,14 +33,14 @@ const LoginPage = () => {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-brand rounded-2xl mb-8 shadow-xl shadow-brand/25">
             <Shield className="text-white fill-current" size={26} />
           </div>
-          <h1 className="text-3xl font-bold text-text-primary tracking-tight leading-tight mb-2">SecureStore</h1>
-          <p className="text-text-secondary text-sm tracking-wide">Enterprise File Management</p>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight leading-tight mb-2">SecureStore</h1>
+          <p className="text-slate-500 text-sm tracking-wide">Enterprise File Management</p>
         </div>
 
-        <div className="bg-surface rounded-2xl shadow-2xl shadow-slate-200/60 border border-border/80 p-10">
+        <div className="bg-white rounded-2xl shadow-2xl shadow-slate-200/60 border border-slate-200/80 p-10">
           <div className="mb-8">
-            <h2 className="text-lg font-semibold text-text-primary mb-1.5">Welcome back</h2>
-            <p className="text-sm text-text-secondary leading-relaxed">Please sign in to your account</p>
+            <h2 className="text-lg font-semibold text-slate-900 mb-1.5">Welcome back</h2>
+            <p className="text-sm text-slate-500 leading-relaxed">Please sign in to your account</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-5">
@@ -54,7 +54,7 @@ const LoginPage = () => {
             </button>
           </form>
 
-          <div className="mt-8 pt-6 border-t border-border/60 flex items-center justify-center gap-2 text-xs text-text-secondary">
+          <div className="mt-8 pt-6 border-t border-slate-200/60 flex items-center justify-center gap-2 text-xs text-slate-500">
             <Shield size={12} className="text-brand-accent" />
             <span>Protected by Enterprise Security</span>
           </div>

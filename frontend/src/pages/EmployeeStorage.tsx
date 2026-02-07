@@ -49,18 +49,18 @@ const EmployeeStorage = () => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div>
-                <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Storage Usage</h1>
-                <p className="text-text-secondary text-sm">Manage your personal quota</p>
+                <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Storage Usage</h1>
+                <p className="text-slate-400 text-sm">Manage your personal quota</p>
             </div>
 
-            <div className="bg-surface rounded-xl shadow-sm border border-border/80 p-6">
+            <div className="bg-white rounded-xl shadow-card border border-slate-200/80 p-6">
                 <div className="flex items-center gap-4 mb-6">
                     <div className="p-3.5 bg-brand/10 rounded-xl">
                         <HardDrive className="text-brand" size={28} />
                     </div>
                     <div>
-                        <h2 className="text-2xl font-bold text-text-primary">{formatSize(stats.used)}</h2>
-                        <p className="text-text-secondary text-sm">of {formatSize(stats.total)} Used</p>
+                        <h2 className="text-2xl font-bold text-slate-900">{formatSize(stats.used)}</h2>
+                        <p className="text-slate-500 text-sm">of {formatSize(stats.total)} Used</p>
                     </div>
                 </div>
 
@@ -71,7 +71,7 @@ const EmployeeStorage = () => {
                             style={{ width: `${percent}%` }}
                         />
                     </div>
-                    <div className="flex justify-between text-xs text-text-secondary font-medium">
+                    <div className="flex justify-between text-xs text-slate-400 font-medium">
                         <span>0 GB</span>
                         <span>{percent.toFixed(1)}%</span>
                         <span>5 GB</span>
@@ -83,8 +83,8 @@ const EmployeeStorage = () => {
                         <div className="flex items-center gap-3">
                             <FileText className="text-slate-400" size={20} />
                             <div>
-                                <div className="text-lg font-semibold text-text-primary">{stats.count}</div>
-                                <div className="text-xs text-text-secondary">Total Files</div>
+                                <div className="text-lg font-semibold text-slate-900">{stats.count}</div>
+                                <div className="text-xs text-slate-400">Total Files</div>
                             </div>
                         </div>
                     </div>
@@ -92,8 +92,8 @@ const EmployeeStorage = () => {
                         <div className="flex items-center gap-3">
                             <HardDrive className="text-slate-400" size={20} />
                             <div>
-                                <div className="text-lg font-semibold text-text-primary">{formatSize(stats.total - stats.used)}</div>
-                                <div className="text-xs text-text-secondary">Available</div>
+                                <div className="text-lg font-semibold text-slate-900">{formatSize(stats.total - stats.used)}</div>
+                                <div className="text-xs text-slate-400">Available</div>
                             </div>
                         </div>
                     </div>

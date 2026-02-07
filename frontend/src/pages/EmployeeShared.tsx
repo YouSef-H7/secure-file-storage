@@ -180,7 +180,7 @@ const EmployeeShared = () => {
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {filteredFiles.map((file: any) => (
-                        <tr key={file.id} className="hover:bg-slate-50 transition-colors group">
+                        <tr key={file.id} className="even:bg-slate-50/40 hover:bg-slate-50 transition-colors group">
                           <td className="py-4 px-6">
                             <div className="flex items-center gap-4">
                               <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${getFileTypeColor(file.mimeType || '')}`}>

@@ -451,7 +451,7 @@ const EmployeeFiles = () => {
                   <tr 
                     key={folder.id} 
                     onClick={() => setSearchParams({ folderId: folder.id })} 
-                    className="hover:bg-slate-50/80 transition-colors duration-150 group cursor-pointer"
+                    className="even:bg-slate-50/40 hover:bg-slate-50/80 transition-colors duration-150 group cursor-pointer"
                   >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-4">
@@ -468,7 +468,7 @@ const EmployeeFiles = () => {
                 ))}
 
                 {filteredFiles.map((file) => (
-                  <tr key={file.id} className="hover:bg-slate-50/80 transition-colors duration-150 group">
+                  <tr key={file.id} className="even:bg-slate-50/40 hover:bg-slate-50/80 transition-colors duration-150 group">
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-4">
                         <div className={`w-8 h-8 rounded flex items-center justify-center text-[10px] font-bold ${getFileTypeColor(file.mimeType)}`}>
