@@ -103,7 +103,7 @@ const EmployeeTrash = () => {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div>
-        <h1 className="text-3xl font-bold text-text-primary mb-1 tracking-tight">Trash</h1>
+        <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Trash</h1>
         <p className="text-text-secondary text-sm">Deleted files (30-day retention)</p>
       </div>
 
@@ -118,7 +118,7 @@ const EmployeeTrash = () => {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50/80 border-b border-slate-200">
@@ -141,7 +141,7 @@ const EmployeeTrash = () => {
                       <button
                         onClick={() => handleRestore(file.id)}
                         disabled={restoringId === file.id}
-                        className="inline-flex items-center gap-2 px-3 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 disabled:opacity-70 transition-colors"
+                        className="inline-flex items-center gap-2 px-3 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-dark disabled:opacity-70 transition-colors"
                       >
                         {restoringId === file.id ? <Loader2 size={16} className="animate-spin" /> : <RotateCcw size={16} />}
                         Restore

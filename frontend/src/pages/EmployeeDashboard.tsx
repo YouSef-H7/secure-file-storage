@@ -114,8 +114,8 @@ const EmployeeDashboard = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-1">My Dashboard</h1>
-        <p className="text-slate-600 text-sm">Quick access to your files and storage</p>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">My Dashboard</h1>
+        <p className="text-slate-400 text-sm">Quick access to your files and storage</p>
       </div>
 
       <input
@@ -125,62 +125,62 @@ const EmployeeDashboard = () => {
         className="hidden"
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <div
           onClick={() => !uploading && fileInputRef.current?.click()}
-          className={`bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-shadow cursor-pointer ${uploading ? 'opacity-70 pointer-events-none' : ''}`}
+          className={`bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 hover:shadow-md transition-all duration-200 cursor-pointer ${uploading ? 'opacity-70 pointer-events-none' : ''}`}
         >
           <div className="flex flex-col items-center text-center">
-            <div className="p-4 bg-slate-900 rounded-lg mb-4">
-              {uploading ? <Loader2 className="text-white animate-spin" size={24} /> : <Upload className="text-white" size={24} />}
+            <div className="p-3.5 bg-brand rounded-xl mb-4">
+              {uploading ? <Loader2 className="text-white animate-spin" size={22} /> : <Upload className="text-white" size={22} />}
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-1">{uploading ? 'Uploading...' : 'Upload File'}</h3>
-            <p className="text-sm text-slate-600">Add new files to your storage</p>
+            <h3 className="text-base font-semibold text-slate-900 mb-1">{uploading ? 'Uploading...' : 'Upload File'}</h3>
+            <p className="text-sm text-slate-400">Add new files to your storage</p>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <FileText className="text-blue-600" size={24} />
+            <div className="p-2.5 bg-blue-50 rounded-lg">
+              <FileText className="text-blue-600" size={20} />
             </div>
           </div>
-          <div className="text-3xl font-bold text-slate-900 mb-1">{stats?.totalFiles ?? 0}</div>
-          <div className="text-sm text-slate-600">Total Files</div>
+          <div className="text-2xl font-bold text-slate-900 mb-1">{stats?.totalFiles ?? 0}</div>
+          <div className="text-sm text-slate-400">Total Files</div>
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5">
           <div className="flex items-center justify-between mb-4">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <TrendingUp className="text-green-600" size={24} />
+            <div className="p-2.5 bg-emerald-50 rounded-lg">
+              <TrendingUp className="text-emerald-600" size={20} />
             </div>
           </div>
-          <div className="text-3xl font-bold text-slate-900 mb-1">{stats?.filesThisWeek ?? 0}</div>
-          <div className="text-sm text-slate-600">Files This Week</div>
+          <div className="text-2xl font-bold text-slate-900 mb-1">{stats?.filesThisWeek ?? 0}</div>
+          <div className="text-sm text-slate-400">Files This Week</div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5">
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-slate-900 mb-1">Storage Usage</h3>
-          <p className="text-sm text-slate-600">Your personal storage allocation</p>
+          <h3 className="text-base font-semibold text-slate-900 mb-1">Storage Usage</h3>
+          <p className="text-sm text-slate-400">Your personal storage allocation</p>
         </div>
         <div className="flex items-end justify-between mb-4">
           <div>
-            <div className="text-3xl font-bold text-slate-900 mb-1">{storageUsedGB} GB</div>
-            <div className="text-sm text-slate-600">of {storageTotalGB} GB used</div>
+            <div className="text-2xl font-bold text-slate-900 mb-1">{storageUsedGB} GB</div>
+            <div className="text-sm text-slate-400">of {storageTotalGB} GB used</div>
           </div>
           <div className="text-right">
-            <div className="p-3 bg-slate-100 rounded-lg mb-2">
-              <HardDrive className="text-slate-600" size={24} />
+            <div className="p-2.5 bg-brand/10 rounded-lg mb-2">
+              <HardDrive className="text-brand" size={20} />
             </div>
             <div className="text-sm font-medium text-slate-900">{Math.round(storagePercent)}% Full</div>
           </div>
         </div>
-        <div className="w-full bg-slate-200 rounded-full h-3">
-          <div className="bg-slate-900 h-3 rounded-full" style={{ width: `${storagePercent}%` }}></div>
+        <div className="w-full bg-slate-100 rounded-full h-2.5">
+          <div className="bg-brand h-2.5 rounded-full transition-all duration-1000 ease-out" style={{ width: `${storagePercent}%` }}></div>
         </div>
-        <div className="text-sm text-slate-600 mt-2">{(parseFloat(storageTotalGB) - parseFloat(storageUsedGB)).toFixed(1)} GB remaining</div>
+        <div className="text-sm text-slate-400 mt-2">{(parseFloat(storageTotalGB) - parseFloat(storageUsedGB)).toFixed(1)} GB remaining</div>
       </div>
     </div>
   );

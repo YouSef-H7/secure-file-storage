@@ -46,12 +46,12 @@ const EmployeeUpload = () => {
     return (
         <div className="space-y-6 animate-in">
             <div>
-                <h1 className="text-3xl font-bold text-text-primary mb-1 tracking-tight">Upload File</h1>
+                <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Upload File</h1>
                 <p className="text-text-secondary text-sm">Add new documents to your workspace</p>
             </div>
 
             <div
-                className="border-2 border-dashed border-slate-300 rounded-2xl p-20 flex flex-col items-center justify-center text-center hover:border-brand/60 hover:bg-brand/5 transition-all duration-300 cursor-pointer group bg-slate-50/50"
+                className="border-2 border-dashed border-slate-200 rounded-xl p-20 flex flex-col items-center justify-center text-center hover:border-brand/50 hover:bg-brand/[0.03] transition-all duration-300 cursor-pointer group bg-slate-50/30"
                 onClick={() => !uploading && fileInputRef.current?.click()}
             >
                 <input
@@ -61,11 +61,11 @@ const EmployeeUpload = () => {
                     onChange={onFileSelect}
                 />
 
-                <div className="w-20 h-20 bg-brand/10 rounded-full flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg shadow-brand/10">
+                <div className="w-18 h-18 bg-brand/10 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-105 transition-transform duration-300">
                     {uploading ? <Loader2 size={40} className="text-brand animate-spin" /> : <UploadCloud size={40} className="text-brand" />}
                 </div>
 
-                <h3 className="text-xl font-semibold text-text-primary mb-2">
+                <h3 className="text-lg font-semibold text-text-primary mb-2">
                     {uploading ? 'Uploading...' : 'Click to Upload'}
                 </h3>
                 <p className="text-text-secondary max-w-sm mx-auto">

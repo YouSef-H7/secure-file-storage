@@ -27,34 +27,34 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
-      <div className="w-full max-w-sm space-y-8 animate-in fade-in zoom-in duration-500">
+    <div className="min-h-screen flex items-center justify-center bg-background p-6 relative overflow-hidden">
+      <div className="w-full max-w-md space-y-10 animate-in fade-in zoom-in duration-500">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-12 h-12 bg-brand rounded-xl mb-6 shadow-lg shadow-brand/20">
-            <Shield className="text-white fill-current" size={24} />
+          <div className="inline-flex items-center justify-center w-14 h-14 bg-brand rounded-2xl mb-8 shadow-xl shadow-brand/25">
+            <Shield className="text-white fill-current" size={26} />
           </div>
-          <h1 className="text-2xl font-bold text-text-primary tracking-tight mb-2">SecureStore</h1>
-          <p className="text-text-secondary text-sm">Enterprise File Management</p>
+          <h1 className="text-3xl font-bold text-text-primary tracking-tight leading-tight mb-2">SecureStore</h1>
+          <p className="text-text-secondary text-sm tracking-wide">Enterprise File Management</p>
         </div>
 
-        <div className="bg-surface rounded-xl shadow-xl shadow-slate-200/50 border border-border p-8">
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-text-primary mb-1">Welcome back</h2>
-            <p className="text-sm text-text-secondary">Please sign in to your account</p>
+        <div className="bg-surface rounded-2xl shadow-2xl shadow-slate-200/60 border border-border/80 p-10">
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-text-primary mb-1.5">Welcome back</h2>
+            <p className="text-sm text-text-secondary leading-relaxed">Please sign in to your account</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-5">
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-brand hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-brand/10"
+              className="w-full bg-brand hover:bg-brand-dark disabled:opacity-50 disabled:cursor-not-allowed text-white font-medium py-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-brand/10 focus:ring-2 focus:ring-brand/30 focus:ring-offset-2"
             >
               {loading && <Loader2 size={18} className="animate-spin" />}
               {loading ? 'Authenticating...' : 'Sign in using SSO'}
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-border flex items-center justify-center gap-2 text-xs text-text-secondary">
+          <div className="mt-8 pt-6 border-t border-border/60 flex items-center justify-center gap-2 text-xs text-text-secondary">
             <Shield size={12} className="text-brand-accent" />
             <span>Protected by Enterprise Security</span>
           </div>

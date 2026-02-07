@@ -79,12 +79,12 @@ const Dashboard = () => {
     <div className="space-y-8 animate-in">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Admin Dashboard</h1>
-        <p className="text-slate-500 mt-1">Real-time system overview and analytics.</p>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Admin Dashboard</h1>
+        <p className="text-slate-400 mt-1.5 text-sm">Real-time system overview and analytics.</p>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <StatsCard
           title="Total Users"
           value={summary.totalUsers}
@@ -115,13 +115,13 @@ const Dashboard = () => {
       </div>
 
       {/* Analytics Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
         {/* Activity Chart (Custom CSS Bar Chart) */}
-        <div className="lg:col-span-2 bg-white rounded-2xl shadow-md border border-slate-200 p-6 hover:shadow-lg transition-shadow duration-300">
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-slate-900">Upload Activity</h3>
-            <p className="text-sm text-slate-500">Files uploaded over the last 7 days</p>
+        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 hover:shadow-md transition-shadow duration-300">
+          <div className="mb-5">
+            <h3 className="text-base font-semibold text-slate-900">Upload Activity</h3>
+            <p className="text-sm text-slate-400">Files uploaded over the last 7 days</p>
           </div>
 
           <div className="h-64 flex items-end gap-2 sm:gap-4 mt-8">
@@ -161,7 +161,7 @@ const Dashboard = () => {
                       <div className="relative w-full flex items-end justify-center">
                         <div
                           style={{ height: `${height}%` }} // No minHeight - allow 0% for zero counts
-                          className="w-full max-w-[40px] bg-brand rounded-t-sm group-hover:bg-brand-light transition-all duration-300 relative"
+                          className="w-full max-w-[40px] bg-brand rounded-t-md group-hover:bg-brand-light transition-all duration-300 relative"
                         >
                           <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-brand-dark text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 shadow-lg">
                             {day.count} files ({formatSize(day.size)})
@@ -186,15 +186,15 @@ const Dashboard = () => {
         </div>
 
         {/* Recent Events (Logs) - REPLACED Matrix/Breakdown per task */}
-        <div className="bg-white rounded-2xl shadow-md border border-slate-200 p-6 flex flex-col hover:shadow-lg transition-shadow duration-300">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-5 flex flex-col hover:shadow-md transition-shadow duration-300">
           <div className="mb-4">
-            <h3 className="text-lg font-semibold text-slate-900">Recent Events</h3>
-            <p className="text-sm text-slate-500">Latest system activities</p>
+            <h3 className="text-base font-semibold text-slate-900">Recent Events</h3>
+            <p className="text-sm text-slate-400">Latest system activities</p>
           </div>
 
           <div className="flex-1 overflow-y-auto space-y-4 pr-1">
             {(recentLogs ?? []).length > 0 ? (recentLogs ?? []).map((log) => (
-              <div key={log.id} className="flex items-start gap-3 p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-slate-100 hover:shadow-sm transition-all duration-200">
+              <div key={log.id} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50/80 border border-slate-100 hover:bg-slate-100 hover:shadow-sm transition-all duration-200">
                 <div className="mt-1">
                   {log.type === 'upload' && <FileText size={16} className="text-emerald-600" />}
                   {log.type === 'delete' && <Server size={16} className="text-red-600" />}
@@ -237,21 +237,21 @@ const StatsCard = ({ title, value, icon, subValue, trend, color }: any) => {
   const trendColor = trend?.includes('+') ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50';
 
   return (
-    <div className="bg-surface rounded-2xl shadow-md border border-border p-6 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+    <div className="bg-surface rounded-xl shadow-sm border border-border/80 p-5 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
       <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-lg ${bgColors[color] || 'bg-slate-100 text-slate-600'}`}>
+        <div className={`p-2.5 rounded-lg ${bgColors[color] || 'bg-slate-100 text-slate-600'}`}>
           {icon}
         </div>
         {trend && (
-          <span className={`text-xs font-semibold px-2 py-1 rounded-full ${trendColor}`}>
+          <span className={`text-[11px] font-semibold px-2 py-1 rounded-full ${trendColor}`}>
             {trend}
           </span>
         )}
       </div>
       <div>
-        <div className="text-3xl font-bold text-text-primary mb-1 tracking-tight font-sans">{value}</div>
+        <div className="text-2xl font-bold text-text-primary mb-1 tracking-tight font-sans">{value}</div>
         <div className="text-sm font-medium text-text-secondary">{title}</div>
-        {subValue && <div className="text-xs text-text-secondary mt-1 opacity-80">{subValue}</div>}
+        {subValue && <div className="text-xs text-text-secondary mt-1 opacity-70">{subValue}</div>}
       </div>
     </div>
   );

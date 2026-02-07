@@ -49,14 +49,14 @@ const EmployeeStorage = () => {
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div>
-                <h1 className="text-3xl font-bold text-text-primary mb-1 tracking-tight">Storage Usage</h1>
+                <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Storage Usage</h1>
                 <p className="text-text-secondary text-sm">Manage your personal quota</p>
             </div>
 
-            <div className="bg-surface rounded-xl shadow-sm border border-border p-8">
+            <div className="bg-surface rounded-xl shadow-sm border border-border/80 p-6">
                 <div className="flex items-center gap-4 mb-6">
-                    <div className="p-4 bg-brand/10 rounded-xl">
-                        <HardDrive className="text-brand" size={32} />
+                    <div className="p-3.5 bg-brand/10 rounded-xl">
+                        <HardDrive className="text-brand" size={28} />
                     </div>
                     <div>
                         <h2 className="text-2xl font-bold text-text-primary">{formatSize(stats.used)}</h2>
@@ -65,7 +65,7 @@ const EmployeeStorage = () => {
                 </div>
 
                 <div className="space-y-2 mb-8">
-                    <div className="h-4 w-full bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-brand transition-all duration-1000 ease-out"
                             style={{ width: `${percent}%` }}

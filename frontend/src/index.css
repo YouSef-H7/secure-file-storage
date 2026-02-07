@@ -30,3 +30,42 @@ body {
   animation: fadeIn 0.4s ease-out;
 }
 
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Brand selection color */
+::selection {
+  background: rgba(11, 59, 46, 0.15);
+  color: #0f172a;
+}
+
+/* Focus-visible utility */
+.focus-ring {
+  outline: none;
+}
+.focus-ring:focus-visible {
+  box-shadow: 0 0 0 2px #ffffff, 0 0 0 4px rgba(11, 59, 46, 0.35);
+  border-radius: 0.5rem;
+}
+

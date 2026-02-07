@@ -60,21 +60,21 @@ const EmployeeRecent = () => {
     return (
         <div className="space-y-6 animate-in">
             <div>
-                <h1 className="text-3xl font-bold text-text-primary mb-1 tracking-tight">Recent Files</h1>
+                <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Recent Files</h1>
                 <p className="text-text-secondary text-sm">Your most recently active documents</p>
             </div>
 
             <div className="flex items-center justify-end gap-2">
-                <div className="flex items-center gap-2 bg-surface border border-border rounded-xl p-1 shadow-sm">
+                <div className="flex items-center gap-1 bg-surface border border-border/80 rounded-lg p-1 shadow-sm">
                     <button
                         onClick={() => setViewMode('grid')}
-                        className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'grid' ? 'bg-brand text-white shadow-md' : 'text-text-secondary hover:bg-slate-50'}`}
+                        className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'grid' ? 'bg-brand text-white shadow-sm' : 'text-text-secondary hover:bg-slate-50'}`}
                     >
-                        <Grid3x3 size={18} />
+                        <Grid3x3 size={16} />
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'list' ? 'bg-brand text-white shadow-md' : 'text-text-secondary hover:bg-slate-50'}`}
+                        className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'list' ? 'bg-brand text-white shadow-sm' : 'text-text-secondary hover:bg-slate-50'}`}
                     >
                         <List size={18} />
                     </button>
@@ -91,7 +91,7 @@ const EmployeeRecent = () => {
                     <p className="text-text-secondary">No recent files found.</p>
                 </div>
             ) : viewMode === 'list' ? (
-                <div className="bg-surface rounded-2xl shadow-md shadow-slate-200/50 border border-border overflow-hidden">
+                <div className="bg-surface rounded-xl shadow-sm border border-border/80 overflow-hidden">
                     <table className="w-full">
                         <thead className="bg-slate-50/80 border-b border-slate-200">
                             <tr>
@@ -125,7 +125,7 @@ const EmployeeRecent = () => {
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {files.map(file => (
-                        <div key={file.id} className="bg-surface p-4 rounded-2xl border border-border shadow-md shadow-slate-200/50 hover:shadow-lg hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-0.5">
+                        <div key={file.id} className="bg-surface p-4 rounded-xl border border-border/80 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5">
                             <div className="flex items-start justify-between mb-3">
                                 <div className={`p-2 rounded ${getFileTypeColor(file.mimeType)}`}>
                                     <FileText size={20} />

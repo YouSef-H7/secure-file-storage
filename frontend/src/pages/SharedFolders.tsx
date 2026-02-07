@@ -47,8 +47,8 @@ const SharedFolders = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-1">Shared Folders</h1>
-        <p className="text-slate-600 text-sm">Folders shared with you by colleagues</p>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Shared Folders</h1>
+        <p className="text-slate-400 text-sm">Folders shared with you by colleagues</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -59,7 +59,7 @@ const SharedFolders = () => {
             placeholder="Search folders or owners..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+            className="w-full bg-white border border-slate-200/80 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-transparent transition-all shadow-sm"
           />
         </div>
       </div>
@@ -70,19 +70,19 @@ const SharedFolders = () => {
           <p className="text-sm text-slate-600">Loading shared folders...</p>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center py-20 px-10 bg-red-50 rounded-xl border border-red-100">
+        <div className="flex flex-col items-center justify-center py-20 px-10 bg-red-50/60 rounded-xl border border-red-100/80">
           <FileQuestion size={48} className="text-red-300 mb-4" />
           <h3 className="text-lg font-semibold text-slate-900 mb-2">Error</h3>
           <p className="text-sm text-slate-600 text-center mb-4">{error}</p>
           <button
             onClick={fetchFolders}
-            className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
+            className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-dark transition-colors"
           >
             Retry
           </button>
         </div>
       ) : filteredFolders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 px-10 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50">
+        <div className="flex flex-col items-center justify-center py-20 px-10 border-2 border-dashed border-slate-200/80 rounded-xl bg-slate-50/50">
           <Folder size={48} className="text-slate-300 mb-4" />
           <h3 className="text-lg font-semibold text-slate-900 mb-2">No shared folders</h3>
           <p className="text-sm text-slate-600 text-center mb-6 max-w-sm">
@@ -94,19 +94,19 @@ const SharedFolders = () => {
           {filteredFolders.map((folder) => (
             <div
               key={folder.id}
-              className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-all"
+              className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 hover:shadow-card-hover transition-all"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-purple-100 text-purple-600 rounded-lg">
-                  <Folder size={24} fill="currentColor" className="text-purple-200" stroke="currentColor" />
+                <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg">
+                  <Folder size={22} />
                 </div>
-                <span className="px-2 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded">Shared</span>
+                <span className="px-2.5 py-1 bg-purple-50 text-purple-600 text-[11px] font-medium rounded-md">Shared</span>
               </div>
 
-              <h3 className="text-lg font-semibold text-slate-900 mb-2 truncate" title={folder.name}>
+              <h3 className="text-[15px] font-semibold text-slate-900 mb-1.5 truncate" title={folder.name}>
                 {folder.name}
               </h3>
-              <div className="space-y-2 text-sm text-slate-600 mb-4">
+              <div className="space-y-1.5 text-xs text-slate-500 mb-4">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">Owner:</span>
                   <span className="truncate">{folder.owner_email}</span>
@@ -118,7 +118,7 @@ const SharedFolders = () => {
               </div>
               <Link
                 to={`/app/employee/files?folderId=${folder.id}`}
-                className="block w-full px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-lg text-sm font-medium transition-colors text-center"
+                className="block w-full px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-sm font-medium transition-colors text-center"
               >
                 Browse Folder
               </Link>

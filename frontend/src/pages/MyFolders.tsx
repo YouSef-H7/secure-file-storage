@@ -96,12 +96,12 @@ const MyFolders = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-1">My Folders</h1>
-          <p className="text-slate-600 text-sm">Organize your files with folders</p>
+          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">My Folders</h1>
+          <p className="text-slate-400 text-sm">Organize your files with folders</p>
         </div>
         <button
           onClick={handleCreateFolder}
-          className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-sm font-medium transition-all shadow-sm flex items-center gap-2"
+          className="px-4 py-2.5 bg-brand hover:bg-brand-dark text-white rounded-lg text-sm font-medium transition-all shadow-sm flex items-center gap-2"
         >
           <FolderPlus size={18} />
           <span>New Folder</span>
@@ -116,7 +116,7 @@ const MyFolders = () => {
             placeholder="Search folders..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+            className="w-full bg-white border border-slate-200/80 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-transparent transition-all shadow-sm"
           />
         </div>
       </div>
@@ -127,19 +127,19 @@ const MyFolders = () => {
           <p className="text-sm text-slate-600">Loading folders...</p>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center py-20 px-10 bg-red-50 rounded-xl border border-red-100">
+        <div className="flex flex-col items-center justify-center py-20 px-10 bg-red-50/60 rounded-xl border border-red-100/80">
           <FileQuestion size={48} className="text-red-300 mb-4" />
           <h3 className="text-lg font-semibold text-slate-900 mb-2">Error</h3>
           <p className="text-sm text-slate-600 text-center mb-4">{error}</p>
           <button
             onClick={fetchFolders}
-            className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-medium hover:bg-slate-800 transition-colors"
+            className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-dark transition-colors"
           >
             Retry
           </button>
         </div>
       ) : filteredFolders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 px-10 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50">
+        <div className="flex flex-col items-center justify-center py-20 px-10 border-2 border-dashed border-slate-200/80 rounded-xl bg-slate-50/50">
           <Folder size={48} className="text-slate-300 mb-4" />
           <h3 className="text-lg font-semibold text-slate-900 mb-2">No folders</h3>
           <p className="text-sm text-slate-600 text-center mb-6 max-w-sm">
@@ -159,11 +159,11 @@ const MyFolders = () => {
           {filteredFolders.map((folder) => (
             <div
               key={folder.id}
-              className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 hover:shadow-md transition-all group"
+              className="bg-white rounded-xl shadow-card border border-slate-200/80 p-5 hover:shadow-card-hover transition-all group"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-3 bg-blue-100 text-blue-600 rounded-lg">
-                  <Folder size={24} fill="currentColor" className="text-blue-200" stroke="currentColor" />
+                <div className="p-2.5 bg-brand/10 text-brand rounded-lg">
+                  <Folder size={22} />
                 </div>
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
@@ -204,23 +204,23 @@ const MyFolders = () => {
                       if (e.key === 'Enter') handleRenameFolder(folder.id);
                       if (e.key === 'Escape') setEditingFolder(null);
                     }}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+                    className="w-full px-3 py-2 border border-slate-200/80 rounded-lg text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/40"
                     autoFocus
                   />
                 </div>
               ) : (
                 <>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2 truncate" title={folder.name}>
+                  <h3 className="text-[15px] font-semibold text-slate-900 mb-1.5 truncate" title={folder.name}>
                     {folder.name}
                   </h3>
-                  <div className="flex items-center gap-4 text-sm text-slate-600">
+                  <div className="flex items-center gap-3 text-xs text-slate-400">
                     <span>{folder.file_count || 0} files</span>
                     <span>•</span>
                     <span>{new Date(folder.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
                   </div>
                   <Link
                     to={`/app/employee/files?folderId=${folder.id}`}
-                    className="block mt-4 w-full px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-900 rounded-lg text-sm font-medium transition-colors text-center"
+                    className="block mt-4 w-full px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded-lg text-sm font-medium transition-colors text-center"
                   >
                     Open Folder
                   </Link>

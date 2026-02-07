@@ -86,7 +86,7 @@ const LogsPage = () => {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-1 tracking-tight">Activity Logs</h1>
+          <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Activity Logs</h1>
           <p className="text-text-secondary text-sm">System activity and security audit trail</p>
         </div>
         <div className="flex h-96 items-center justify-center">
@@ -100,7 +100,7 @@ const LogsPage = () => {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-1 tracking-tight">Activity Logs</h1>
+          <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Activity Logs</h1>
           <p className="text-text-secondary text-sm">System activity and security audit trail</p>
         </div>
         <div className="p-6 bg-red-50 text-red-600 rounded-xl border border-red-100">
@@ -126,16 +126,16 @@ const LogsPage = () => {
             placeholder="Search logs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-surface border border-border rounded-lg pl-10 pr-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all"
+            className="w-full bg-surface border border-border/80 rounded-lg pl-10 pr-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-transparent transition-all shadow-sm"
           />
         </div>
-        <button className="px-4 py-2.5 bg-surface border border-border rounded-lg text-text-secondary hover:bg-slate-50 hover:text-text-primary transition-colors flex items-center gap-2 font-medium text-sm shadow-sm">
+        <button className="px-4 py-2.5 bg-surface border border-border/80 rounded-lg text-text-secondary hover:bg-slate-50 hover:text-text-primary transition-colors flex items-center gap-2 font-medium text-sm shadow-sm">
           <Filter size={18} />
           <span className="hidden sm:inline">Filters</span>
         </button>
       </div>
 
-      <div className="bg-surface rounded-xl shadow-sm border border-border overflow-hidden">
+      <div className="bg-surface rounded-xl shadow-sm border border-border/80 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-slate-50/80 border-b border-border">

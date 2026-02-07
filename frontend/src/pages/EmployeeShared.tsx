@@ -82,8 +82,8 @@ const EmployeeShared = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-slate-900 mb-1">Shared with Me</h1>
-        <p className="text-slate-600 text-sm">Files and folders shared by other users</p>
+        <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">Shared with Me</h1>
+        <p className="text-slate-400 text-sm">Files and folders shared by other users</p>
       </div>
 
       <div className="flex items-center gap-3">
@@ -94,7 +94,7 @@ const EmployeeShared = () => {
             placeholder="Search files and folders..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+            className="w-full bg-white border border-slate-200/80 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-transparent transition-all"
           />
         </div>
       </div>
@@ -136,7 +136,7 @@ const EmployeeShared = () => {
                 {filteredFolders.map((folder) => (
                   <div
                     key={folder.id}
-                    className="bg-white rounded-xl shadow-sm border border-slate-200 p-4 hover:shadow-md transition-all"
+                    className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
@@ -166,7 +166,7 @@ const EmployeeShared = () => {
                 <FileText size={20} className="text-blue-600" />
                 Shared Files
               </h2>
-              <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="w-full">
                     <thead className="bg-slate-50 border-b border-slate-200">

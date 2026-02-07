@@ -296,10 +296,10 @@ const EmployeeFiles = () => {
           </button>
         )}
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-1">
+          <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight">
             {currentFolderId ? 'Folder View' : 'My Files'}
           </h1>
-          <p className="text-slate-600 text-sm">Manage your personal secure documents</p>
+          <p className="text-slate-400 text-sm">Manage your personal secure documents</p>
         </div>
       </div>
 
@@ -318,28 +318,28 @@ const EmployeeFiles = () => {
             placeholder="Search files..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all shadow-sm"
+            className="w-full bg-white border border-slate-200/80 rounded-lg pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-transparent transition-all shadow-sm"
           />
         </div>
 
         <button 
           onClick={handleCreateFolder} 
-          className="px-4 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-900 rounded-xl text-sm font-medium transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2"
+          className="px-4 py-2.5 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-900 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2"
         >
           <FolderPlus size={18} className="text-slate-600" />
           <span>New Folder</span>
         </button>
 
-        <div className="flex items-center gap-2 bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+        <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg p-1 shadow-sm">
           <button
             onClick={() => setViewMode('grid')}
-            className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'grid' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'grid' ? 'bg-brand text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
           >
-            <Grid3x3 size={18} />
+            <Grid3x3 size={16} />
           </button>
           <button
             onClick={() => setViewMode('list')}
-            className={`p-2 rounded-xl transition-all duration-200 ${viewMode === 'list' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-600 hover:bg-slate-50'}`}
+            className={`p-2 rounded-md transition-all duration-200 ${viewMode === 'list' ? 'bg-brand text-white shadow-sm' : 'text-slate-500 hover:bg-slate-50'}`}
           >
             <List size={18} />
           </button>
@@ -347,7 +347,7 @@ const EmployeeFiles = () => {
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className={`px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-sm font-medium transition-all shadow-md hover:shadow-lg active:scale-95 flex items-center gap-2 ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          className={`px-4 py-2.5 bg-brand hover:bg-brand-dark text-white rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2 ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
           {uploading ? <Loader2 size={18} className="animate-spin" /> : <UploadCloud size={18} />}
           <span>{uploading ? 'Uploading...' : 'Upload File'}</span>
@@ -360,7 +360,7 @@ const EmployeeFiles = () => {
           <p className="text-sm text-slate-600">Loading secure files...</p>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center py-20 px-10 bg-red-50 rounded-2xl border border-red-100 shadow-sm">
+        <div className="flex flex-col items-center justify-center py-20 px-10 bg-red-50 rounded-xl border border-red-100 shadow-sm">
           <FileQuestion size={48} className="text-red-300 mb-4 opacity-60" />
           <h3 className="text-lg font-semibold text-slate-900 mb-2">Unavailable</h3>
           <p className="text-sm text-slate-600 text-center mb-4">{error}</p>
@@ -372,7 +372,7 @@ const EmployeeFiles = () => {
           </button>
         </div>
       ) : !loading && filteredFiles.length === 0 && filteredFolders.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 px-10 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50/50">
+        <div className="flex flex-col items-center justify-center py-20 px-10 border-2 border-dashed border-slate-200 rounded-xl bg-slate-50/50">
           <UploadCloud size={48} className="text-slate-400 mb-4 opacity-60" />
           <h3 className="text-lg font-semibold text-slate-900 mb-2">Empty Folder</h3>
           <p className="text-sm text-slate-600 text-center mb-6 max-w-sm">
@@ -391,7 +391,7 @@ const EmployeeFiles = () => {
             <div 
               key={folder.id}
               onClick={() => setSearchParams({ folderId: folder.id })}
-              className="bg-white rounded-2xl shadow-md shadow-slate-200/50 border border-slate-200 p-4 hover:shadow-lg hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-0.5 group cursor-pointer flex items-center gap-3"
+              className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-pointer flex items-center gap-3"
             >
               <div className="p-2 bg-blue-100 text-blue-600 rounded-xl shadow-sm">
                 <Folder size={24} fill="currentColor" className="text-blue-200" stroke="currentColor" />
@@ -404,7 +404,7 @@ const EmployeeFiles = () => {
           ))}
 
           {filteredFiles.map((file) => (
-            <div key={file.id} className="bg-white rounded-2xl shadow-md shadow-slate-200/50 border border-slate-200 p-4 hover:shadow-lg hover:shadow-slate-300/50 transition-all duration-300 hover:-translate-y-0.5 group cursor-default">
+            <div key={file.id} className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-default">
               <div className="flex justify-between items-start mb-3">
                 <div className={`${getFileTypeColor(file.mimeType)} px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wide`}>
                   {getFileTypeLabel(file.mimeType)}
@@ -435,7 +435,7 @@ const EmployeeFiles = () => {
           ))}
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-md shadow-slate-200/50 border border-slate-200 overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-slate-50/80 border-b border-slate-200">

@@ -118,18 +118,18 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
-                <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                    <h3 className="font-semibold text-slate-900">Share "{file.name}"</h3>
-                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in">
+            <div className="bg-white rounded-xl shadow-dropdown w-full max-w-md overflow-hidden">
+                <div className="px-6 py-4 border-b border-slate-100/80 flex items-center justify-between">
+                    <h3 className="font-semibold text-slate-900 text-[15px]">Share "{file.name}"</h3>
+                    <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-md hover:bg-slate-50">
                         <X size={20} />
                     </button>
                 </div>
 
                 <div className="p-6">
                     {/* Mode Toggle */}
-                    <div className="mb-4 flex gap-2 border-b border-slate-200">
+                    <div className="mb-4 flex gap-1 border-b border-slate-100">
                         <button
                             onClick={() => { setShareLinkMode('user'); setStatus('idle'); setErrorMsg(''); }}
                             className={`px-4 py-2 text-sm font-medium transition-colors ${
@@ -166,7 +166,7 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
                                         placeholder="Enter colleague's email..."
                                         value={email}
                                         onChange={(e) => { setEmail(e.target.value); setStatus('idle'); }}
-                                        className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-brand focus:border-transparent outline-none transition-all"
+                                        className="w-full pl-10 pr-4 py-2.5 border border-slate-200/80 rounded-lg focus:ring-2 focus:ring-brand/40 focus:border-transparent outline-none transition-all text-sm"
                                     />
                                 </div>
                             </div>

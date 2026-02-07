@@ -158,11 +158,11 @@ const FileManager = () => {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary mb-1 tracking-tight">Global File Repository</h1>
+          <h1 className="text-2xl font-bold text-text-primary mb-1 tracking-tight">Global File Repository</h1>
           <p className="text-text-secondary text-sm">Enterprise-wide visibility for organization administrators</p>
         </div>
         <div>
-          <button className="flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-xl hover:bg-brand-dark transition-all shadow-md hover:shadow-lg active:scale-95 text-sm font-medium">
+          <button className="flex items-center gap-2 bg-brand text-white px-4 py-2.5 rounded-lg hover:bg-brand-dark transition-all shadow-sm hover:shadow-md active:scale-95 text-sm font-medium">
             <Download size={18} />
             <span>Export Report</span>
           </button>
@@ -177,11 +177,11 @@ const FileManager = () => {
             placeholder="Search repository..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand focus:border-transparent transition-all shadow-sm"
+            className="w-full bg-surface border border-border/80 rounded-lg pl-10 pr-4 py-2.5 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-transparent transition-all shadow-sm"
           />
         </div>
         <button
-          className="px-4 py-2.5 bg-surface border border-border rounded-xl text-text-secondary hover:bg-slate-50 hover:text-text-primary transition-all flex items-center gap-2 font-medium text-sm shadow-sm hover:shadow-md active:scale-95"
+          className="px-4 py-2.5 bg-surface border border-border/80 rounded-lg text-text-secondary hover:bg-slate-50 hover:text-text-primary transition-all flex items-center gap-2 font-medium text-sm shadow-sm hover:shadow-md active:scale-95"
         >
           <Filter size={18} />
           <span className="hidden sm:inline">Filters</span>
@@ -200,7 +200,7 @@ const FileManager = () => {
         </button>
       </div>
 
-      <div className="bg-surface rounded-2xl shadow-md shadow-slate-200/50 border border-border overflow-hidden">
+      <div className="bg-surface rounded-xl shadow-sm border border-border/80 overflow-hidden">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20">
             <Loader2 size={32} className="text-brand-light animate-spin mb-4" />

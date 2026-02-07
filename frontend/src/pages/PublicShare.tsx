@@ -46,7 +46,7 @@ const PublicShare = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb]">
         <Loader2 size={32} className="text-slate-400 animate-spin" />
       </div>
     );
@@ -54,31 +54,31 @@ const PublicShare = () => {
 
   if (error || !file) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="bg-white rounded-xl shadow-lg p-8 max-w-md text-center">
-          <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">Link Not Available</h2>
-          <p className="text-slate-600">{error || 'This share link is invalid or has expired.'}</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb]">
+        <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-8 max-w-md text-center">
+          <AlertCircle size={44} className="text-red-400 mx-auto mb-4" />
+          <h2 className="text-lg font-semibold text-slate-900 mb-2">Link Not Available</h2>
+          <p className="text-slate-500 text-sm">{error || 'This share link is invalid or has expired.'}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
-      <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full">
+    <div className="min-h-screen flex items-center justify-center bg-[#f8f9fb] p-4">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-8 max-w-md w-full">
         {file.type === 'file' ? (
           <>
-            <h2 className="text-2xl font-semibold text-slate-900 mb-2">Shared File</h2>
+            <h2 className="text-xl font-semibold text-slate-900 mb-2 tracking-tight">Shared File</h2>
             <div className="mb-6">
-              <p className="text-lg text-slate-700 font-medium mb-1">{file.filename}</p>
-              <p className="text-sm text-slate-500">
+              <p className="text-[15px] text-slate-700 font-medium mb-1">{file.filename}</p>
+              <p className="text-xs text-slate-400">
                 {formatSize(file.size)} • {new Date(file.created_at).toLocaleDateString()}
               </p>
             </div>
             <button
               onClick={handleDownload}
-              className="w-full bg-brand text-white py-3 px-4 rounded-lg font-medium hover:bg-brand-dark transition-colors flex items-center justify-center gap-2"
+              className="w-full bg-brand text-white py-2.5 px-4 rounded-lg text-sm font-medium hover:bg-brand-dark transition-colors flex items-center justify-center gap-2"
             >
               <Download size={20} />
               Download File
@@ -86,10 +86,10 @@ const PublicShare = () => {
           </>
         ) : (
           <>
-            <h2 className="text-2xl font-semibold text-slate-900 mb-2">Shared Folder</h2>
+            <h2 className="text-xl font-semibold text-slate-900 mb-2 tracking-tight">Shared Folder</h2>
             <div className="mb-6">
-              <p className="text-lg text-slate-700 font-medium mb-1">{file.name}</p>
-              <p className="text-sm text-slate-500">
+              <p className="text-[15px] text-slate-700 font-medium mb-1">{file.name}</p>
+              <p className="text-xs text-slate-400">
                 {file.contents?.length || 0} items • {new Date(file.created_at).toLocaleDateString()}
               </p>
             </div>
@@ -97,7 +97,7 @@ const PublicShare = () => {
               <div className="mb-4 max-h-64 overflow-y-auto">
                 <div className="space-y-2">
                   {file.contents.map((item: any) => (
-                    <div key={item.id} className="flex items-center gap-2 p-2 bg-slate-50 rounded">
+                    <div key={item.id} className="flex items-center gap-2 p-2 bg-slate-50/80 rounded-md">
                       {item.type === 'folder' ? (
                         <Folder size={16} className="text-slate-500" />
                       ) : (
