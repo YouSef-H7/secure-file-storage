@@ -231,13 +231,12 @@ router.get('/admin/matrix', requireAdmin, async (req: AuthRequest, res: Response
             []
         );
 
-        // Top storage consumers (global) - join on email, not id (files.user_id contains email)
+        // Top storage consumers (global) - group by user_id directly (contains email/sub identity)
         const [userRows] = await db.execute<RowDataPacket[]>(
-            `SELECT u.email, SUM(f.size) as usageBytes, COUNT(f.id) as fileCount
+            `SELECT f.user_id as email, SUM(f.size) as usageBytes, COUNT(f.id) as fileCount
              FROM files f
-             JOIN users u ON f.user_id = u.email
              WHERE (f.is_deleted = FALSE OR f.is_deleted IS NULL)
-             GROUP BY u.email
+             GROUP BY f.user_id
              ORDER BY usageBytes DESC
              LIMIT 5`,
             []
