@@ -20,6 +20,7 @@ import AnimatedFolder from '../components/AnimatedFolder';
 import PageTransition from '../components/PageTransition';
 import { FileMetadata } from '../types/file';
 import { api, notifyFilesChanged } from '../lib/api';
+import { Swal, Toast } from '../lib/toast';
 
 const EmployeeFiles = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -167,8 +168,19 @@ const EmployeeFiles = () => {
   }, []);
 
   const handleCreateFolder = async () => {
-    const name = prompt("Folder Name:");
-    if (!name || !name.trim()) return;
+    const { value: name } = await Swal.fire({
+      title: 'New Folder',
+      input: 'text',
+      inputPlaceholder: 'Enter folder name',
+      showCancelButton: true,
+      confirmButtonColor: '#10854a',
+      confirmButtonText: 'Create',
+      cancelButtonText: 'Cancel',
+      inputValidator: (value) => {
+        if (!value || !value.trim()) return 'Folder name cannot be empty';
+      }
+    });
+    if (!name) return;
     try {
       await api.request('/api/folders', {
         method: 'POST',
@@ -176,7 +188,7 @@ const EmployeeFiles = () => {
       });
       fetchContent();
     } catch (e) {
-      alert("Failed to create folder");
+      Toast.fire({ icon: 'error', title: 'Failed to create folder' });
     }
   };
 
@@ -185,7 +197,7 @@ const EmployeeFiles = () => {
 
     const MAX_SIZE = 100 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      alert("File too large (Max 100MB).");
+      Toast.fire({ icon: 'error', title: 'File too large (Max 100MB).' });
       return;
     }
 
@@ -211,7 +223,7 @@ const EmployeeFiles = () => {
 
       fetchContent();
     } catch (err) {
-      alert("Upload failed.");
+      Toast.fire({ icon: 'error', title: 'Upload failed.' });
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -228,13 +240,23 @@ const EmployeeFiles = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Move this file to trash?')) return;
+    const result = await Swal.fire({
+      title: 'Move to Trash?',
+      text: 'You can restore this file later from the Trash.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, move to trash',
+      cancelButtonText: 'Cancel'
+    });
+    if (!result.isConfirmed) return;
     try {
       await api.request(`/api/files/${id}`, { method: 'DELETE' });
       setFiles(prev => prev.filter(f => f.id !== id));
       notifyFilesChanged();
     } catch (err) {
-      alert("Delete failed.");
+      Toast.fire({ icon: 'error', title: 'Delete failed.' });
     }
   };
 

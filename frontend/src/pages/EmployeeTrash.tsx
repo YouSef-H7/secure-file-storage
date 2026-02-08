@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import PageTransition from '../components/PageTransition';
 import { Trash2, RotateCcw, Loader2 } from 'lucide-react';
 import { api, notifyFilesChanged } from '../lib/api';
+import { Toast } from '../lib/toast';
 
 interface TrashFile {
   id: string;
@@ -75,7 +76,7 @@ const EmployeeTrash = () => {
       setItems(prev => prev.filter(f => f.id !== id));
       notifyFilesChanged();
     } catch {
-      alert('Restore failed.');
+      Toast.fire({ icon: 'error', title: 'Restore failed.' });
     } finally {
       setRestoringId(null);
     }

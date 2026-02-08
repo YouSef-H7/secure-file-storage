@@ -2,6 +2,7 @@ import React, { useRef, useState } from 'react';
 import PageTransition from '../components/PageTransition';
 import { UploadCloud, Loader2, FileText } from 'lucide-react';
 import { api, notifyFilesChanged } from '../lib/api';
+import { Toast } from '../lib/toast';
 
 const EmployeeUpload = () => {
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -12,7 +13,7 @@ const EmployeeUpload = () => {
         if (!file || uploading) return;
 
         if (file.size > 100 * 1024 * 1024) {
-            alert("File too large (Max 100MB)");
+            Toast.fire({ icon: 'error', title: 'File too large (Max 100MB)' });
             return;
         }
 

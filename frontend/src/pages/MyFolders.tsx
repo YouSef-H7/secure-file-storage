@@ -5,6 +5,7 @@ import { Folder, FolderPlus, Share2, Trash2, Edit2, Loader2, FileQuestion, Searc
 import AnimatedFolder from '../components/AnimatedFolder';
 import PageTransition from '../components/PageTransition';
 import { api } from '../lib/api';
+import { Swal, Toast } from '../lib/toast';
 import { ShareModal } from '../components/ShareModal';
 
 interface FolderItem {
@@ -47,8 +48,19 @@ const MyFolders = () => {
   }, [fetchFolders]);
 
   const handleCreateFolder = async () => {
-    const name = prompt("Folder Name:");
-    if (!name || !name.trim()) return;
+    const { value: name } = await Swal.fire({
+      title: 'New Folder',
+      input: 'text',
+      inputPlaceholder: 'Enter folder name',
+      showCancelButton: true,
+      confirmButtonColor: '#10854a',
+      confirmButtonText: 'Create',
+      cancelButtonText: 'Cancel',
+      inputValidator: (value) => {
+        if (!value || !value.trim()) return 'Folder name cannot be empty';
+      }
+    });
+    if (!name) return;
     try {
       await api.request('/api/folders', {
         method: 'POST',
@@ -56,17 +68,27 @@ const MyFolders = () => {
       });
       fetchFolders();
     } catch (e) {
-      alert("Failed to create folder");
+      Toast.fire({ icon: 'error', title: 'Failed to create folder' });
     }
   };
 
   const handleDeleteFolder = async (id: string, name: string) => {
-    if (!confirm(`Delete folder "${name}"? This will not delete files inside.`)) return;
+    const result = await Swal.fire({
+      title: `Delete folder "${name}"?`,
+      text: 'This will not delete files inside.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: 'Yes, delete it',
+      cancelButtonText: 'Cancel'
+    });
+    if (!result.isConfirmed) return;
     try {
       await api.request(`/api/folders/${id}`, { method: 'DELETE' });
       fetchFolders();
     } catch (err) {
-      alert("Delete failed.");
+      Toast.fire({ icon: 'error', title: 'Delete failed.' });
     }
   };
 
@@ -83,7 +105,7 @@ const MyFolders = () => {
       setEditingFolder(null);
       fetchFolders();
     } catch (err) {
-      alert("Rename failed.");
+      Toast.fire({ icon: 'error', title: 'Rename failed.' });
     }
   };
 

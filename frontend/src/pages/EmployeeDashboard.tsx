@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import PageTransition from '../components/PageTransition';
 import { Upload, FileText, TrendingUp, HardDrive, Loader2 } from 'lucide-react';
 import { api, notifyFilesChanged } from '../lib/api';
+import { Toast } from '../lib/toast';
 
 const STORAGE_QUOTA_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
 
@@ -47,7 +48,7 @@ const EmployeeDashboard = () => {
 
     const MAX_SIZE = 100 * 1024 * 1024;
     if (file.size > MAX_SIZE) {
-      alert("File too large (Max 100MB).");
+      Toast.fire({ icon: 'error', title: 'File too large (Max 100MB).' });
       return;
     }
 
@@ -68,9 +69,9 @@ const EmployeeDashboard = () => {
 
       fetchStats();
       notifyFilesChanged();
-      alert("File uploaded successfully!");
+      Toast.fire({ icon: 'success', title: 'File uploaded successfully!' });
     } catch (err) {
-      alert("Upload failed.");
+      Toast.fire({ icon: 'error', title: 'Upload failed.' });
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
