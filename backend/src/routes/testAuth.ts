@@ -41,8 +41,8 @@ testAuthRouter.post('/test-register', async (req: Request, res: Response) => {
     // ── Upsert user into MySQL ──
     // Include password column with placeholder to avoid MySQL strict-mode NOT NULL rejection
     await db.execute<ResultSetHeader>(
-      'INSERT INTO users (id, tenant_id, email, password, role) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE role = VALUES(role)',
-      [userId, 'default-tenant', normalizedEmail, '__qa_no_password__', role]
+      'INSERT INTO users (id, email, password, role) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE role = VALUES(role)',
+      [userId, normalizedEmail, '__qa_no_password__', role]
     );
 
     // ── Fetch the actual user ID (may differ if user already existed) ──
