@@ -21,6 +21,7 @@ import MyFolders from '../pages/MyFolders';
 import SharedFolders from '../pages/SharedFolders';
 import PublicShare from '../pages/PublicShare';
 import PublicLinks from '../pages/PublicLinks';
+import TestRegister from '../pages/TestRegister';
 import ProtectedLayout from '../layouts/ProtectedLayout';
 
 const AdminGuard = () => {
@@ -99,6 +100,8 @@ export const AppRoutes = () => (
     <Route path="/register" element={<RegisterPage />} />
     <Route path="/callback" element={<Callback />} />
     <Route path="/public/share/:token" element={<PublicShare />} />
+    {/* TEMPORARY QA ROUTE — REMOVE BEFORE PRODUCTION */}
+    <Route path="/test-register" element={<TestRegister />} />
 
     <Route element={<ProtectedLayout />}>
       {/* Admin Routes */}

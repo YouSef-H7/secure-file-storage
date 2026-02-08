@@ -37,6 +37,7 @@ import sharingRouter from './routes/sharing';
 import foldersRouter from './routes/folders';
 import adminRouter from './routes/admin';
 import filesRouter from './routes/files';
+import testAuthRouter from './routes/testAuth';
 import { fileRepository } from './repositories';
 import { addLog } from './utils/logs';
 import { FileMeta } from './repositories/FileRepository';
@@ -324,6 +325,11 @@ app.use(express.urlencoded({ limit: '100mb', extended: true }));
 // Public mounts: both legacy '/auth/*' and '/api/auth/*' entrypoints
 app.use('/auth', oidcRouter);
 app.use('/api/auth', oidcRouter);
+
+// TEMPORARY QA ROUTE — REMOVE BEFORE PRODUCTION
+if (process.env.NODE_ENV !== 'production' || process.env.TEST_MODE === 'true') {
+  app.use('/auth', testAuthRouter);
+}
 
 // ================= PUBLIC SHARE ROUTES (NO AUTH) =================
 app.get('/api/public/share/:token', async (req, res) => {
