@@ -78,7 +78,7 @@ const Sidebar = () => {
         <div className="w-9 h-9 bg-gradient-to-br from-[#10854a] to-[#0d4d2e] rounded-lg flex items-center justify-center shadow-lg shadow-brand-dark/40">
           <span className="text-white text-lg font-bold">S</span>
         </div>
-        <span className="font-semibold text-[17px] text-white tracking-tight">SecureStore</span>
+        <span className="font-semibold text-[17px] text-white tracking-tight">SPB SecureDrive</span>
       </div>
 
       <nav className="flex-1 px-4 py-5 space-y-0.5 overflow-y-auto">

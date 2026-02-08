@@ -33,7 +33,7 @@ const LoginPage = () => {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-brand rounded-2xl mb-8 shadow-xl shadow-brand/25">
             <Shield className="text-white fill-current" size={26} />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight leading-tight mb-2">SecureStore</h1>
+          <h1 className="text-3xl font-bold text-slate-900 tracking-tight leading-tight mb-2">SPB SecureDrive</h1>
           <p className="text-slate-500 text-sm tracking-wide">Enterprise File Management</p>
         </div>
 

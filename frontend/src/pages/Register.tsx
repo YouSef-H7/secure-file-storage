@@ -55,7 +55,7 @@ const RegisterPage = () => {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-brand rounded-2xl mb-4 shadow-xl shadow-brand/25">
             <span className="text-white text-2xl font-bold">S</span>
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2 leading-tight">SecureStore</h1>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2 leading-tight">SPB SecureDrive</h1>
           <p className="text-slate-400 text-sm">Enterprise File Storage Platform</p>
         </div>
 
