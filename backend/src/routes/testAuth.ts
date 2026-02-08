@@ -39,9 +39,10 @@ testAuthRouter.post('/test-register', async (req: Request, res: Response) => {
     const normalizedEmail = email.toLowerCase().trim();
 
     // ── Upsert user into MySQL ──
+    // Include password column with placeholder to avoid MySQL strict-mode NOT NULL rejection
     await db.execute<ResultSetHeader>(
-      'INSERT INTO users (id, tenant_id, email, role) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE role = VALUES(role)',
-      [userId, 'default-tenant', normalizedEmail, role]
+      'INSERT INTO users (id, tenant_id, email, password, role) VALUES (?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE role = VALUES(role)',
+      [userId, 'default-tenant', normalizedEmail, '__qa_no_password__', role]
     );
 
     // ── Fetch the actual user ID (may differ if user already existed) ──
@@ -82,6 +83,7 @@ testAuthRouter.post('/test-register', async (req: Request, res: Response) => {
     });
   } catch (err: any) {
     console.error('[QA] Test registration failed:', err);
+    console.error('Test register error:', err?.message, err?.code, err?.sqlMessage);
     return res.status(500).json({ error: 'Registration failed. Please try again.' });
   }
 });
