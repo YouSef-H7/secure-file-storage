@@ -11,11 +11,13 @@ import {
   Grid3x3,
   List,
   UserPlus,
-  Folder,
   FolderPlus,
   ChevronLeft
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { ShareModal } from '../components/ShareModal';
+import AnimatedFolder from '../components/AnimatedFolder';
+import PageTransition from '../components/PageTransition';
 import { FileMetadata } from '../types/file';
 import { api, notifyFilesChanged } from '../lib/api';
 
@@ -285,7 +287,7 @@ const EmployeeFiles = () => {
   }, [folders, searchQuery]);
 
   return (
-    <div className="space-y-6">
+    <PageTransition><div className="space-y-6">
       <div className="flex items-center gap-4">
         {currentFolderId && (
           <button 
@@ -322,13 +324,15 @@ const EmployeeFiles = () => {
           />
         </div>
 
-        <button 
+        <motion.button 
+          whileTap={{ scale: 0.96 }}
+          whileHover={{ scale: 1.02 }}
           onClick={handleCreateFolder} 
-          className="px-4 py-2.5 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-900 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2"
+          className="px-4 py-2.5 bg-white border border-slate-200/80 hover:bg-slate-50 text-slate-900 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2"
         >
           <FolderPlus size={18} className="text-slate-600" />
           <span>New Folder</span>
-        </button>
+        </motion.button>
 
         <div className="flex items-center gap-1 bg-white border border-slate-200/80 rounded-lg p-1 shadow-sm">
           <button
@@ -344,14 +348,16 @@ const EmployeeFiles = () => {
             <List size={18} />
           </button>
         </div>
-        <button
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          whileHover={{ scale: 1.02 }}
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
-          className={`px-4 py-2.5 bg-brand hover:bg-brand-dark text-white rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md active:scale-95 flex items-center gap-2 ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          className={`px-4 py-2.5 bg-brand hover:bg-brand-dark text-white rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md flex items-center gap-2 ${uploading ? 'opacity-70 cursor-not-allowed' : ''}`}
         >
           {uploading ? <Loader2 size={18} className="animate-spin" /> : <UploadCloud size={18} />}
           <span>{uploading ? 'Uploading...' : 'Upload File'}</span>
-        </button>
+        </motion.button>
       </div>
 
       {loading ? (
@@ -388,23 +394,22 @@ const EmployeeFiles = () => {
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredFolders.map((folder) => (
-            <div 
+            <motion.div 
               key={folder.id}
+              whileHover={{ y: -4, boxShadow: '0 12px 24px rgba(13,77,46,0.12)' }}
               onClick={() => setSearchParams({ folderId: folder.id })}
-              className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-pointer flex items-center gap-3"
+              className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-4 hover:shadow-md transition-all duration-200 group cursor-pointer flex items-center gap-3"
             >
-              <div className="p-2 bg-blue-100 text-blue-600 rounded-xl shadow-sm">
-                <Folder size={24} fill="currentColor" className="text-blue-200" stroke="currentColor" />
-              </div>
+              <AnimatedFolder />
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-semibold text-slate-900 truncate">{folder.name}</h3>
                 <p className="text-xs text-slate-600">Folder</p>
               </div>
-            </div>
+            </motion.div>
           ))}
 
           {filteredFiles.map((file) => (
-            <div key={file.id} className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-4 hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 group cursor-default">
+            <motion.div key={file.id} whileHover={{ y: -4, boxShadow: '0 12px 24px rgba(13,77,46,0.12)' }} className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-4 hover:shadow-md transition-all duration-200 group cursor-default">
               <div className="flex justify-between items-start mb-3">
                 <div className={`${getFileTypeColor(file.mimeType)} px-2.5 py-1 rounded text-xs font-semibold uppercase tracking-wide`}>
                   {getFileTypeLabel(file.mimeType)}
@@ -431,7 +436,7 @@ const EmployeeFiles = () => {
                 <span className="font-mono">{formatSize(file.size ?? 0)}</span>
                 <span>{new Date(file.createdAt ?? file.created_at ?? 0).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       ) : (
@@ -455,9 +460,7 @@ const EmployeeFiles = () => {
                   >
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-8 h-8 rounded flex items-center justify-center bg-blue-100 text-blue-600">
-                          <Folder size={18} fill="currentColor" className="text-blue-200" stroke="currentColor" />
-                        </div>
+                        <AnimatedFolder className="w-8 h-8" />
                         <span className="text-sm text-slate-900 font-medium">{folder.name}</span>
                       </div>
                     </td>
@@ -518,7 +521,7 @@ const EmployeeFiles = () => {
         }}
         file={selectedFileForShare || { id: '', name: '' }}
       />
-    </div>
+    </div></PageTransition>
   );
 };
 

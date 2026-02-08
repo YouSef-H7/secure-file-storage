@@ -1,4 +1,5 @@
 import React, { useRef, useState } from 'react';
+import PageTransition from '../components/PageTransition';
 import { UploadCloud, Loader2, FileText } from 'lucide-react';
 import { api, notifyFilesChanged } from '../lib/api';
 
@@ -44,7 +45,7 @@ const EmployeeUpload = () => {
     };
 
     return (
-        <div className="space-y-6 animate-in">
+        <PageTransition><div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Upload File</h1>
                 <p className="text-slate-500 text-sm">Add new documents to your workspace</p>
@@ -83,7 +84,7 @@ const EmployeeUpload = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </div></PageTransition>
     );
 };
 

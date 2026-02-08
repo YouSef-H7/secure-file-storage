@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import { Folder, Loader2, FileQuestion, Search, Download, Eye } from 'lucide-react';
+import AnimatedFolder from '../components/AnimatedFolder';
+import PageTransition from '../components/PageTransition';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 
@@ -45,7 +48,7 @@ const SharedFolders = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <PageTransition><div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Shared Folders</h1>
         <p className="text-slate-400 text-sm">Folders shared with you by colleagues</p>
@@ -92,14 +95,13 @@ const SharedFolders = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredFolders.map((folder) => (
-            <div
+            <motion.div
               key={folder.id}
-              className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-all"
+              whileHover={{ y: -4, boxShadow: '0 12px 24px rgba(13,77,46,0.12)' }}
+              className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:border-brand transition-all"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg">
-                  <Folder size={22} />
-                </div>
+                <AnimatedFolder />
                 <span className="px-2.5 py-1 bg-purple-50 text-purple-600 text-[11px] font-medium rounded-md">Shared</span>
               </div>
 
@@ -122,11 +124,11 @@ const SharedFolders = () => {
               >
                 Browse Folder
               </Link>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}
-    </div>
+    </div></PageTransition>
   );
 };
 

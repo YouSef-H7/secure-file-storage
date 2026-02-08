@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import PageTransition from '../components/PageTransition';
 import { Link as LinkIcon, Copy, Check, FileText, Folder, Loader2, AlertCircle } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -112,7 +113,7 @@ const PublicLinks = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <PageTransition><div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-heading">Public Links</h1>
       </div>
@@ -186,7 +187,7 @@ const PublicLinks = () => {
           </div>
         </div>
       )}
-    </div>
+    </div></PageTransition>
   );
 };
 

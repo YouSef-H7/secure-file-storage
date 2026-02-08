@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PageTransition from '../components/PageTransition';
 import { Users as UsersIcon, Search, Loader2 } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -71,7 +72,7 @@ const UsersPage = () => {
     }
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <PageTransition><div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Users</h1>
                 <p className="text-slate-500 text-sm">Manage user accounts and permissions</p>
@@ -170,7 +171,7 @@ const UsersPage = () => {
                     )}
                 </>
             )}
-        </div>
+        </div></PageTransition>
     );
 };
 

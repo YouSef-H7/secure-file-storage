@@ -1,9 +1,10 @@
 import React from 'react';
+import PageTransition from '../components/PageTransition';
 import { ShieldCheck, Files } from 'lucide-react';
 
 const SettingsPage = () => {
   return (
-    <div className="space-y-6">
+    <PageTransition><div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Security Nodes</h1>
         <p className="text-slate-400 text-sm">System configuration and security settings</p>
@@ -54,7 +55,7 @@ const SettingsPage = () => {
           </button>
         </div>
       </div>
-    </div>
+    </div></PageTransition>
   );
 };
 

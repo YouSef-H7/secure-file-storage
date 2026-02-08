@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PageTransition from '../components/PageTransition';
 import { HardDrive, FileText, Loader2 } from 'lucide-react';
 import { api, notifyFilesChanged } from '../lib/api';
 
@@ -47,7 +48,7 @@ const EmployeeStorage = () => {
     if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-brand" /></div>;
 
     return (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <PageTransition><div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Storage Usage</h1>
                 <p className="text-slate-400 text-sm">Manage your personal quota</p>
@@ -99,7 +100,7 @@ const EmployeeStorage = () => {
                     </div>
                 </div>
             </div>
-        </div>
+        </div></PageTransition>
     );
 };
 

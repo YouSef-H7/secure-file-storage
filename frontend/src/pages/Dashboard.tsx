@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAdminStats } from '../hooks/useAdminStats';
+import PageTransition from '../components/PageTransition';
 import {
   Users, HardDrive, FileText, Activity, TrendingUp,
   ArrowUp, ArrowDown, Database, Clock, Server
@@ -131,7 +132,7 @@ const Dashboard = () => {
   }));
 
   return (
-    <div className="space-y-8 animate-in">
+    <PageTransition><div className="space-y-8">
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight font-heading">Admin Dashboard</h1>
@@ -264,7 +265,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
-    </div>
+    </div></PageTransition>
   );
 };
 

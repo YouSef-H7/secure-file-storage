@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import PageTransition from '../components/PageTransition';
 import { Upload, FileText, TrendingUp, HardDrive, Loader2 } from 'lucide-react';
 import { api, notifyFilesChanged } from '../lib/api';
 
@@ -112,7 +113,7 @@ const EmployeeDashboard = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <PageTransition><div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">My Dashboard</h1>
         <p className="text-slate-400 text-sm">Quick access to your files and storage</p>
@@ -182,7 +183,7 @@ const EmployeeDashboard = () => {
         </div>
         <div className="text-sm text-slate-400 mt-2">{(parseFloat(storageTotalGB) - parseFloat(storageUsedGB)).toFixed(1)} GB remaining</div>
       </div>
-    </div>
+    </div></PageTransition>
   );
 };
 

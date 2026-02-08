@@ -15,6 +15,7 @@ import {
   Link as LinkIcon
 } from 'lucide-react';
 import { api } from '../lib/api';
+import AnimatedLogo from './AnimatedLogo';
 
 const Sidebar = () => {
   const { user } = useAuth();
@@ -74,11 +75,8 @@ const Sidebar = () => {
 
   return (
     <aside className="w-64 bg-brand border-r border-white/5 flex flex-col h-screen fixed z-30 shadow-xl">
-      <div className="px-6 py-5 flex items-center gap-3 border-b border-white/10">
-        <div className="w-9 h-9 bg-gradient-to-br from-[#10854a] to-[#0d4d2e] rounded-lg flex items-center justify-center shadow-lg shadow-brand-dark/40">
-          <span className="text-white text-lg font-bold">S</span>
-        </div>
-        <span className="font-semibold text-[17px] text-white tracking-tight">SPB SecureDrive</span>
+      <div className="px-6 py-5 border-b border-white/10">
+        <AnimatedLogo compact />
       </div>
 
       <nav className="flex-1 px-4 py-5 space-y-0.5 overflow-y-auto">

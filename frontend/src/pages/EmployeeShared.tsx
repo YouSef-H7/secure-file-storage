@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Users, FileText, Folder, Loader2, FileQuestion, Search, Download, Link as LinkIcon } from 'lucide-react';
+import { motion } from 'framer-motion';
+import AnimatedFolder from '../components/AnimatedFolder';
+import PageTransition from '../components/PageTransition';
 import { Link } from 'react-router-dom';
 import { api } from '../lib/api';
 import { FileMetadata } from '../types/file';
@@ -80,7 +83,7 @@ const EmployeeShared = () => {
   );
 
   return (
-    <div className="space-y-6">
+    <PageTransition><div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Shared with Me</h1>
         <p className="text-slate-400 text-sm">Files and folders shared by other users</p>
@@ -134,14 +137,13 @@ const EmployeeShared = () => {
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredFolders.map((folder) => (
-                  <div
+                  <motion.div
                     key={folder.id}
+                    whileHover={{ y: -4, boxShadow: '0 12px 24px rgba(13,77,46,0.12)' }}
                     className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-4 hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex items-start justify-between mb-3">
-                      <div className="p-2 bg-purple-100 text-purple-600 rounded-lg">
-                        <Folder size={20} fill="currentColor" className="text-purple-200" stroke="currentColor" />
-                      </div>
+                      <AnimatedFolder />
                       <span className="px-2 py-1 bg-purple-50 text-purple-700 text-xs font-medium rounded">Shared</span>
                     </div>
                     <h3 className="text-sm font-semibold text-slate-900 mb-2 truncate" title={folder.name}>
@@ -154,7 +156,7 @@ const EmployeeShared = () => {
                     >
                       Open
                     </Link>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
@@ -213,7 +215,7 @@ const EmployeeShared = () => {
           )}
         </div>
       )}
-    </div>
+    </div></PageTransition>
   );
 };
 

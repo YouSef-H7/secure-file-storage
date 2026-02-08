@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { Folder, FolderPlus, Share2, Trash2, Edit2, Loader2, FileQuestion, Search } from 'lucide-react';
+import AnimatedFolder from '../components/AnimatedFolder';
+import PageTransition from '../components/PageTransition';
 import { api } from '../lib/api';
 import { ShareModal } from '../components/ShareModal';
 
@@ -93,19 +96,21 @@ const MyFolders = () => {
   const filteredFolders = folders.filter(folder => (folder.name ?? '').toLowerCase().includes(q));
 
   return (
-    <div className="space-y-6">
+    <PageTransition><div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">My Folders</h1>
           <p className="text-slate-400 text-sm">Organize your files with folders</p>
         </div>
-        <button
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          whileHover={{ scale: 1.02 }}
           onClick={handleCreateFolder}
           className="px-4 py-2.5 bg-brand hover:bg-brand-dark text-white rounded-lg text-sm font-medium transition-all shadow-sm flex items-center gap-2"
         >
           <FolderPlus size={18} />
           <span>New Folder</span>
-        </button>
+        </motion.button>
       </div>
 
       <div className="flex items-center gap-3">
@@ -157,14 +162,13 @@ const MyFolders = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredFolders.map((folder) => (
-            <div
+            <motion.div
               key={folder.id}
-              className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:shadow-[0_12px_24px_rgba(13,77,46,0.15)] hover:border-brand hover:-translate-y-1 transition-all group"
+              whileHover={{ y: -4, boxShadow: '0 12px 24px rgba(13,77,46,0.12)' }}
+              className="bg-white rounded-2xl shadow-sm border-2 border-gray-200 p-5 hover:border-brand transition-all group"
             >
               <div className="flex items-start justify-between mb-4">
-                <div className="p-2.5 bg-brand/10 text-brand rounded-lg">
-                  <Folder size={22} />
-                </div>
+                <AnimatedFolder />
                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => {
@@ -226,7 +230,7 @@ const MyFolders = () => {
                   </Link>
                 </>
               )}
-            </div>
+            </motion.div>
           ))}
         </div>
       )}
@@ -240,7 +244,7 @@ const MyFolders = () => {
         file={selectedFolder ? { id: selectedFolder.id, name: selectedFolder.name } : { id: '', name: '' }}
         isFolder={true}
       />
-    </div>
+    </div></PageTransition>
   );
 };
 

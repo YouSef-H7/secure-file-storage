@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { UserPlus, ShieldAlert, Loader2, CheckCircle2 } from 'lucide-react';
+import AnimatedLogo from '../components/AnimatedLogo';
 import { api } from '../lib/api';
 
 const RegisterPage = () => {
@@ -52,10 +54,7 @@ const RegisterPage = () => {
     <div className="min-h-screen flex items-center justify-center bg-[#f8faf9] relative overflow-hidden p-6">
       <div className="w-full max-w-md space-y-10">
         <div className="text-center">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-brand rounded-2xl mb-4 shadow-xl shadow-brand/25">
-            <span className="text-white text-2xl font-bold">S</span>
-          </div>
-          <h1 className="text-3xl font-bold text-slate-900 mb-2 leading-tight">SPB SecureDrive</h1>
+          <AnimatedLogo />
           <p className="text-slate-400 text-sm">Enterprise File Storage Platform</p>
         </div>
 
@@ -96,14 +95,16 @@ const RegisterPage = () => {
                 <span>{error}</span>
               </div>
             )}
-            <button 
+            <motion.button 
+              whileTap={{ scale: 0.96 }}
+              whileHover={{ scale: 1.02 }}
               type="submit"
               disabled={loading}
               className="w-full bg-brand hover:bg-brand-dark disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium py-3 rounded-xl transition-colors flex items-center justify-center gap-2 focus:ring-2 focus:ring-brand/30 focus:ring-offset-2"
             >
               {loading && <Loader2 size={18} className="animate-spin" />}
               {loading ? 'Creating account...' : 'Create Account'}
-            </button>
+            </motion.button>
           </form>
           <div className="mt-8 pt-6 border-t border-slate-200/60 text-center text-sm text-slate-500">
             Already have an account? <Link to="/login" className="text-brand font-medium hover:underline">Sign In</Link>

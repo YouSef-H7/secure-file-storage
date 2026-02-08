@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import { X, Search, UserPlus, Loader2, Check, Copy, Link as LinkIcon } from 'lucide-react';
 import { api } from '../lib/api';
 
@@ -180,7 +181,9 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
                                 Generate shareable link
                             </label>
                             {!shareLink ? (
-                                <button
+                                <motion.button
+                                    whileTap={{ scale: 0.96 }}
+                                    whileHover={{ scale: 1.02 }}
                                     onClick={handleGenerateLink}
                                     disabled={linkLoading}
                                     className="w-full px-4 py-2.5 bg-brand text-white rounded-lg font-medium hover:bg-brand-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -196,7 +199,7 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
                                             Generate Link
                                         </>
                                     )}
-                                </button>
+                                </motion.button>
                             ) : (
                                 <div className="space-y-3">
                                     <div className="flex gap-2">
@@ -252,14 +255,16 @@ export const ShareModal = ({ file, isOpen, onClose, isFolder = false }: ShareMod
                             >
                                 Cancel
                             </button>
-                            <button
+                            <motion.button
+                                whileTap={{ scale: 0.96 }}
+                                whileHover={{ scale: 1.02 }}
                                 onClick={handleShare}
                                 disabled={!email || loading || status === 'success'}
                                 className="px-4 py-2 bg-brand text-white rounded-lg text-sm font-medium hover:bg-brand-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                             >
                                 {loading ? <Loader2 size={16} className="animate-spin" /> : <UserPlus size={16} />}
                                 Share
-                            </button>
+                            </motion.button>
                         </div>
                     )}
                     {shareLinkMode === 'link' && (

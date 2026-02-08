@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PageTransition from '../components/PageTransition';
 import { HardDrive, TrendingUp, Loader2, Users, FileText } from 'lucide-react';
 import { api } from '../lib/api';
 import {
@@ -195,7 +196,7 @@ const StoragePage = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <PageTransition><div className="space-y-6">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Storage Overview</h1>
@@ -417,7 +418,7 @@ const StoragePage = () => {
           </div>
         )}
       </div>
-    </div>
+    </div></PageTransition>
   );
 };
 

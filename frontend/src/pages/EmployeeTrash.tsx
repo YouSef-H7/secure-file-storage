@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import PageTransition from '../components/PageTransition';
 import { Trash2, RotateCcw, Loader2 } from 'lucide-react';
 import { api, notifyFilesChanged } from '../lib/api';
 
@@ -101,7 +102,7 @@ const EmployeeTrash = () => {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <PageTransition><div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Trash</h1>
         <p className="text-slate-500 text-sm">Deleted files (30-day retention)</p>
@@ -154,7 +155,7 @@ const EmployeeTrash = () => {
           </div>
         </div>
       )}
-    </div>
+    </div></PageTransition>
   );
 };
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import PageTransition from '../components/PageTransition';
 import { FileText, Download, Clock, Image as ImageIcon, Search, Grid3x3, List, File, Loader2, FileQuestion } from 'lucide-react';
 import { FileMetadata } from '../types/file';
 import { api } from '../lib/api';
@@ -58,7 +59,7 @@ const EmployeeRecent = () => {
     };
 
     return (
-        <div className="space-y-6 animate-in">
+        <PageTransition><div className="space-y-6">
             <div>
                 <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Recent Files</h1>
                 <p className="text-slate-500 text-sm">Your most recently active documents</p>
@@ -140,7 +141,7 @@ const EmployeeRecent = () => {
                     ))}
                 </div>
             )}
-        </div>
+        </div></PageTransition>
     );
 };
 

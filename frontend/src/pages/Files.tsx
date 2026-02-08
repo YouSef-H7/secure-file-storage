@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import PageTransition from '../components/PageTransition';
 import {
   FileText,
   Image as ImageIcon,
@@ -155,7 +156,7 @@ const FileManager = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <PageTransition><div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 mb-1 tracking-tight font-heading">Global File Repository</h1>
@@ -279,7 +280,7 @@ const FileManager = () => {
           </div>
         )}
       </div>
-    </div>
+    </div></PageTransition>
   );
 };
 
