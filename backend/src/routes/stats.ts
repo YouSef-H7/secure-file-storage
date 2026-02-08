@@ -152,13 +152,13 @@ router.get('/admin/activity', requireAdmin, async (req: AuthRequest, res: Respon
         // IFNULL ensures size is always a number (never NULL) for stable growth calculations
         const [rows] = await db.execute<RowDataPacket[]>(
             `SELECT 
-                DATE(DATE_ADD(created_at, INTERVAL 3 HOUR)) as date, 
+                DATE(created_at) as date, 
                 COUNT(*) as count, 
                 IFNULL(SUM(size), 0) as size
              FROM files
              WHERE (is_deleted = FALSE OR is_deleted IS NULL)
-             AND created_at >= NOW() - INTERVAL 7 DAY
-             GROUP BY DATE(DATE_ADD(created_at, INTERVAL 3 HOUR))
+             AND created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+             GROUP BY DATE(created_at)
              ORDER BY date ASC`,
             []
         );
@@ -170,7 +170,7 @@ router.get('/admin/activity', requireAdmin, async (req: AuthRequest, res: Respon
 
         // Map existing data
         rows.forEach((row: any) => {
-            const dateStr = row.date ? row.date.toString().split('T')[0] : null;
+            const dateStr = row.date ? new Date(row.date).toLocaleDateString('en-CA') : null;
             if (dateStr) {
                 dataMap.set(dateStr, {
                     count: Number(row.count || 0),
@@ -183,10 +183,7 @@ router.get('/admin/activity', requireAdmin, async (req: AuthRequest, res: Respon
         for (let i = 6; i >= 0; i--) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
-            const year = date.getFullYear();
-            const month = String(date.getMonth() + 1).padStart(2, '0');
-            const day = String(date.getDate()).padStart(2, '0');
-            const dateStr = `${year}-${month}-${day}`;
+            const dateStr = date.toLocaleDateString('en-CA');
             
             if (dataMap.has(dateStr)) {
                 sevenDaysData.push({
