@@ -66,7 +66,7 @@ export const useAdminStats = () => {
                     for (let i = 0; i < 7; i++) {
                         const d = new Date();
                         d.setDate(d.getDate() - i);
-                        const dateStr = d.toISOString().split('T')[0];
+                        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
                         activityMap.set(dateStr, { count: 0, size: 0 });
                     }
                     

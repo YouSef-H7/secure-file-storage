@@ -152,13 +152,13 @@ router.get('/admin/activity', requireAdmin, async (req: AuthRequest, res: Respon
         // IFNULL ensures size is always a number (never NULL) for stable growth calculations
         const [rows] = await db.execute<RowDataPacket[]>(
             `SELECT 
-                DATE(created_at) as date, 
+                DATE(DATE_ADD(created_at, INTERVAL 3 HOUR)) as date, 
                 COUNT(*) as count, 
                 IFNULL(SUM(size), 0) as size
              FROM files
              WHERE (is_deleted = FALSE OR is_deleted IS NULL)
              AND created_at >= NOW() - INTERVAL 7 DAY
-             GROUP BY DATE(created_at)
+             GROUP BY DATE(DATE_ADD(created_at, INTERVAL 3 HOUR))
              ORDER BY date ASC`,
             []
         );
@@ -183,7 +183,10 @@ router.get('/admin/activity', requireAdmin, async (req: AuthRequest, res: Respon
         for (let i = 6; i >= 0; i--) {
             const date = new Date(today);
             date.setDate(date.getDate() - i);
-            const dateStr = date.toISOString().split('T')[0];
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
             
             if (dataMap.has(dateStr)) {
                 sevenDaysData.push({
